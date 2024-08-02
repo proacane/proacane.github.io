@@ -27,8 +27,9 @@
 <meta property="og:description" content="asio的多线程模型">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/2024/08/01/%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B8%8Basio%E7%9A%84%E4%BD%BF%E7%94%A8/image-20240801133223177.png">
+<meta property="og:image" content="http://example.com/2024/08/01/%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B8%8Basio%E7%9A%84%E4%BD%BF%E7%94%A8/Inkedimage-20240802135142490_LI.jpg">
 <meta property="article:published_time" content="2024-08-01T05:31:38.000Z">
-<meta property="article:modified_time" content="2024-08-01T07:57:24.181Z">
+<meta property="article:modified_time" content="2024-08-02T07:47:23.156Z">
 <meta property="article:author" content="proacene">
 <meta property="article:tag" content="原创">
 <meta name="twitter:card" content="summary_large_image">
@@ -238,7 +239,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          986 字
+          1.3k 字
         
       </span>
     
@@ -249,7 +250,7 @@
         
         
         
-          9 分钟
+          11 分钟
         
       </span>
     
@@ -301,7 +302,8 @@
               <div class="markdown-body">
                 
                 <h1 id="多线程模型"><a href="#多线程模型" class="headerlink" title="多线程模型"></a>多线程模型</h1><p>asio 的多线程模型有两种，IOServicePool 和 IOThreadPool</p>
-<img src="/2024/08/01/%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B8%8Basio%E7%9A%84%E4%BD%BF%E7%94%A8/image-20240801133223177.png" srcset="/img/loading.gif" lazyload class="" title="多线程模型">
+<h1 id="IOServicePool"><a href="#IOServicePool" class="headerlink" title="IOServicePool"></a>IOServicePool</h1><p>IOServicePool模型：</p>
+<img src="/2024/08/01/%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B8%8Basio%E7%9A%84%E4%BD%BF%E7%94%A8/image-20240801133223177.png" srcset="/img/loading.gif" lazyload class="" title="IOServicePool模型">
 
 <p>特点:</p>
 <ol>
@@ -309,7 +311,7 @@
 <li>不同的 socket，回调函数可能由不同的线程调用，如果回调函数中进行了共享数据的修改，就会存在线程安全问题，这时可以在回调函数中加锁或者使用逻辑队列的方式</li>
 <li>多线程模式极大的提高了并发能力；单线程模式下如果回调函数调用时间过长，会影响后续函数的调用；通过逻辑队列的方式将网络线程和逻辑线程解耦合了，不会出现前一个调用时间影响下一个回调触发的问题</li>
 </ol>
-<h1 id="IOServicePool实现"><a href="#IOServicePool实现" class="headerlink" title="IOServicePool实现"></a>IOServicePool实现</h1><p>本质就是一个线程池，基本功能就是根据构造函数传入的数量创建n个线程和 io_context，然后每个线程跑一个 io_context，这样就可以并发处理不同 io_context 读写事件了。</p>
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>本质就是一个线程池，基本功能就是根据构造函数传入的数量创建n个线程和 io_context，然后每个线程跑一个 io_context，这样就可以并发处理不同 io_context 读写事件了。</p>
 <p>io_context.run() 阻塞住的原因是调用之前 io_context 已经注册了监听事件。如果没有其他任务需要执行，那么<code>io_context</code>就会停止工作，导致所有正在进行的异步操作都被取消。</p>
 <p>这时，我们需要使用<code>boost::asio::io_context::work</code>对象来防止<code>io_context</code>停止工作。<code>boost::asio::io_context::work</code>的作用是持有一个指向<code>io_context</code>的引用，并通过创建一个“工作”项来保证<code>io_context</code>不会停止工作，直到work对象被销毁或者调用<code>reset()</code>方法为止。当所有异步操作完成后，程序可以使用<code>work.reset()</code>方法来释放<code>io_context</code>，从而让其正常退出。</p>
 <p>线程池要继承单例模板类，使用 vector 来存储多个 io_context 实例、对应的 work、及线程；采用简单的轮询算法实现负载均衡</p>
@@ -324,6 +326,16 @@
 
 
 <p>代码地址：<a target="_blank" rel="noopener" href="https://github.com/proacane/boost-asio-learn">proacane&#x2F;boost-asio-learn (github.com)</a></p>
+<h1 id="IOThreadPool"><a href="#IOThreadPool" class="headerlink" title="IOThreadPool"></a>IOThreadPool</h1><p>IOThreadPool 模型：只创建一个 io_context 用来监听读写事件，让 io_context.run() 在多个线程中调用，这样回调函数就会被不同的线程触发</p>
+<p>问题：</p>
+<p>​	同一个 socket 的回调函数可能在不同的线程里，如果两个线程同时调用回调函数来进行 IO 操作，就会产生并发问题</p>
+<img src="/2024/08/01/%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B8%8Basio%E7%9A%84%E4%BD%BF%E7%94%A8/Inkedimage-20240802135142490_LI.jpg" srcset="/img/loading.gif" lazyload class="" title="IOThreadPool模型">
+
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> IOTHREADPOOL_ASIOTHREADPOOL_H</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> IOTHREADPOOL_ASIOTHREADPOOL_H</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;Singleton.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;boost/asio.hpp&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;vector&gt;</span></span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">AsioThreadPool</span> : <span class="hljs-keyword">public</span> Singleton&lt;AsioThreadPool&gt; &#123;<br>    <span class="hljs-keyword">friend</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Singleton</span>&lt;AsioThreadPool&gt;;<br><br><span class="hljs-keyword">public</span>:<br>    ~<span class="hljs-built_in">AsioThreadPool</span>() &#123;&#125;;<br><br>    <span class="hljs-built_in">AsioThreadPool</span>(<span class="hljs-type">const</span> AsioThreadPool &amp;) = <span class="hljs-keyword">delete</span>;<br><br>    AsioThreadPool &amp;<span class="hljs-keyword">operator</span>=(<span class="hljs-type">const</span> AsioThreadPool &amp;) = <span class="hljs-keyword">delete</span>;<br><br>    boost::<span class="hljs-function">asio::io_context &amp;<span class="hljs-title">getIOService</span><span class="hljs-params">()</span></span>;<br><br>    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">stop</span><span class="hljs-params">()</span></span>;<br><br><span class="hljs-keyword">private</span>:<br>    <span class="hljs-built_in">AsioThreadPool</span>(<span class="hljs-type">int</span> threadNum = std::thread::<span class="hljs-built_in">hardware_concurrency</span>());<br><br>    boost::asio::io_context _service;<br>    std::unique_ptr&lt;boost::asio::io_context::work&gt; _work;<br>    <span class="hljs-comment">// 管理线程</span><br>    std::vector&lt;std::thread&gt; _threads;<br>&#125;;<br><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span> <span class="hljs-comment">//IOTHREADPOOL_ASIOTHREADPOOL_H</span></span><br></code></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;../include/AsioThreadPool.h&quot;</span></span><br><br>AsioThreadPool::<span class="hljs-built_in">AsioThreadPool</span>(<span class="hljs-type">int</span> threadNum):_work(<span class="hljs-keyword">new</span> boost::asio::io_context::<span class="hljs-built_in">work</span>(_service)) &#123;<br>    <span class="hljs-comment">// 绑定 work 对象</span><br>    <span class="hljs-comment">// 创建线程</span><br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; threadNum; i++) &#123;<br>        _threads.<span class="hljs-built_in">emplace_back</span>([<span class="hljs-keyword">this</span>]() &#123;<br>            _service.<span class="hljs-built_in">run</span>();<br>        &#125;);<br>    &#125;<br>&#125;<br><br>boost::<span class="hljs-function">asio::io_context &amp;<span class="hljs-title">AsioThreadPool::getIOService</span><span class="hljs-params">()</span> </span>&#123;<br>    <span class="hljs-keyword">return</span> _service;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">AsioThreadPool::stop</span><span class="hljs-params">()</span> </span>&#123;<br>    <span class="hljs-comment">// 释放 io_context 的 work</span><br>    _work.<span class="hljs-built_in">reset</span>();<br>    <span class="hljs-keyword">for</span>(<span class="hljs-keyword">auto</span> &amp;t:_threads)&#123;<br>        t.<span class="hljs-built_in">join</span>();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="strand-改进"><a href="#strand-改进" class="headerlink" title="strand 改进"></a>strand 改进</h2><p>当socket就绪后并不是由多个线程调用每个socket注册的回调函数，而是将回调函数投递给strand管理的队列，再由strand统一调度派发；为了让回调函数被派发到strand的队列，我们只需要在注册回调函数时加一层strand的包装即可。</p>
 
                 
               </div>
@@ -413,6 +425,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2024/08/02/%E8%AF%B4%E6%98%8E/" title="说明">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">说明</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
