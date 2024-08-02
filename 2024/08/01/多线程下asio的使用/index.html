@@ -28,8 +28,9 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/2024/08/01/%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B8%8Basio%E7%9A%84%E4%BD%BF%E7%94%A8/image-20240801133223177.png">
 <meta property="og:image" content="http://example.com/2024/08/01/%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B8%8Basio%E7%9A%84%E4%BD%BF%E7%94%A8/Inkedimage-20240802135142490_LI.jpg">
+<meta property="og:image" content="http://example.com/2024/08/01/%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B8%8Basio%E7%9A%84%E4%BD%BF%E7%94%A8/image-20240802145345080.png">
 <meta property="article:published_time" content="2024-08-01T05:31:38.000Z">
-<meta property="article:modified_time" content="2024-08-02T08:06:53.039Z">
+<meta property="article:modified_time" content="2024-08-02T08:14:52.564Z">
 <meta property="article:author" content="proacene">
 <meta property="article:tag" content="原创">
 <meta name="twitter:card" content="summary_large_image">
@@ -239,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.3k 字
+          1.6k 字
         
       </span>
     
@@ -250,7 +251,7 @@
         
         
         
-          11 分钟
+          14 分钟
         
       </span>
     
@@ -333,6 +334,25 @@
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;../include/AsioThreadPool.h&quot;</span></span><br><br>AsioThreadPool::<span class="hljs-built_in">AsioThreadPool</span>(<span class="hljs-type">int</span> threadNum):_work(<span class="hljs-keyword">new</span> boost::asio::io_context::<span class="hljs-built_in">work</span>(_service)) &#123;<br>    <span class="hljs-comment">// 绑定 work 对象</span><br>    <span class="hljs-comment">// 创建线程</span><br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; threadNum; i++) &#123;<br>        _threads.<span class="hljs-built_in">emplace_back</span>([<span class="hljs-keyword">this</span>]() &#123;<br>            _service.<span class="hljs-built_in">run</span>();<br>        &#125;);<br>    &#125;<br>&#125;<br><br>boost::<span class="hljs-function">asio::io_context &amp;<span class="hljs-title">AsioThreadPool::getIOService</span><span class="hljs-params">()</span> </span>&#123;<br>    <span class="hljs-keyword">return</span> _service;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">AsioThreadPool::stop</span><span class="hljs-params">()</span> </span>&#123;<br>    <span class="hljs-comment">// 释放 io_context 的 work</span><br>    _work.<span class="hljs-built_in">reset</span>();<br>    <span class="hljs-keyword">for</span>(<span class="hljs-keyword">auto</span> &amp;t:_threads)&#123;<br>        t.<span class="hljs-built_in">join</span>();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <h2 id="strand-改进"><a href="#strand-改进" class="headerlink" title="strand 改进"></a>strand 改进</h2><p>当socket就绪后并不是由多个线程调用每个socket注册的回调函数，而是将回调函数投递给strand管理的队列，再由strand统一调度派发；为了让回调函数被派发到strand的队列，我们只需要在注册回调函数时加一层strand的包装即可。</p>
+<img src="/2024/08/01/%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B8%8Basio%E7%9A%84%E4%BD%BF%E7%94%A8/image-20240802145345080.png" srcset="/img/loading.gif" lazyload class="">
+
+<p>CSession 中增加 strand 成员变量：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c++">boost::asio::strand&lt;boost::asio::io_context::executor_type&gt; _strand;<br></code></pre></td></tr></table></figure>
+
+<p>strand 的初始化：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c++">_strand(io_context.<span class="hljs-built_in">get_executor</span>())<br></code></pre></td></tr></table></figure>
+
+<p>绑定：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c++">_socket.<span class="hljs-built_in">async_read_some</span>(boost::asio::<span class="hljs-built_in">buffer</span>(_data, MAX_LENGTH),<br>        boost::asio::<span class="hljs-built_in">bind_executor</span>(_strand, std::<span class="hljs-built_in">bind</span>(&amp;CSession::HandleRead, <span class="hljs-keyword">this</span>,<br>            std::placeholders::_1, std::placeholders::_2, <span class="hljs-built_in">SharedSelf</span>())));<br></code></pre></td></tr></table></figure>
+
+
+
+<h2 id="main-函数修改"><a href="#main-函数修改" class="headerlink" title="main 函数修改"></a>main 函数修改</h2><p>因为 io_context.run() 是运行在线程池中的，所以线程池相当于是个主线程；CServer 创建后需要线程需要阻塞住，当收到停止信号时，再继续执行</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;iostream&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;csignal&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;include/CServer.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;include/AsioThreadPool.h&quot;</span></span><br>std::mutex mutex_quit;<br><span class="hljs-type">bool</span> bstop = <span class="hljs-literal">false</span>;<br>std::condition_variable cond_quit;<br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span> </span>&#123;<br>    <span class="hljs-keyword">try</span> &#123;<br>        <span class="hljs-keyword">auto</span> pool = AsioThreadPool::<span class="hljs-built_in">getInstance</span>();<br><br>        boost::asio::io_context ioc;<br>        <span class="hljs-comment">// 这两个信号注册到 ioc 中</span><br>        boost::<span class="hljs-function">asio::signal_set <span class="hljs-title">signals</span><span class="hljs-params">(ioc,SIGINT,SIGTERM)</span></span>;<br>        <span class="hljs-comment">// 异步等待信号被触发</span><br>        signals.<span class="hljs-built_in">async_wait</span>([&amp;ioc,&amp;pool](<span class="hljs-keyword">auto</span>,<span class="hljs-keyword">auto</span>)&#123;<br>            <span class="hljs-comment">// 收到了就停止服务器</span><br>            ioc.<span class="hljs-built_in">stop</span>();<br>            pool-&gt;<span class="hljs-built_in">stop</span>();<br>            std::unique_lock&lt;std::mutex&gt; <span class="hljs-built_in">lock</span>(mutex_quit);<br>            bstop = <span class="hljs-literal">true</span>;<br>            cond_quit.<span class="hljs-built_in">notify_one</span>();<br>        &#125;);<br>        <span class="hljs-function">CServer <span class="hljs-title">server</span><span class="hljs-params">(pool-&gt;getIOService(), <span class="hljs-number">1234</span>)</span></span>;<br>        &#123;<br>            <span class="hljs-function">std::unique_lock&lt;std::mutex&gt; <span class="hljs-title">lock</span><span class="hljs-params">(mutex_quit)</span></span>;<br>            <span class="hljs-keyword">while</span>(!bstop)&#123;<br>                <span class="hljs-comment">// 收到停止信号前阻塞</span><br>                cond_quit.<span class="hljs-built_in">wait</span>(lock);<br>            &#125;<br><br>        &#125;<br>    &#125; <span class="hljs-built_in">catch</span> (std::exception &amp;e) &#123;<br>        std::cerr &lt;&lt; <span class="hljs-string">&quot;Unknown error occurred: &quot;</span> &lt;&lt; e.<span class="hljs-built_in">what</span>() &lt;&lt; std::endl;<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<p>代码地址：<a target="_blank" rel="noopener" href="https://github.com/proacane/boost-asio-learn">proacane&#x2F;boost-asio-learn (github.com)</a></p>
 
                 
               </div>
