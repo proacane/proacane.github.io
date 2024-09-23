@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Proacane的个人微博</title><link>https://proacane.github.io</link><description>学无止境</description><copyright>Proacane的个人微博</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true</url><title>avatar</title><link>https://proacane.github.io</link></image><lastBuildDate>Mon, 23 Sep 2024 06:05:22 +0000</lastBuildDate><managingEditor>Proacane的个人微博</managingEditor><ttl>60</ttl><webMaster>Proacane的个人微博</webMaster><item><title>Asio协程</title><link>https://proacane.github.io/post/Asio-xie-cheng.html</link><description># 协程&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Proacane的个人微博</title><link>https://proacane.github.io</link><description>学无止境</description><copyright>Proacane的个人微博</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true</url><title>avatar</title><link>https://proacane.github.io</link></image><lastBuildDate>Mon, 23 Sep 2024 06:06:47 +0000</lastBuildDate><managingEditor>Proacane的个人微博</managingEditor><ttl>60</ttl><webMaster>Proacane的个人微博</webMaster><item><title>Asio协程</title><link>https://proacane.github.io/post/Asio-xie-cheng.html</link><description># 协程&#13;
 协程，英文Coroutines，是一种基于线程之上，但又比线程更加轻量级的存在，这种由程序员自己写程序来管理的轻量级线程叫做『用户空间线程』，具有对内核来说不可见的特性。</description><guid isPermaLink="true">https://proacane.github.io/post/Asio-xie-cheng.html</guid><pubDate>Mon, 23 Sep 2024 06:04:56 +0000</pubDate></item><item><title>Grpc</title><link>https://proacane.github.io/post/Grpc.html</link><description># 下载&#13;
 &#13;
 vcpkg install grpc&#13;
@@ -36,7 +36,7 @@ WebSocket连接需要一个有状态对象，由Beast中的一个类模板websoc
 &#13;
 ## Http包头信息&#13;
 &#13;
-一个标准的HTTP报文头通常由请求头和响应头两部分组成。</description><guid isPermaLink="true">https://proacane.github.io/post/Asio-shi-xian-Http-fu-wu-qi.html</guid><pubDate>Mon, 23 Sep 2024 06:00:29 +0000</pubDate></item><item><title>测试</title><link>https://proacane.github.io/post/ce-shi.html</link><description>测试。</description><guid isPermaLink="true">https://proacane.github.io/post/ce-shi.html</guid><pubDate>Mon, 23 Sep 2024 05:58:14 +0000</pubDate></item><item><title>多线程Asio</title><link>https://proacane.github.io/post/duo-xian-cheng-Asio.html</link><description># 多线程模型&#13;
+一个标准的HTTP报文头通常由请求头和响应头两部分组成。</description><guid isPermaLink="true">https://proacane.github.io/post/Asio-shi-xian-Http-fu-wu-qi.html</guid><pubDate>Mon, 23 Sep 2024 06:00:29 +0000</pubDate></item><item><title>多线程Asio</title><link>https://proacane.github.io/post/duo-xian-cheng-Asio.html</link><description># 多线程模型&#13;
 asio 的多线程模型有两种，IOServicePool 和 IOThreadPool&#13;
 # IOServicePool&#13;
 IOServicePool模型：&#13;
