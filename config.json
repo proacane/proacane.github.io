@@ -1,8 +1,8 @@
 {
     "title":"Proacane的个人微博",
     "subTitle":"学无止境",
-    "avatarUrl":"https://github.com/proacane/proacane.github.io/blob/main/static/avatar.svg",
-    "faviconUrl":"https://github.com/proacane/proacane.github.io/blob/main/static/avatar.svg",
+    "avatarUrl":"https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true",
+    "faviconUrl":"https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true",
     "GMEEK_VERSION":"last",
     "script":"<script src='https://blog.meekdai.com/Gmeek/plugins/GmeekTOC.js'></script><script src='https://blog.meekdai.com/Gmeek/plugins/lightbox.js'></script>"
 }
