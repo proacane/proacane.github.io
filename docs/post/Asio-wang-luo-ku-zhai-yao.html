@@ -1,0 +1,2155 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="# 单线程通信流程
+![image-20240726093453475](https://github.com/user-attachments/assets/a53c98fb-c149-403e-b102-d110905e5eb4)
+# 同步读写的示例
+- 服务端
+```cpp
+#include <iostream>
+#include <boost/asio.hpp>
+#include <memory>
+#include <set>
+#include <thread>
+
+using namespace std;
+using namespace boost::asio::ip;
+
+const int MAX_LEN = 1024;
+typedef shared_ptr<tcp::socket> socket_ptr;
+std::set<std::shared_ptr<std::thread>> thread_set;
+
+void session(socket_ptr sock) {
+    try {
+        for (;;) {
+            char data[MAX_LEN];
+            boost::system::error_code error;
+            // 读取客户端发送的内容
+            size_t length = sock->read_some(boost::asio::buffer(data), error);
+
+            if (error == boost::asio::error::eof) {
+                std::cout << 'Connection closed by peer\n';
+                break;
+            } else if (error) {
+                throw boost::system::system_error(error);
+            }
+
+            std::string received_message(data, length);
+            std::cout << 'Received from ' << sock->remote_endpoint().address().to_string() << ': ' << received_message << std::endl;
+
+            // 转换为 大写
+            // Process the received message (e.g., convert to upper case)
+            std::transform(received_message.begin(), received_message.end(), received_message.begin(), ::toupper);
+            // 再写回客户端
+            boost::asio::write(*sock, boost::asio::buffer(received_message));
+        }
+    } catch (exception &e) {
+        std::cerr << 'Exception in thread: ' << e.what() << std::endl;
+    }
+}
+
+// 建立连接
+void server(boost::asio::io_context &ios, unsigned short port_num) {
+    boost::asio::ip::tcp::acceptor acceptor(ios, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port_num));
+    std::cout << 'Server started on port ' << port_num << std::endl;
+    // 没连接就一直阻塞
+    for (;;) {
+        socket_ptr socket(new tcp::socket(ios));
+        acceptor.accept(*socket);
+        std::cout << 'Accepted connection from ' << socket->remote_endpoint().address().to_string() << std::endl;
+        // 为连接创建一个线程，开始通信
+        auto t = make_shared<std::thread>(session, socket);
+        thread_set.insert(t);
+    }
+}
+
+int main() {
+    try {
+        boost::asio::io_context ios;
+        server(ios, 1234);
+        // 防止有数据未传输完时，主线程就结束了
+        for (auto &t: thread_set) {
+            t->join();
+        }
+    } catch (exception &e) {
+        std::cerr << 'Exception in main thread: ' << e.what() << std::endl;
+    }
+
+    return 0;
+}
+```
+# 异步读写示例
+![image-20240726095026183](https://github.com/user-attachments/assets/bd621b55-b962-4eaf-9488-5bb8f7c47f79)
+## 注意的问题
+
+- 异常处理时，为防止 Session 二次析构，需要继承 std::enable_shared_from_this<CSession>；使用智能指针与 map 延长 Session 的生命周期
+
+- 发送消息时，为保证消息的有序性，需要增加发送队列
+
+- 处理粘包问题，消息结构采用 TLV 格式，使用 async_read_some 比较麻烦，使用 async_read 比较简洁
+
+  ​							![image-20240726093831093](https://github.com/user-attachments/assets/45a3e63d-53d6-4124-b647-d9742bc9897e)
+
+  - async_read_some：回调函数里不断判断已经处理的字节
+
+  - async_read：两层回调，第一层处理包头，第二层处理包体
+
+- 字节序的处理：发送前转换为网络字节序，接收后转换为本地字节序 (boost::asio::detail::socket_ops::network_to_host_short)
+- 发送数据使用jsoncpp进行封装
+
+CServer.h
+
+```cpp
+#ifndef ASYNCSERVER_CSERVER_H
+#define ASYNCSERVER_CSERVER_H
+#include 'CSession.h'
+#include <iostream>
+class CSession;
+/**
+ * 接受新的客户端连接，每个连接都会创建一个新的 Session 实例
+ */
+class CServer {
+public:
+    CServer(boost::asio::io_context &ioc, unsigned short port_num);
+    // 移除已处理完成的 Session 实例
+    void clear_session(std::string uuid);
+private:
+    // 创建一个新的 Session 并等待新的客户端连接
+    void start_accept();
+    // 处理新的客户端连接，将其加入 _sessions 中，并启动数据处理
+    void handle_accept(std::shared_ptr<CSession> newSession, const boost::system::error_code errorCode);
+
+    boost::asio::io_context &_ioc;
+    boost::asio::ip::tcp::acceptor _acceptor;
+    // 管理连接
+    std::map<std::string, std::shared_ptr<CSession>> _sessions;
+
+};
+#endif //ASYNCSERVER_CSERVER_H
+```
+
+CServer.cpp
+
+```cpp
+#include 'CServer.h'
+
+CServer::CServer(boost::asio::io_context &ioc, unsigned short port_num) : _ioc(ioc),
+                                                                          _acceptor(_ioc,
+                                                                                    tcp::endpoint(tcp::v4(),
+                                                                                                  port_num)) {
+    std::cout << 'Acceptor create succeed! port number is ' << port_num << std::endl;
+    start_accept();
+}
+
+void CServer::start_accept() {
+    // 使用智能指针来管理 session 实例，以保证不会二次析构
+    std::shared_ptr<CSession> newSession = std::make_shared<CSession>(_ioc, this);
+    // 绑定到服务上，新连接到来后触发回调函数 handle_accept
+    _acceptor.async_accept(newSession->get_socket(),
+                           std::bind(&CServer::handle_accept, this, newSession, std::placeholders::_1));
+
+}
+
+void CServer::handle_accept(std::shared_ptr<CSession> newSession, const boost::system::error_code errorCode) {
+    if (errorCode.value() != 0) {
+        std::cerr << 'Error occurred int accept connection: ' << errorCode.message() << std::endl;
+//        delete newSession;
+    } else {
+        std::cout << 'Accept connection successfully ' << std::endl;
+        std::cout << 'Start dealing with data' << std::endl;
+        // 没问题就开始处理数据
+        newSession->start();
+        _sessions.insert(std::make_pair(newSession->get_uuid(), newSession));
+    }
+    // 继续接收新连接
+    start_accept();
+}
+
+void CServer::clear_session(std::string uuid) {
+    _sessions.erase(uuid);
+}
+```
+
+CSession.h
+
+```cpp
+#ifndef ASYNCSERVER_CSESSION_H
+#define ASYNCSERVER_CSESSION_H
+
+#include <boost/asio.hpp>
+#include <string>
+#include <map>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include 'CServer.h'
+#include <queue>
+#include 'global.h'
+using namespace boost::asio::ip;
+
+class MsgNode;
+
+class CServer;
+
+/**
+ * 处理客户端消息收发
+ */
+class CSession : public std::enable_shared_from_this<CSession> {
+public:
+    tcp::socket &get_socket() { return _socket; };
+
+    explicit CSession(boost::asio::io_context &ioc, CServer *server);;
+
+    // 开始处理
+    void start();
+
+    // 获取 uuid
+    std::string &get_uuid() {
+        return _uuid;
+    }
+
+    /**
+     * 发送接口
+     * @param msg
+     * @param max_length
+     */
+    void send(char *msg, int max_length);
+
+    void send(std::string msg);
+private:
+    // 写的回调函数
+    void handle_write(const boost::system::error_code &errorCode, std::shared_ptr<CSession> self_shared);
+
+    // 读的回调函数
+    void handle_read(const boost::system::error_code &errorCode, size_t bytes_transferred,
+                     std::shared_ptr<CSession> self_shared);
+
+    /**
+     * 读取包头的回调函数
+     * @param errorCode
+     * @param bytes_transferred
+     * @param self_shared
+     */
+    void handle_read_head(const boost::system::error_code &errorCode, size_t bytes_transferred,
+                          std::shared_ptr<CSession> self_shared);
+
+    /**
+     * 读取包体的回调函数
+     * @param errorCode
+     * @param bytes_transferred
+     * @param self_shared
+     */
+    void handle_read_msg(const boost::system::error_code &errorCode, size_t bytes_transferred,
+                          std::shared_ptr<CSession> self_shared);
+    // 打印收到的二进制数据
+    void printRecvData(char* data, int length);
+    // 传输信息的 socket
+    tcp::socket _socket;
+    // 保存数据
+
+    char _data[MAX_LENGTH];
+    // 隶属于哪个 server
+    CServer *_server;
+    // uuid
+    std::string _uuid;
+    // 发送队列
+    std::queue<std::shared_ptr<MsgNode>> _send_que;
+    // 互斥锁，防止多个线程同时操作队列
+    std::mutex _send_lock;
+
+    //收到的消息结构
+    std::shared_ptr<MsgNode> _recv_msg_node;
+    // 标记头部结构是否接收完毕
+    bool _b_head_parse;
+    //收到的头部结构
+    std::shared_ptr<MsgNode> _recv_head_node;
+};
+
+/**
+ * 消息结点
+ */
+class MsgNode {
+    friend class CSession;
+
+public:
+    MsgNode(const char *msg, short max_len) : _total_len(max_len + HEAD_LENGTH), _cur_len(0) {
+        _data = new char[_total_len + 1];
+        // 包头字节序转换
+        int max_len_host = boost::asio::detail::socket_ops::host_to_network_short(max_len);
+        // 记录长度
+        memcpy(_data, &max_len_host, HEAD_LENGTH);
+        // 拷贝数据
+        memcpy(_data + HEAD_LENGTH, msg, max_len);
+        _data[_total_len] = '\0';
+    }
+
+    MsgNode(short max_len) : _total_len(max_len), _cur_len(0) {
+        _data = new char[_total_len + 1];
+    }
+
+    void clear() {
+        memset(_data, 0, _total_len);
+        _cur_len = 0;
+    }
+
+    ~MsgNode() {
+        delete[] _data;
+    }
+
+private:
+    int _cur_len;
+    int _total_len;
+    char *_data;
+};
+
+#endif //ASYNCSERVER_CSESSION_H
+```
+
+CSession.cpp
+
+```cpp
+#include <iostream>
+#include <iomanip>
+#include <thread>
+#include 'CSession.h'
+#include 'proto/msg.pb.h'
+#include <json/json.h>
+#include <json/value.h>
+#include <json/reader.h>
+
+CSession::CSession(boost::asio::io_context &ioc, CServer *server) : _socket(ioc), _server(server),
+                                                                    _b_head_parse(false) {
+    std::memset(_data, '\0', MAX_LENGTH);
+    // 生成 uuid
+    boost::uuids::uuid a_uuid = boost::uuids::random_generator()();
+    _uuid = boost::uuids::to_string(a_uuid);
+    _recv_head_node = std::make_shared<MsgNode>(HEAD_LENGTH);
+}
+
+void CSession::start() {
+    std::cout << 'First read from client\n';
+    // 先在客户端读取
+//    _socket.async_read_some(boost::asio::buffer(_data, MAX_LENGTH),
+//                            std::bind(&CSession::handle_read, this, std::placeholders::_1, std::placeholders::_2,
+//                                      shared_from_this()));
+    boost::asio::async_read(_socket, boost::asio::buffer(_recv_head_node->_data, HEAD_LENGTH),
+                            std::bind(&CSession::handle_read_head, this, std::placeholders::_1, std::placeholders::_2,
+                                      shared_from_this()));
+}
+
+void CSession::handle_read(const boost::system::error_code &errorCode, size_t bytes_transferred,
+                           std::shared_ptr<CSession> self_shared) {
+    try {
+        if (errorCode.value() != 0) {
+            std::cerr << 'Error occurred int read: ' << errorCode.message() << std::endl;
+            // 移除连接
+            _server->clear_session(_uuid);
+            return;
+        }
+        // 测试粘包
+        printRecvData(_data, bytes_transferred);
+        std::chrono::milliseconds dura(2000);
+        std::this_thread::sleep_for(dura);
+
+        while (bytes_transferred > 0) {
+            // 记录已经处理的字节
+            int copy_len = 0;
+            if (!_b_head_parse) {
+                // 头部结构还没处理完
+                // 收到的数据比头部结构小
+                if (bytes_transferred < HEAD_LENGTH) {
+                    // 先接收这部分数据
+                    memcpy(_recv_head_node->_data + _recv_head_node->_cur_len, _data + copy_len, bytes_transferred);
+                    _recv_head_node->_cur_len += bytes_transferred;
+                    // 清空 _data 缓冲区
+                    memset(_data, 0, MAX_LENGTH);
+                    // 继续监听
+                    _socket.async_read_some(boost::asio::buffer(_data, MAX_LENGTH),
+                                            std::bind(&CSession::handle_read, this, std::placeholders::_1,
+                                                      std::placeholders::_2, self_shared));
+                    return;
+                }
+                // 收到的数据比头部结构大
+                int head_remain = HEAD_LENGTH - _recv_head_node->_cur_len;
+                // 剩余的数据拷贝进去
+                memcpy(_recv_head_node->_data + _recv_head_node->_cur_len, _data + copy_len, head_remain);
+                _recv_head_node->_cur_len += head_remain;
+                copy_len += head_remain;
+                bytes_transferred -= head_remain;
+                // 获取头部存储的数据
+                short data_len = 0;
+                memcpy(&data_len, _recv_head_node->_data, HEAD_LENGTH);
+                // 网络字节序转换为本地字节序
+                data_len = boost::asio::detail::socket_ops::network_to_host_short(data_len);
+
+                std::cout << 'Receive data length is ' << data_len << std::endl;
+                if (data_len > MAX_LENGTH) {
+                    std::cerr << 'invalid data length is ' << data_len << std::endl;
+                    return;
+                }
+
+                _recv_msg_node = std::make_shared<MsgNode>(data_len);
+                // 剩余消息的长度小于数据长度，先将部分数据放到节点里
+                if (bytes_transferred < data_len) {
+                    memcpy(_recv_msg_node->_data + _recv_msg_node->_cur_len, _data + copy_len, bytes_transferred);
+                    _recv_msg_node->_cur_len += bytes_transferred;
+                    // 重置 _data
+                    memset(_data, 0, MAX_LENGTH);
+                    // 继续监听
+                    _socket.async_read_some(boost::asio::buffer(_data, MAX_LENGTH),
+                                            std::bind(&CSession::handle_read, this, std::placeholders::_1,
+                                                      std::placeholders::_2, self_shared));
+                    // 头部处理完毕
+                    _b_head_parse = true;
+                    return;
+                }
+                // 大于直接拷贝进去
+                memcpy(_recv_msg_node->_data + _recv_msg_node->_cur_len, _data + copy_len, data_len);
+                _recv_msg_node->_cur_len += data_len;
+                copy_len += data_len;
+                bytes_transferred -= data_len;
+                _recv_msg_node->_data[_recv_msg_node->_total_len] = '\0';
+                // 调用 send 测试
+//                MsgData msgData;
+//                std::string receive_data;
+//                msgData.ParseFromString(std::string(_recv_msg_node->_data,_recv_msg_node->_total_len));
+//                std::cout << 'Received msg id  is ' << msgData.id() << ' msg data is ' << msgData.data() <<std:: endl;
+//                std::string return_str = 'Server has received msg, msg data is ' + msgData.data();
+//                MsgData msgReturn;
+//                msgReturn.set_id(msgData.id());
+//                msgReturn.set_data(return_str);
+//                msgReturn.SerializeToString(&return_str);
+//                send(return_str);
+//                Json::Reader reader;
+//                Json::Value root;
+//                reader.parse(std::string(_recv_msg_node->_data, _recv_msg_node->_total_len), root);
+//                std::cout << 'Received msg id  is ' << root['id'].asInt() << ' msg data is ''
+//                          << root['data'].asString() << ''' << std::endl;
+//                root['data'] = 'Server has received msg, msg data is '' + root['data'].asString() + ''';
+//                send(root.toStyledString());
+                send(_recv_msg_node->_data,_recv_msg_node->_total_len);
+                // 继续处理剩下的字节
+                _b_head_parse = false;
+                _recv_head_node->clear();
+                // 如果小于等于0，其实只能等于
+                if (bytes_transferred <= 0) {
+                    // 需要继续监听
+                    memset(_data, 0, MAX_LENGTH);
+                    _socket.async_read_some(boost::asio::buffer(_data, MAX_LENGTH),
+                                            std::bind(&CSession::handle_read, this, std::placeholders::_1,
+                                                      std::placeholders::_2, self_shared));
+                    return;
+                }
+                // 继续循环即可
+                continue;
+            }
+            // 头结点处理完了，接着处理数据
+            int remain_msg = _recv_msg_node->_total_len - _recv_msg_node->_cur_len;
+            // 本次接收的还是不足
+            if (bytes_transferred < remain_msg) {
+                // 拷贝部分，继续监听
+                memcpy(_recv_msg_node->_data + _recv_msg_node->_cur_len, _data + copy_len, bytes_transferred);
+                _recv_msg_node->_cur_len += bytes_transferred;
+                memset(_data, 0, MAX_LENGTH);
+                _socket.async_read_some(boost::asio::buffer(_data, MAX_LENGTH),
+                                        std::bind(&CSession::handle_read, this, std::placeholders::_1,
+                                                  std::placeholders::_2, self_shared));
+                return;
+            }
+            // 足够就直接拷进来
+            memcpy(_recv_msg_node->_data + _recv_msg_node->_cur_len, _data + copy_len, remain_msg);
+            _recv_msg_node->_cur_len += remain_msg;
+            copy_len += remain_msg;
+            bytes_transferred -= remain_msg;
+            _recv_msg_node->_data[_recv_msg_node->_total_len] = '\0';
+            // 调用 send 测试
+//            MsgData msgData;
+//            std::string receive_data;
+//            msgData.ParseFromString(std::string(_recv_msg_node->_data,_recv_msg_node->_total_len));
+//            std::cout << 'Received msg id  is ' << msgData.id() << ' msg data is ' << msgData.data() <<std:: endl;
+//            std::string return_str = 'Server has received msg, msg data is ' + msgData.data();
+//            MsgData msgReturn;
+//            msgReturn.set_id(msgData.id());
+//            msgReturn.set_data(return_str);
+//            msgReturn.SerializeToString(&return_str);
+//            send(return_str);
+
+//            Json::Reader reader;
+//            Json::Value root;
+//            reader.parse(std::string(_recv_msg_node->_data, _recv_msg_node->_total_len), root);
+//            std::cout << 'Received msg id  is ' << root['id'].asInt() << ' msg data is ''
+//                      << root['data'].asString() << ''' << std::endl;
+//            root['data'] = 'Server has received msg, msg data is '' + root['data'].asString() + ''';
+//            send(root.toStyledString());
+            send(_recv_msg_node->_data,_recv_msg_node->_total_len);
+
+            // 继续处理
+            _b_head_parse = false;
+            _recv_head_node->clear();
+
+            // 不剩下数据了
+            if (bytes_transferred <= 0) {
+                memset(_data, 0, MAX_LENGTH);
+                _socket.async_read_some(boost::asio::buffer(_data, MAX_LENGTH),
+                                        std::bind(&CSession::handle_read, this, std::placeholders::_1,
+                                                  std::placeholders::_2, self_shared));
+                return;
+            }
+            // 继续循环即可
+            continue;
+        }
+    } catch (std::exception &e) {
+        std::cerr << 'Error occurred: ' << e.what() << std::endl;
+    }
+}
+
+void CSession::handle_write(const boost::system::error_code &errorCode, std::shared_ptr<CSession> self_shared) {
+    try {
+        if (errorCode.value() != 0) {
+            std::cerr << 'Error occurred int write: ' << errorCode.message() << std::endl;
+            // 移除连接
+            _server->clear_session(_uuid);
+            return;
+        }
+        std::cout << 'Writing to client successfully, start read from client\n';
+
+        // 调用回调函数表示已经写完
+        // 上锁
+        std::lock_guard<std::mutex> lock(_send_lock);
+        // 弹出队列元素
+        _send_que.pop();
+        // 队列是否还有剩下的消息
+        if (!_send_que.empty()) {
+            // 接着发，直到队列为空
+            auto &msgNode = _send_que.front();
+            boost::asio::async_write(_socket, boost::asio::buffer(msgNode->_data, msgNode->_total_len),
+                                     std::bind(&CSession::handle_write, this, std::placeholders::_1, self_shared));
+        }
+    } catch (std::exception &e) {
+        std::cerr << 'Error occurred: ' << e.what() << std::endl;
+    }
+}
+
+void CSession::send(char *msg, int max_length) {
+    // 发送队列里是否还有没法完的数据
+    bool pending = false;
+    // 上锁
+    std::lock_guard<std::mutex> lock(_send_lock);
+    int send_que_size = _send_que.size();
+    if (send_que_size > MAX_SENDQUE) {
+        std::cout << 'session: ' << _uuid << ' send que fulled, size is ' << MAX_SENDQUE << std::endl;
+        return;
+    }
+
+    // 加入发送队列
+    _send_que.push(std::make_shared<MsgNode>(msg, max_length));
+
+    if (send_que_size > 0) {
+        // 之前的还没发送完
+        return;
+    }
+    auto &msgNode = _send_que.front();
+    // 之前的全发完了，直接发本次的
+    boost::asio::async_write(_socket, boost::asio::buffer(msgNode->_data, msgNode->_total_len),
+                             std::bind(&CSession::handle_write, this, std::placeholders::_1, shared_from_this()));
+}
+
+// 打印二进制数据
+void CSession::printRecvData(char *data, int length) {
+    std::stringstream ss;
+    std::string result = '0x';
+    for (int i = 0; i < length; i++) {
+        std::string hexstr;
+        ss << std::hex << std::setw(2) << std::setfill('0') << int(data[i]) << std::endl;
+        ss >> hexstr;
+        result += hexstr;
+    }
+    std::cout << 'receive raw data is : ' << result << std::endl;;
+}
+
+void CSession::send(std::string msg) {
+    std::lock_guard<std::mutex> lock(_send_lock);
+
+    int send_que_size = _send_que.size();
+    if (send_que_size > MAX_SENDQUE) {
+        std::cout << 'session: ' << _uuid << ' send que fulled, size is ' << MAX_SENDQUE << std::endl;
+        return;
+    }
+    _send_que.push(std::make_shared<MsgNode>(msg.c_str(), msg.size()));
+    if (send_que_size > 0) {
+        return;
+    }
+    auto &msgNode = _send_que.front();
+    boost::asio::async_write(_socket, boost::asio::buffer(msgNode->_data, msgNode->_total_len),
+                             std::bind(&CSession::handle_write, this, std::placeholders::_1, shared_from_this()));
+}
+
+void CSession::handle_read_head(const boost::system::error_code &errorCode, size_t bytes_transferred,
+                                std::shared_ptr<CSession> self_shared) {
+    if (errorCode.value() != 0) {
+        std::cerr << 'Error occurred in read head: ' << errorCode.message() << std::endl;
+        // 移除连接
+        _server->clear_session(_uuid);
+        return;
+    }
+    if (bytes_transferred < HEAD_LENGTH) {
+        std::cerr << 'Error occurred in read head: ' << errorCode.message() << std::endl;
+        // 移除连接
+        _server->clear_session(_uuid);
+        return;
+    }
+    // 解析包头数据
+    short data_len = 0;
+    memcpy(&data_len, _recv_head_node->_data, HEAD_LENGTH);
+    // 字节序处理
+    data_len = boost::asio::detail::socket_ops::network_to_host_short(data_len);
+    if (data_len > MAX_LENGTH) {
+        std::cerr << 'Invalid data length :' << data_len << std::endl;
+        _server->clear_session(_uuid);
+        return;
+    }
+
+
+    _recv_msg_node = std::make_shared<MsgNode>(data_len);
+
+    boost::asio::async_read(_socket, boost::asio::buffer(_recv_msg_node->_data, _recv_msg_node->_total_len),
+                            std::bind(&CSession::handle_read_msg, this, std::placeholders::_1, std::placeholders::_2,
+                                      shared_from_this()));
+}
+
+void CSession::handle_read_msg(const boost::system::error_code &errorCode, size_t bytes_transferred,
+                               std::shared_ptr<CSession> self_shared) {
+    if (errorCode.value() != 0) {
+        std::cerr << 'Error occurred in read msg: ' << errorCode.message() << std::endl;
+        // 移除连接
+        _server->clear_session(_uuid);
+        return;
+    }
+    // 测试粘包
+    printRecvData(_recv_msg_node->_data, bytes_transferred);
+    std::chrono::milliseconds dura(2000);
+    std::this_thread::sleep_for(dura);
+    _recv_msg_node->_data[_recv_msg_node->_total_len] = '\0';
+    std::cout << 'receive data is ' << _recv_msg_node->_data << std::endl;
+    send(_recv_msg_node->_data, _recv_msg_node->_total_len);
+    // 再次接收头部数据
+    _recv_head_node->clear();
+    boost::asio::async_read(_socket, boost::asio::buffer(_recv_head_node->_data, HEAD_LENGTH),
+                            std::bind(&CSession::handle_read_head, this, std::placeholders::_1, std::placeholders::_2,
+                                      shared_from_this()));
+}
+```。">
+<meta property="og:title" content="Asio网络库摘要">
+<meta property="og:description" content="# 单线程通信流程
+![image-20240726093453475](https://github.com/user-attachments/assets/a53c98fb-c149-403e-b102-d110905e5eb4)
+# 同步读写的示例
+- 服务端
+```cpp
+#include <iostream>
+#include <boost/asio.hpp>
+#include <memory>
+#include <set>
+#include <thread>
+
+using namespace std;
+using namespace boost::asio::ip;
+
+const int MAX_LEN = 1024;
+typedef shared_ptr<tcp::socket> socket_ptr;
+std::set<std::shared_ptr<std::thread>> thread_set;
+
+void session(socket_ptr sock) {
+    try {
+        for (;;) {
+            char data[MAX_LEN];
+            boost::system::error_code error;
+            // 读取客户端发送的内容
+            size_t length = sock->read_some(boost::asio::buffer(data), error);
+
+            if (error == boost::asio::error::eof) {
+                std::cout << 'Connection closed by peer\n';
+                break;
+            } else if (error) {
+                throw boost::system::system_error(error);
+            }
+
+            std::string received_message(data, length);
+            std::cout << 'Received from ' << sock->remote_endpoint().address().to_string() << ': ' << received_message << std::endl;
+
+            // 转换为 大写
+            // Process the received message (e.g., convert to upper case)
+            std::transform(received_message.begin(), received_message.end(), received_message.begin(), ::toupper);
+            // 再写回客户端
+            boost::asio::write(*sock, boost::asio::buffer(received_message));
+        }
+    } catch (exception &e) {
+        std::cerr << 'Exception in thread: ' << e.what() << std::endl;
+    }
+}
+
+// 建立连接
+void server(boost::asio::io_context &ios, unsigned short port_num) {
+    boost::asio::ip::tcp::acceptor acceptor(ios, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port_num));
+    std::cout << 'Server started on port ' << port_num << std::endl;
+    // 没连接就一直阻塞
+    for (;;) {
+        socket_ptr socket(new tcp::socket(ios));
+        acceptor.accept(*socket);
+        std::cout << 'Accepted connection from ' << socket->remote_endpoint().address().to_string() << std::endl;
+        // 为连接创建一个线程，开始通信
+        auto t = make_shared<std::thread>(session, socket);
+        thread_set.insert(t);
+    }
+}
+
+int main() {
+    try {
+        boost::asio::io_context ios;
+        server(ios, 1234);
+        // 防止有数据未传输完时，主线程就结束了
+        for (auto &t: thread_set) {
+            t->join();
+        }
+    } catch (exception &e) {
+        std::cerr << 'Exception in main thread: ' << e.what() << std::endl;
+    }
+
+    return 0;
+}
+```
+# 异步读写示例
+![image-20240726095026183](https://github.com/user-attachments/assets/bd621b55-b962-4eaf-9488-5bb8f7c47f79)
+## 注意的问题
+
+- 异常处理时，为防止 Session 二次析构，需要继承 std::enable_shared_from_this<CSession>；使用智能指针与 map 延长 Session 的生命周期
+
+- 发送消息时，为保证消息的有序性，需要增加发送队列
+
+- 处理粘包问题，消息结构采用 TLV 格式，使用 async_read_some 比较麻烦，使用 async_read 比较简洁
+
+  ​							![image-20240726093831093](https://github.com/user-attachments/assets/45a3e63d-53d6-4124-b647-d9742bc9897e)
+
+  - async_read_some：回调函数里不断判断已经处理的字节
+
+  - async_read：两层回调，第一层处理包头，第二层处理包体
+
+- 字节序的处理：发送前转换为网络字节序，接收后转换为本地字节序 (boost::asio::detail::socket_ops::network_to_host_short)
+- 发送数据使用jsoncpp进行封装
+
+CServer.h
+
+```cpp
+#ifndef ASYNCSERVER_CSERVER_H
+#define ASYNCSERVER_CSERVER_H
+#include 'CSession.h'
+#include <iostream>
+class CSession;
+/**
+ * 接受新的客户端连接，每个连接都会创建一个新的 Session 实例
+ */
+class CServer {
+public:
+    CServer(boost::asio::io_context &ioc, unsigned short port_num);
+    // 移除已处理完成的 Session 实例
+    void clear_session(std::string uuid);
+private:
+    // 创建一个新的 Session 并等待新的客户端连接
+    void start_accept();
+    // 处理新的客户端连接，将其加入 _sessions 中，并启动数据处理
+    void handle_accept(std::shared_ptr<CSession> newSession, const boost::system::error_code errorCode);
+
+    boost::asio::io_context &_ioc;
+    boost::asio::ip::tcp::acceptor _acceptor;
+    // 管理连接
+    std::map<std::string, std::shared_ptr<CSession>> _sessions;
+
+};
+#endif //ASYNCSERVER_CSERVER_H
+```
+
+CServer.cpp
+
+```cpp
+#include 'CServer.h'
+
+CServer::CServer(boost::asio::io_context &ioc, unsigned short port_num) : _ioc(ioc),
+                                                                          _acceptor(_ioc,
+                                                                                    tcp::endpoint(tcp::v4(),
+                                                                                                  port_num)) {
+    std::cout << 'Acceptor create succeed! port number is ' << port_num << std::endl;
+    start_accept();
+}
+
+void CServer::start_accept() {
+    // 使用智能指针来管理 session 实例，以保证不会二次析构
+    std::shared_ptr<CSession> newSession = std::make_shared<CSession>(_ioc, this);
+    // 绑定到服务上，新连接到来后触发回调函数 handle_accept
+    _acceptor.async_accept(newSession->get_socket(),
+                           std::bind(&CServer::handle_accept, this, newSession, std::placeholders::_1));
+
+}
+
+void CServer::handle_accept(std::shared_ptr<CSession> newSession, const boost::system::error_code errorCode) {
+    if (errorCode.value() != 0) {
+        std::cerr << 'Error occurred int accept connection: ' << errorCode.message() << std::endl;
+//        delete newSession;
+    } else {
+        std::cout << 'Accept connection successfully ' << std::endl;
+        std::cout << 'Start dealing with data' << std::endl;
+        // 没问题就开始处理数据
+        newSession->start();
+        _sessions.insert(std::make_pair(newSession->get_uuid(), newSession));
+    }
+    // 继续接收新连接
+    start_accept();
+}
+
+void CServer::clear_session(std::string uuid) {
+    _sessions.erase(uuid);
+}
+```
+
+CSession.h
+
+```cpp
+#ifndef ASYNCSERVER_CSESSION_H
+#define ASYNCSERVER_CSESSION_H
+
+#include <boost/asio.hpp>
+#include <string>
+#include <map>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include 'CServer.h'
+#include <queue>
+#include 'global.h'
+using namespace boost::asio::ip;
+
+class MsgNode;
+
+class CServer;
+
+/**
+ * 处理客户端消息收发
+ */
+class CSession : public std::enable_shared_from_this<CSession> {
+public:
+    tcp::socket &get_socket() { return _socket; };
+
+    explicit CSession(boost::asio::io_context &ioc, CServer *server);;
+
+    // 开始处理
+    void start();
+
+    // 获取 uuid
+    std::string &get_uuid() {
+        return _uuid;
+    }
+
+    /**
+     * 发送接口
+     * @param msg
+     * @param max_length
+     */
+    void send(char *msg, int max_length);
+
+    void send(std::string msg);
+private:
+    // 写的回调函数
+    void handle_write(const boost::system::error_code &errorCode, std::shared_ptr<CSession> self_shared);
+
+    // 读的回调函数
+    void handle_read(const boost::system::error_code &errorCode, size_t bytes_transferred,
+                     std::shared_ptr<CSession> self_shared);
+
+    /**
+     * 读取包头的回调函数
+     * @param errorCode
+     * @param bytes_transferred
+     * @param self_shared
+     */
+    void handle_read_head(const boost::system::error_code &errorCode, size_t bytes_transferred,
+                          std::shared_ptr<CSession> self_shared);
+
+    /**
+     * 读取包体的回调函数
+     * @param errorCode
+     * @param bytes_transferred
+     * @param self_shared
+     */
+    void handle_read_msg(const boost::system::error_code &errorCode, size_t bytes_transferred,
+                          std::shared_ptr<CSession> self_shared);
+    // 打印收到的二进制数据
+    void printRecvData(char* data, int length);
+    // 传输信息的 socket
+    tcp::socket _socket;
+    // 保存数据
+
+    char _data[MAX_LENGTH];
+    // 隶属于哪个 server
+    CServer *_server;
+    // uuid
+    std::string _uuid;
+    // 发送队列
+    std::queue<std::shared_ptr<MsgNode>> _send_que;
+    // 互斥锁，防止多个线程同时操作队列
+    std::mutex _send_lock;
+
+    //收到的消息结构
+    std::shared_ptr<MsgNode> _recv_msg_node;
+    // 标记头部结构是否接收完毕
+    bool _b_head_parse;
+    //收到的头部结构
+    std::shared_ptr<MsgNode> _recv_head_node;
+};
+
+/**
+ * 消息结点
+ */
+class MsgNode {
+    friend class CSession;
+
+public:
+    MsgNode(const char *msg, short max_len) : _total_len(max_len + HEAD_LENGTH), _cur_len(0) {
+        _data = new char[_total_len + 1];
+        // 包头字节序转换
+        int max_len_host = boost::asio::detail::socket_ops::host_to_network_short(max_len);
+        // 记录长度
+        memcpy(_data, &max_len_host, HEAD_LENGTH);
+        // 拷贝数据
+        memcpy(_data + HEAD_LENGTH, msg, max_len);
+        _data[_total_len] = '\0';
+    }
+
+    MsgNode(short max_len) : _total_len(max_len), _cur_len(0) {
+        _data = new char[_total_len + 1];
+    }
+
+    void clear() {
+        memset(_data, 0, _total_len);
+        _cur_len = 0;
+    }
+
+    ~MsgNode() {
+        delete[] _data;
+    }
+
+private:
+    int _cur_len;
+    int _total_len;
+    char *_data;
+};
+
+#endif //ASYNCSERVER_CSESSION_H
+```
+
+CSession.cpp
+
+```cpp
+#include <iostream>
+#include <iomanip>
+#include <thread>
+#include 'CSession.h'
+#include 'proto/msg.pb.h'
+#include <json/json.h>
+#include <json/value.h>
+#include <json/reader.h>
+
+CSession::CSession(boost::asio::io_context &ioc, CServer *server) : _socket(ioc), _server(server),
+                                                                    _b_head_parse(false) {
+    std::memset(_data, '\0', MAX_LENGTH);
+    // 生成 uuid
+    boost::uuids::uuid a_uuid = boost::uuids::random_generator()();
+    _uuid = boost::uuids::to_string(a_uuid);
+    _recv_head_node = std::make_shared<MsgNode>(HEAD_LENGTH);
+}
+
+void CSession::start() {
+    std::cout << 'First read from client\n';
+    // 先在客户端读取
+//    _socket.async_read_some(boost::asio::buffer(_data, MAX_LENGTH),
+//                            std::bind(&CSession::handle_read, this, std::placeholders::_1, std::placeholders::_2,
+//                                      shared_from_this()));
+    boost::asio::async_read(_socket, boost::asio::buffer(_recv_head_node->_data, HEAD_LENGTH),
+                            std::bind(&CSession::handle_read_head, this, std::placeholders::_1, std::placeholders::_2,
+                                      shared_from_this()));
+}
+
+void CSession::handle_read(const boost::system::error_code &errorCode, size_t bytes_transferred,
+                           std::shared_ptr<CSession> self_shared) {
+    try {
+        if (errorCode.value() != 0) {
+            std::cerr << 'Error occurred int read: ' << errorCode.message() << std::endl;
+            // 移除连接
+            _server->clear_session(_uuid);
+            return;
+        }
+        // 测试粘包
+        printRecvData(_data, bytes_transferred);
+        std::chrono::milliseconds dura(2000);
+        std::this_thread::sleep_for(dura);
+
+        while (bytes_transferred > 0) {
+            // 记录已经处理的字节
+            int copy_len = 0;
+            if (!_b_head_parse) {
+                // 头部结构还没处理完
+                // 收到的数据比头部结构小
+                if (bytes_transferred < HEAD_LENGTH) {
+                    // 先接收这部分数据
+                    memcpy(_recv_head_node->_data + _recv_head_node->_cur_len, _data + copy_len, bytes_transferred);
+                    _recv_head_node->_cur_len += bytes_transferred;
+                    // 清空 _data 缓冲区
+                    memset(_data, 0, MAX_LENGTH);
+                    // 继续监听
+                    _socket.async_read_some(boost::asio::buffer(_data, MAX_LENGTH),
+                                            std::bind(&CSession::handle_read, this, std::placeholders::_1,
+                                                      std::placeholders::_2, self_shared));
+                    return;
+                }
+                // 收到的数据比头部结构大
+                int head_remain = HEAD_LENGTH - _recv_head_node->_cur_len;
+                // 剩余的数据拷贝进去
+                memcpy(_recv_head_node->_data + _recv_head_node->_cur_len, _data + copy_len, head_remain);
+                _recv_head_node->_cur_len += head_remain;
+                copy_len += head_remain;
+                bytes_transferred -= head_remain;
+                // 获取头部存储的数据
+                short data_len = 0;
+                memcpy(&data_len, _recv_head_node->_data, HEAD_LENGTH);
+                // 网络字节序转换为本地字节序
+                data_len = boost::asio::detail::socket_ops::network_to_host_short(data_len);
+
+                std::cout << 'Receive data length is ' << data_len << std::endl;
+                if (data_len > MAX_LENGTH) {
+                    std::cerr << 'invalid data length is ' << data_len << std::endl;
+                    return;
+                }
+
+                _recv_msg_node = std::make_shared<MsgNode>(data_len);
+                // 剩余消息的长度小于数据长度，先将部分数据放到节点里
+                if (bytes_transferred < data_len) {
+                    memcpy(_recv_msg_node->_data + _recv_msg_node->_cur_len, _data + copy_len, bytes_transferred);
+                    _recv_msg_node->_cur_len += bytes_transferred;
+                    // 重置 _data
+                    memset(_data, 0, MAX_LENGTH);
+                    // 继续监听
+                    _socket.async_read_some(boost::asio::buffer(_data, MAX_LENGTH),
+                                            std::bind(&CSession::handle_read, this, std::placeholders::_1,
+                                                      std::placeholders::_2, self_shared));
+                    // 头部处理完毕
+                    _b_head_parse = true;
+                    return;
+                }
+                // 大于直接拷贝进去
+                memcpy(_recv_msg_node->_data + _recv_msg_node->_cur_len, _data + copy_len, data_len);
+                _recv_msg_node->_cur_len += data_len;
+                copy_len += data_len;
+                bytes_transferred -= data_len;
+                _recv_msg_node->_data[_recv_msg_node->_total_len] = '\0';
+                // 调用 send 测试
+//                MsgData msgData;
+//                std::string receive_data;
+//                msgData.ParseFromString(std::string(_recv_msg_node->_data,_recv_msg_node->_total_len));
+//                std::cout << 'Received msg id  is ' << msgData.id() << ' msg data is ' << msgData.data() <<std:: endl;
+//                std::string return_str = 'Server has received msg, msg data is ' + msgData.data();
+//                MsgData msgReturn;
+//                msgReturn.set_id(msgData.id());
+//                msgReturn.set_data(return_str);
+//                msgReturn.SerializeToString(&return_str);
+//                send(return_str);
+//                Json::Reader reader;
+//                Json::Value root;
+//                reader.parse(std::string(_recv_msg_node->_data, _recv_msg_node->_total_len), root);
+//                std::cout << 'Received msg id  is ' << root['id'].asInt() << ' msg data is ''
+//                          << root['data'].asString() << ''' << std::endl;
+//                root['data'] = 'Server has received msg, msg data is '' + root['data'].asString() + ''';
+//                send(root.toStyledString());
+                send(_recv_msg_node->_data,_recv_msg_node->_total_len);
+                // 继续处理剩下的字节
+                _b_head_parse = false;
+                _recv_head_node->clear();
+                // 如果小于等于0，其实只能等于
+                if (bytes_transferred <= 0) {
+                    // 需要继续监听
+                    memset(_data, 0, MAX_LENGTH);
+                    _socket.async_read_some(boost::asio::buffer(_data, MAX_LENGTH),
+                                            std::bind(&CSession::handle_read, this, std::placeholders::_1,
+                                                      std::placeholders::_2, self_shared));
+                    return;
+                }
+                // 继续循环即可
+                continue;
+            }
+            // 头结点处理完了，接着处理数据
+            int remain_msg = _recv_msg_node->_total_len - _recv_msg_node->_cur_len;
+            // 本次接收的还是不足
+            if (bytes_transferred < remain_msg) {
+                // 拷贝部分，继续监听
+                memcpy(_recv_msg_node->_data + _recv_msg_node->_cur_len, _data + copy_len, bytes_transferred);
+                _recv_msg_node->_cur_len += bytes_transferred;
+                memset(_data, 0, MAX_LENGTH);
+                _socket.async_read_some(boost::asio::buffer(_data, MAX_LENGTH),
+                                        std::bind(&CSession::handle_read, this, std::placeholders::_1,
+                                                  std::placeholders::_2, self_shared));
+                return;
+            }
+            // 足够就直接拷进来
+            memcpy(_recv_msg_node->_data + _recv_msg_node->_cur_len, _data + copy_len, remain_msg);
+            _recv_msg_node->_cur_len += remain_msg;
+            copy_len += remain_msg;
+            bytes_transferred -= remain_msg;
+            _recv_msg_node->_data[_recv_msg_node->_total_len] = '\0';
+            // 调用 send 测试
+//            MsgData msgData;
+//            std::string receive_data;
+//            msgData.ParseFromString(std::string(_recv_msg_node->_data,_recv_msg_node->_total_len));
+//            std::cout << 'Received msg id  is ' << msgData.id() << ' msg data is ' << msgData.data() <<std:: endl;
+//            std::string return_str = 'Server has received msg, msg data is ' + msgData.data();
+//            MsgData msgReturn;
+//            msgReturn.set_id(msgData.id());
+//            msgReturn.set_data(return_str);
+//            msgReturn.SerializeToString(&return_str);
+//            send(return_str);
+
+//            Json::Reader reader;
+//            Json::Value root;
+//            reader.parse(std::string(_recv_msg_node->_data, _recv_msg_node->_total_len), root);
+//            std::cout << 'Received msg id  is ' << root['id'].asInt() << ' msg data is ''
+//                      << root['data'].asString() << ''' << std::endl;
+//            root['data'] = 'Server has received msg, msg data is '' + root['data'].asString() + ''';
+//            send(root.toStyledString());
+            send(_recv_msg_node->_data,_recv_msg_node->_total_len);
+
+            // 继续处理
+            _b_head_parse = false;
+            _recv_head_node->clear();
+
+            // 不剩下数据了
+            if (bytes_transferred <= 0) {
+                memset(_data, 0, MAX_LENGTH);
+                _socket.async_read_some(boost::asio::buffer(_data, MAX_LENGTH),
+                                        std::bind(&CSession::handle_read, this, std::placeholders::_1,
+                                                  std::placeholders::_2, self_shared));
+                return;
+            }
+            // 继续循环即可
+            continue;
+        }
+    } catch (std::exception &e) {
+        std::cerr << 'Error occurred: ' << e.what() << std::endl;
+    }
+}
+
+void CSession::handle_write(const boost::system::error_code &errorCode, std::shared_ptr<CSession> self_shared) {
+    try {
+        if (errorCode.value() != 0) {
+            std::cerr << 'Error occurred int write: ' << errorCode.message() << std::endl;
+            // 移除连接
+            _server->clear_session(_uuid);
+            return;
+        }
+        std::cout << 'Writing to client successfully, start read from client\n';
+
+        // 调用回调函数表示已经写完
+        // 上锁
+        std::lock_guard<std::mutex> lock(_send_lock);
+        // 弹出队列元素
+        _send_que.pop();
+        // 队列是否还有剩下的消息
+        if (!_send_que.empty()) {
+            // 接着发，直到队列为空
+            auto &msgNode = _send_que.front();
+            boost::asio::async_write(_socket, boost::asio::buffer(msgNode->_data, msgNode->_total_len),
+                                     std::bind(&CSession::handle_write, this, std::placeholders::_1, self_shared));
+        }
+    } catch (std::exception &e) {
+        std::cerr << 'Error occurred: ' << e.what() << std::endl;
+    }
+}
+
+void CSession::send(char *msg, int max_length) {
+    // 发送队列里是否还有没法完的数据
+    bool pending = false;
+    // 上锁
+    std::lock_guard<std::mutex> lock(_send_lock);
+    int send_que_size = _send_que.size();
+    if (send_que_size > MAX_SENDQUE) {
+        std::cout << 'session: ' << _uuid << ' send que fulled, size is ' << MAX_SENDQUE << std::endl;
+        return;
+    }
+
+    // 加入发送队列
+    _send_que.push(std::make_shared<MsgNode>(msg, max_length));
+
+    if (send_que_size > 0) {
+        // 之前的还没发送完
+        return;
+    }
+    auto &msgNode = _send_que.front();
+    // 之前的全发完了，直接发本次的
+    boost::asio::async_write(_socket, boost::asio::buffer(msgNode->_data, msgNode->_total_len),
+                             std::bind(&CSession::handle_write, this, std::placeholders::_1, shared_from_this()));
+}
+
+// 打印二进制数据
+void CSession::printRecvData(char *data, int length) {
+    std::stringstream ss;
+    std::string result = '0x';
+    for (int i = 0; i < length; i++) {
+        std::string hexstr;
+        ss << std::hex << std::setw(2) << std::setfill('0') << int(data[i]) << std::endl;
+        ss >> hexstr;
+        result += hexstr;
+    }
+    std::cout << 'receive raw data is : ' << result << std::endl;;
+}
+
+void CSession::send(std::string msg) {
+    std::lock_guard<std::mutex> lock(_send_lock);
+
+    int send_que_size = _send_que.size();
+    if (send_que_size > MAX_SENDQUE) {
+        std::cout << 'session: ' << _uuid << ' send que fulled, size is ' << MAX_SENDQUE << std::endl;
+        return;
+    }
+    _send_que.push(std::make_shared<MsgNode>(msg.c_str(), msg.size()));
+    if (send_que_size > 0) {
+        return;
+    }
+    auto &msgNode = _send_que.front();
+    boost::asio::async_write(_socket, boost::asio::buffer(msgNode->_data, msgNode->_total_len),
+                             std::bind(&CSession::handle_write, this, std::placeholders::_1, shared_from_this()));
+}
+
+void CSession::handle_read_head(const boost::system::error_code &errorCode, size_t bytes_transferred,
+                                std::shared_ptr<CSession> self_shared) {
+    if (errorCode.value() != 0) {
+        std::cerr << 'Error occurred in read head: ' << errorCode.message() << std::endl;
+        // 移除连接
+        _server->clear_session(_uuid);
+        return;
+    }
+    if (bytes_transferred < HEAD_LENGTH) {
+        std::cerr << 'Error occurred in read head: ' << errorCode.message() << std::endl;
+        // 移除连接
+        _server->clear_session(_uuid);
+        return;
+    }
+    // 解析包头数据
+    short data_len = 0;
+    memcpy(&data_len, _recv_head_node->_data, HEAD_LENGTH);
+    // 字节序处理
+    data_len = boost::asio::detail::socket_ops::network_to_host_short(data_len);
+    if (data_len > MAX_LENGTH) {
+        std::cerr << 'Invalid data length :' << data_len << std::endl;
+        _server->clear_session(_uuid);
+        return;
+    }
+
+
+    _recv_msg_node = std::make_shared<MsgNode>(data_len);
+
+    boost::asio::async_read(_socket, boost::asio::buffer(_recv_msg_node->_data, _recv_msg_node->_total_len),
+                            std::bind(&CSession::handle_read_msg, this, std::placeholders::_1, std::placeholders::_2,
+                                      shared_from_this()));
+}
+
+void CSession::handle_read_msg(const boost::system::error_code &errorCode, size_t bytes_transferred,
+                               std::shared_ptr<CSession> self_shared) {
+    if (errorCode.value() != 0) {
+        std::cerr << 'Error occurred in read msg: ' << errorCode.message() << std::endl;
+        // 移除连接
+        _server->clear_session(_uuid);
+        return;
+    }
+    // 测试粘包
+    printRecvData(_recv_msg_node->_data, bytes_transferred);
+    std::chrono::milliseconds dura(2000);
+    std::this_thread::sleep_for(dura);
+    _recv_msg_node->_data[_recv_msg_node->_total_len] = '\0';
+    std::cout << 'receive data is ' << _recv_msg_node->_data << std::endl;
+    send(_recv_msg_node->_data, _recv_msg_node->_total_len);
+    // 再次接收头部数据
+    _recv_head_node->clear();
+    boost::asio::async_read(_socket, boost::asio::buffer(_recv_head_node->_data, HEAD_LENGTH),
+                            std::bind(&CSession::handle_read_head, this, std::placeholders::_1, std::placeholders::_2,
+                                      shared_from_this()));
+}
+```。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://proacane.github.io/post/Asio-wang-luo-ku-zhai-yao.html">
+<meta property="og:image" content="https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true">
+<title>Asio网络库摘要</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">Asio网络库摘要</h1>
+<div class="title-right">
+    <a href="https://proacane.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/proacane/proacane.github.io/issues/2" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><h1>单线程通信流程</h1>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a53c98fb-c149-403e-b102-d110905e5eb4"><img src="https://github.com/user-attachments/assets/a53c98fb-c149-403e-b102-d110905e5eb4" alt="image-20240726093453475" style="max-width: 100%;"></a></p>
+<h1>同步读写的示例</h1>
+<ul>
+<li>服务端</li>
+</ul>
+<div class="highlight highlight-source-c++"><pre class="notranslate">#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>iostream<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>boost/asio.hpp<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>memory<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>set<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>thread<span class="pl-pds">&gt;</span></span>
+
+<span class="pl-k">using</span> <span class="pl-k">namespace</span> <span class="pl-en">std</span><span class="pl-k">;</span>
+<span class="pl-k">using</span> <span class="pl-k">namespace</span> <span class="pl-en">boost</span>::asio::ip<span class="pl-k">;</span>
+
+<span class="pl-k">const</span> <span class="pl-k">int</span> MAX_LEN = <span class="pl-c1">1024</span>;
+<span class="pl-k">typedef</span> shared_ptr&lt;tcp::socket&gt; socket_ptr;
+std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
+
+<span class="pl-k">void</span> <span class="pl-en">session</span>(socket_ptr sock) {
+    <span class="pl-k">try</span> {
+        <span class="pl-k">for</span> (;;) {
+            <span class="pl-k">char</span> data[MAX_LEN];
+            boost::<span class="pl-c1">system</span>::error_code error;
+            <span class="pl-c"><span class="pl-c">//</span> 读取客户端发送的内容</span>
+            <span class="pl-c1">size_t</span> length = sock-&gt;<span class="pl-c1">read_some</span>(<span class="pl-c1">boost::asio::buffer</span>(data), error);
+
+            <span class="pl-k">if</span> (error == boost::asio::error::eof) {
+                std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Connection closed by peer<span class="pl-cce">\n</span><span class="pl-pds">"</span></span>;
+                <span class="pl-k">break</span>;
+            } <span class="pl-k">else</span> <span class="pl-k">if</span> (error) {
+                <span class="pl-k">throw</span> <span class="pl-smi">boost::system::system_error</span>(error);
+            }
+
+            std::string <span class="pl-smi">received_message</span>(data, length);
+            std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Received from <span class="pl-pds">"</span></span> &lt;&lt; sock-&gt;<span class="pl-c1">remote_endpoint</span>().<span class="pl-c1">address</span>().<span class="pl-c1">to_string</span>() &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>: <span class="pl-pds">"</span></span> &lt;&lt; received_message &lt;&lt; std::endl;
+
+            <span class="pl-c"><span class="pl-c">//</span> 转换为 大写</span>
+            <span class="pl-c"><span class="pl-c">//</span> Process the received message (e.g., convert to upper case)</span>
+            <span class="pl-c1">std::transform</span>(received_message.<span class="pl-c1">begin</span>(), received_message.<span class="pl-c1">end</span>(), received_message.<span class="pl-c1">begin</span>(), ::toupper);
+            <span class="pl-c"><span class="pl-c">//</span> 再写回客户端</span>
+            <span class="pl-c1">boost::asio::write</span>(*sock, <span class="pl-c1">boost::asio::buffer</span>(received_message));
+        }
+    } <span class="pl-k">catch</span> (<span class="pl-c1">exception</span> &amp;e) {
+        std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Exception in thread: <span class="pl-pds">"</span></span> &lt;&lt; e.<span class="pl-c1">what</span>() &lt;&lt; std::endl;
+    }
+}
+
+<span class="pl-c"><span class="pl-c">//</span> 建立连接</span>
+<span class="pl-k">void</span> <span class="pl-en">server</span>(boost::asio::io_context &amp;ios, <span class="pl-k">unsigned</span> <span class="pl-k">short</span> port_num) {
+    boost::asio::ip::tcp::acceptor <span class="pl-smi">acceptor</span>(ios, <span class="pl-c1">boost::asio::ip::tcp::endpoint</span>(<span class="pl-c1">boost::asio::ip::tcp::v4</span>(), port_num));
+    std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Server started on port <span class="pl-pds">"</span></span> &lt;&lt; port_num &lt;&lt; std::endl;
+    <span class="pl-c"><span class="pl-c">//</span> 没连接就一直阻塞</span>
+    <span class="pl-k">for</span> (;;) {
+        socket_ptr <span class="pl-smi">socket</span>(<span class="pl-k">new</span> <span class="pl-c1">tcp::socket</span>(ios));
+        acceptor.<span class="pl-c1">accept</span>(*socket);
+        std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Accepted connection from <span class="pl-pds">"</span></span> &lt;&lt; socket-&gt;<span class="pl-c1">remote_endpoint</span>().<span class="pl-c1">address</span>().<span class="pl-c1">to_string</span>() &lt;&lt; std::endl;
+        <span class="pl-c"><span class="pl-c">//</span> 为连接创建一个线程，开始通信</span>
+        <span class="pl-k">auto</span> t = make_shared&lt;std::thread&gt;(session, socket);
+        thread_set.<span class="pl-c1">insert</span>(t);
+    }
+}
+
+<span class="pl-k">int</span> <span class="pl-en">main</span>() {
+    <span class="pl-k">try</span> {
+        boost::asio::io_context ios;
+        <span class="pl-c1">server</span>(ios, <span class="pl-c1">1234</span>);
+        <span class="pl-c"><span class="pl-c">//</span> 防止有数据未传输完时，主线程就结束了</span>
+        <span class="pl-k">for</span> (<span class="pl-k">auto</span> &amp;t: thread_set) {
+            t-&gt;<span class="pl-c1">join</span>();
+        }
+    } <span class="pl-k">catch</span> (<span class="pl-c1">exception</span> &amp;e) {
+        std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Exception in main thread: <span class="pl-pds">"</span></span> &lt;&lt; e.<span class="pl-c1">what</span>() &lt;&lt; std::endl;
+    }
+
+    <span class="pl-k">return</span> <span class="pl-c1">0</span>;
+}</pre></div>
+<h1>异步读写示例</h1>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/bd621b55-b962-4eaf-9488-5bb8f7c47f79"><img src="https://github.com/user-attachments/assets/bd621b55-b962-4eaf-9488-5bb8f7c47f79" alt="image-20240726095026183" style="max-width: 100%;"></a></p>
+<h2>注意的问题</h2>
+<ul>
+<li>
+<p>异常处理时，为防止 Session 二次析构，需要继承 std::enable_shared_from_this；使用智能指针与 map 延长 Session 的生命周期</p>
+</li>
+<li>
+<p>发送消息时，为保证消息的有序性，需要增加发送队列</p>
+</li>
+<li>
+<p>处理粘包问题，消息结构采用 TLV 格式，使用 async_read_some 比较麻烦，使用 async_read 比较简洁</p>
+<p>​							<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/45a3e63d-53d6-4124-b647-d9742bc9897e"><img src="https://github.com/user-attachments/assets/45a3e63d-53d6-4124-b647-d9742bc9897e" alt="image-20240726093831093" style="max-width: 100%;"></a></p>
+<ul>
+<li>
+<p>async_read_some：回调函数里不断判断已经处理的字节</p>
+</li>
+<li>
+<p>async_read：两层回调，第一层处理包头，第二层处理包体</p>
+</li>
+</ul>
+</li>
+<li>
+<p>字节序的处理：发送前转换为网络字节序，接收后转换为本地字节序 (boost::asio::detail::socket_ops::network_to_host_short)</p>
+</li>
+<li>
+<p>发送数据使用jsoncpp进行封装</p>
+</li>
+</ul>
+<p>CServer.h</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate">#<span class="pl-k">ifndef</span> ASYNCSERVER_CSERVER_H
+#<span class="pl-k">define</span> <span class="pl-en">ASYNCSERVER_CSERVER_H</span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">"</span>CSession.h<span class="pl-pds">"</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>iostream<span class="pl-pds">&gt;</span></span>
+<span class="pl-k">class</span> <span class="pl-en">CSession</span>;
+<span class="pl-c"><span class="pl-c">/*</span>*</span>
+<span class="pl-c"> * 接受新的客户端连接，每个连接都会创建一个新的 Session 实例</span>
+<span class="pl-c"> <span class="pl-c">*/</span></span>
+<span class="pl-k">class</span> <span class="pl-en">CServer</span> {
+<span class="pl-k">public:</span>
+    <span class="pl-en">CServer</span>(boost::asio::io_context &amp;ioc, <span class="pl-k">unsigned</span> <span class="pl-k">short</span> port_num);
+    <span class="pl-c"><span class="pl-c">//</span> 移除已处理完成的 Session 实例</span>
+    <span class="pl-k">void</span> <span class="pl-en">clear_session</span>(std::string uuid);
+<span class="pl-k">private:</span>
+    <span class="pl-c"><span class="pl-c">//</span> 创建一个新的 Session 并等待新的客户端连接</span>
+    <span class="pl-k">void</span> <span class="pl-en">start_accept</span>();
+    <span class="pl-c"><span class="pl-c">//</span> 处理新的客户端连接，将其加入 _sessions 中，并启动数据处理</span>
+    <span class="pl-k">void</span> <span class="pl-en">handle_accept</span>(std::shared_ptr&lt;CSession&gt; newSession, <span class="pl-k">const</span> boost::system::error_code errorCode);
+
+    boost::asio::io_context &amp;_ioc;
+    boost::asio::ip::tcp::acceptor _acceptor;
+    <span class="pl-c"><span class="pl-c">//</span> 管理连接</span>
+    std::map&lt;std::string, std::shared_ptr&lt;CSession&gt;&gt; _sessions;
+
+};
+#<span class="pl-k">endif</span> <span class="pl-c"><span class="pl-c">//</span>ASYNCSERVER_CSERVER_H</span></pre></div>
+<p>CServer.cpp</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate">#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">"</span>CServer.h<span class="pl-pds">"</span></span>
+
+<span class="pl-en">CServer::CServer</span>(boost::asio::io_context &amp;ioc, <span class="pl-k">unsigned</span> <span class="pl-k">short</span> port_num) : _ioc(ioc),
+                                                                          _acceptor(_ioc,
+                                                                                    <span class="pl-en">tcp::endpoint</span>(tcp::v4(),
+                                                                                                  port_num)) {
+    std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Acceptor create succeed! port number is <span class="pl-pds">"</span></span> &lt;&lt; port_num &lt;&lt; std::endl;
+    <span class="pl-c1">start_accept</span>();
+}
+
+<span class="pl-k">void</span> <span class="pl-en">CServer::start_accept</span>() {
+    <span class="pl-c"><span class="pl-c">//</span> 使用智能指针来管理 session 实例，以保证不会二次析构</span>
+    std::shared_ptr&lt;CSession&gt; newSession = std::make_shared&lt;CSession&gt;(_ioc, <span class="pl-c1">this</span>);
+    <span class="pl-c"><span class="pl-c">//</span> 绑定到服务上，新连接到来后触发回调函数 handle_accept</span>
+    _acceptor.<span class="pl-c1">async_accept</span>(newSession-&gt;<span class="pl-c1">get_socket</span>(),
+                           <span class="pl-c1">std::bind</span>(&amp;CServer::handle_accept, <span class="pl-c1">this</span>, newSession, std::placeholders::_1));
+
+}
+
+<span class="pl-k">void</span> <span class="pl-en">CServer::handle_accept</span>(std::shared_ptr&lt;CSession&gt; newSession, <span class="pl-k">const</span> boost::system::error_code errorCode) {
+    <span class="pl-k">if</span> (errorCode.<span class="pl-c1">value</span>() != <span class="pl-c1">0</span>) {
+        std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Error occurred int accept connection: <span class="pl-pds">"</span></span> &lt;&lt; errorCode.<span class="pl-c1">message</span>() &lt;&lt; std::endl;
+<span class="pl-c"><span class="pl-c">//</span>        delete newSession;</span>
+    } <span class="pl-k">else</span> {
+        std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Accept connection successfully <span class="pl-pds">"</span></span> &lt;&lt; std::endl;
+        std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Start dealing with data<span class="pl-pds">"</span></span> &lt;&lt; std::endl;
+        <span class="pl-c"><span class="pl-c">//</span> 没问题就开始处理数据</span>
+        newSession-&gt;<span class="pl-c1">start</span>();
+        _sessions.<span class="pl-c1">insert</span>(<span class="pl-c1">std::make_pair</span>(newSession-&gt;<span class="pl-c1">get_uuid</span>(), newSession));
+    }
+    <span class="pl-c"><span class="pl-c">//</span> 继续接收新连接</span>
+    <span class="pl-c1">start_accept</span>();
+}
+
+<span class="pl-k">void</span> <span class="pl-en">CServer::clear_session</span>(std::string uuid) {
+    _sessions.<span class="pl-c1">erase</span>(uuid);
+}</pre></div>
+<p>CSession.h</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate">#<span class="pl-k">ifndef</span> ASYNCSERVER_CSESSION_H
+#<span class="pl-k">define</span> <span class="pl-en">ASYNCSERVER_CSESSION_H</span>
+
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>boost/asio.hpp<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>string<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>map<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>boost/uuid/uuid_generators.hpp<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>boost/uuid/uuid_io.hpp<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">"</span>CServer.h<span class="pl-pds">"</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>queue<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">"</span>global.h<span class="pl-pds">"</span></span>
+<span class="pl-k">using</span> <span class="pl-k">namespace</span> <span class="pl-en">boost</span>::asio::ip<span class="pl-k">;</span>
+
+<span class="pl-k">class</span> <span class="pl-en">MsgNode</span>;
+
+<span class="pl-k">class</span> <span class="pl-en">CServer</span>;
+
+<span class="pl-c"><span class="pl-c">/*</span>*</span>
+<span class="pl-c"> * 处理客户端消息收发</span>
+<span class="pl-c"> <span class="pl-c">*/</span></span>
+<span class="pl-k">class</span> <span class="pl-en">CSession</span> : <span class="pl-k">public</span> <span class="pl-en">std</span>::enable_shared_from_this&lt;CSession&gt; {
+<span class="pl-k">public:</span>
+    tcp::socket &amp;<span class="pl-en">get_socket</span>() { <span class="pl-k">return</span> _socket; };
+
+    <span class="pl-k">explicit</span> <span class="pl-en">CSession</span>(boost::asio::io_context &amp;ioc, CServer *server);;
+
+    <span class="pl-c"><span class="pl-c">//</span> 开始处理</span>
+    <span class="pl-k">void</span> <span class="pl-en">start</span>();
+
+    <span class="pl-c"><span class="pl-c">//</span> 获取 uuid</span>
+    std::string &amp;<span class="pl-en">get_uuid</span>() {
+        <span class="pl-k">return</span> _uuid;
+    }
+
+    <span class="pl-c"><span class="pl-c">/*</span>*</span>
+<span class="pl-c">     * 发送接口</span>
+<span class="pl-c">     * @param msg</span>
+<span class="pl-c">     * @param max_length</span>
+<span class="pl-c">     <span class="pl-c">*/</span></span>
+    <span class="pl-k">void</span> <span class="pl-en">send</span>(<span class="pl-k">char</span> *msg, <span class="pl-k">int</span> max_length);
+
+    <span class="pl-k">void</span> <span class="pl-en">send</span>(std::string msg);
+<span class="pl-k">private:</span>
+    <span class="pl-c"><span class="pl-c">//</span> 写的回调函数</span>
+    <span class="pl-k">void</span> <span class="pl-en">handle_write</span>(<span class="pl-k">const</span> boost::system::error_code &amp;errorCode, std::shared_ptr&lt;CSession&gt; self_shared);
+
+    <span class="pl-c"><span class="pl-c">//</span> 读的回调函数</span>
+    <span class="pl-k">void</span> <span class="pl-en">handle_read</span>(<span class="pl-k">const</span> boost::system::error_code &amp;errorCode, <span class="pl-c1">size_t</span> bytes_transferred,
+                     std::shared_ptr&lt;CSession&gt; self_shared);
+
+    <span class="pl-c"><span class="pl-c">/*</span>*</span>
+<span class="pl-c">     * 读取包头的回调函数</span>
+<span class="pl-c">     * @param errorCode</span>
+<span class="pl-c">     * @param bytes_transferred</span>
+<span class="pl-c">     * @param self_shared</span>
+<span class="pl-c">     <span class="pl-c">*/</span></span>
+    <span class="pl-k">void</span> <span class="pl-en">handle_read_head</span>(<span class="pl-k">const</span> boost::system::error_code &amp;errorCode, <span class="pl-c1">size_t</span> bytes_transferred,
+                          std::shared_ptr&lt;CSession&gt; self_shared);
+
+    <span class="pl-c"><span class="pl-c">/*</span>*</span>
+<span class="pl-c">     * 读取包体的回调函数</span>
+<span class="pl-c">     * @param errorCode</span>
+<span class="pl-c">     * @param bytes_transferred</span>
+<span class="pl-c">     * @param self_shared</span>
+<span class="pl-c">     <span class="pl-c">*/</span></span>
+    <span class="pl-k">void</span> <span class="pl-en">handle_read_msg</span>(<span class="pl-k">const</span> boost::system::error_code &amp;errorCode, <span class="pl-c1">size_t</span> bytes_transferred,
+                          std::shared_ptr&lt;CSession&gt; self_shared);
+    <span class="pl-c"><span class="pl-c">//</span> 打印收到的二进制数据</span>
+    <span class="pl-k">void</span> <span class="pl-en">printRecvData</span>(<span class="pl-k">char</span>* data, <span class="pl-k">int</span> length);
+    <span class="pl-c"><span class="pl-c">//</span> 传输信息的 socket</span>
+    tcp::socket _socket;
+    <span class="pl-c"><span class="pl-c">//</span> 保存数据</span>
+
+    <span class="pl-k">char</span> _data[MAX_LENGTH];
+    <span class="pl-c"><span class="pl-c">//</span> 隶属于哪个 server</span>
+    CServer *_server;
+    <span class="pl-c"><span class="pl-c">//</span> uuid</span>
+    std::string _uuid;
+    <span class="pl-c"><span class="pl-c">//</span> 发送队列</span>
+    std::queue&lt;std::shared_ptr&lt;MsgNode&gt;&gt; _send_que;
+    <span class="pl-c"><span class="pl-c">//</span> 互斥锁，防止多个线程同时操作队列</span>
+    std::mutex _send_lock;
+
+    <span class="pl-c"><span class="pl-c">//</span>收到的消息结构</span>
+    std::shared_ptr&lt;MsgNode&gt; _recv_msg_node;
+    <span class="pl-c"><span class="pl-c">//</span> 标记头部结构是否接收完毕</span>
+    <span class="pl-k">bool</span> _b_head_parse;
+    <span class="pl-c"><span class="pl-c">//</span>收到的头部结构</span>
+    std::shared_ptr&lt;MsgNode&gt; _recv_head_node;
+};
+
+<span class="pl-c"><span class="pl-c">/*</span>*</span>
+<span class="pl-c"> * 消息结点</span>
+<span class="pl-c"> <span class="pl-c">*/</span></span>
+<span class="pl-k">class</span> <span class="pl-en">MsgNode</span> {
+    <span class="pl-k">friend</span> <span class="pl-k">class</span> <span class="pl-en">CSession</span>;
+
+<span class="pl-k">public:</span>
+    <span class="pl-en">MsgNode</span>(<span class="pl-k">const</span> <span class="pl-k">char</span> *msg, <span class="pl-k">short</span> max_len) : _total_len(max_len + HEAD_LENGTH), _cur_len(<span class="pl-c1">0</span>) {
+        _data = <span class="pl-k">new</span> <span class="pl-k">char</span>[_total_len + <span class="pl-c1">1</span>];
+        <span class="pl-c"><span class="pl-c">//</span> 包头字节序转换</span>
+        <span class="pl-k">int</span> max_len_host = <span class="pl-c1">boost::asio::detail::socket_ops::host_to_network_short</span>(max_len);
+        <span class="pl-c"><span class="pl-c">//</span> 记录长度</span>
+        <span class="pl-c1">memcpy</span>(_data, &amp;max_len_host, HEAD_LENGTH);
+        <span class="pl-c"><span class="pl-c">//</span> 拷贝数据</span>
+        <span class="pl-c1">memcpy</span>(_data + HEAD_LENGTH, msg, max_len);
+        _data[_total_len] = <span class="pl-s"><span class="pl-pds">'</span><span class="pl-cce">\0</span><span class="pl-pds">'</span></span>;
+    }
+
+    <span class="pl-en">MsgNode</span>(<span class="pl-k">short</span> max_len) : _total_len(max_len), _cur_len(<span class="pl-c1">0</span>) {
+        _data = <span class="pl-k">new</span> <span class="pl-k">char</span>[_total_len + <span class="pl-c1">1</span>];
+    }
+
+    <span class="pl-k">void</span> <span class="pl-en">clear</span>() {
+        <span class="pl-c1">memset</span>(_data, <span class="pl-c1">0</span>, _total_len);
+        _cur_len = <span class="pl-c1">0</span>;
+    }
+
+    <span class="pl-en">~MsgNode</span>() {
+        <span class="pl-k">delete[]</span> _data;
+    }
+
+<span class="pl-k">private:</span>
+    <span class="pl-k">int</span> _cur_len;
+    <span class="pl-k">int</span> _total_len;
+    <span class="pl-k">char</span> *_data;
+};
+
+#<span class="pl-k">endif</span> <span class="pl-c"><span class="pl-c">//</span>ASYNCSERVER_CSESSION_H</span></pre></div>
+<p>CSession.cpp</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate">#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>iostream<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>iomanip<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>thread<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">"</span>CSession.h<span class="pl-pds">"</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">"</span>proto/msg.pb.h<span class="pl-pds">"</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>json/json.h<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>json/value.h<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>json/reader.h<span class="pl-pds">&gt;</span></span>
+
+<span class="pl-en">CSession::CSession</span>(boost::asio::io_context &amp;ioc, CServer *server) : _socket(ioc), _server(server),
+                                                                    _b_head_parse(<span class="pl-c1">false</span>) {
+    <span class="pl-c1">std::memset</span>(_data, <span class="pl-s"><span class="pl-pds">'</span><span class="pl-cce">\0</span><span class="pl-pds">'</span></span>, MAX_LENGTH);
+    <span class="pl-c"><span class="pl-c">//</span> 生成 uuid</span>
+    boost::uuids::uuid a_uuid = <span class="pl-c1">boost::uuids::random_generator</span>()();
+    _uuid = <span class="pl-c1">boost::uuids::to_string</span>(a_uuid);
+    _recv_head_node = std::make_shared&lt;MsgNode&gt;(HEAD_LENGTH);
+}
+
+<span class="pl-k">void</span> <span class="pl-en">CSession::start</span>() {
+    std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>First read from client<span class="pl-cce">\n</span><span class="pl-pds">"</span></span>;
+    <span class="pl-c"><span class="pl-c">//</span> 先在客户端读取</span>
+<span class="pl-c"><span class="pl-c">//</span>    _socket.async_read_some(boost::asio::buffer(_data, MAX_LENGTH),</span>
+<span class="pl-c"><span class="pl-c">//</span>                            std::bind(&amp;CSession::handle_read, this, std::placeholders::_1, std::placeholders::_2,</span>
+<span class="pl-c"><span class="pl-c">//</span>                                      shared_from_this()));</span>
+    <span class="pl-c1">boost::asio::async_read</span>(_socket, <span class="pl-c1">boost::asio::buffer</span>(_recv_head_node-&gt;<span class="pl-smi">_data</span>, HEAD_LENGTH),
+                            <span class="pl-c1">std::bind</span>(&amp;CSession::handle_read_head, <span class="pl-c1">this</span>, std::placeholders::_1, std::placeholders::_2,
+                                      <span class="pl-c1">shared_from_this</span>()));
+}
+
+<span class="pl-k">void</span> <span class="pl-en">CSession::handle_read</span>(<span class="pl-k">const</span> boost::system::error_code &amp;errorCode, <span class="pl-c1">size_t</span> bytes_transferred,
+                           std::shared_ptr&lt;CSession&gt; self_shared) {
+    <span class="pl-k">try</span> {
+        <span class="pl-k">if</span> (errorCode.<span class="pl-c1">value</span>() != <span class="pl-c1">0</span>) {
+            std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Error occurred int read: <span class="pl-pds">"</span></span> &lt;&lt; errorCode.<span class="pl-c1">message</span>() &lt;&lt; std::endl;
+            <span class="pl-c"><span class="pl-c">//</span> 移除连接</span>
+            _server-&gt;<span class="pl-c1">clear_session</span>(_uuid);
+            <span class="pl-k">return</span>;
+        }
+        <span class="pl-c"><span class="pl-c">//</span> 测试粘包</span>
+        <span class="pl-c1">printRecvData</span>(_data, bytes_transferred);
+        std::chrono::milliseconds <span class="pl-smi">dura</span>(<span class="pl-c1">2000</span>);
+        <span class="pl-c1">std::this_thread::sleep_for</span>(dura);
+
+        <span class="pl-k">while</span> (bytes_transferred &gt; <span class="pl-c1">0</span>) {
+            <span class="pl-c"><span class="pl-c">//</span> 记录已经处理的字节</span>
+            <span class="pl-k">int</span> copy_len = <span class="pl-c1">0</span>;
+            <span class="pl-k">if</span> (!_b_head_parse) {
+                <span class="pl-c"><span class="pl-c">//</span> 头部结构还没处理完</span>
+                <span class="pl-c"><span class="pl-c">//</span> 收到的数据比头部结构小</span>
+                <span class="pl-k">if</span> (bytes_transferred &lt; HEAD_LENGTH) {
+                    <span class="pl-c"><span class="pl-c">//</span> 先接收这部分数据</span>
+                    <span class="pl-c1">memcpy</span>(_recv_head_node-&gt;<span class="pl-smi">_data</span> + _recv_head_node-&gt;<span class="pl-smi">_cur_len</span>, _data + copy_len, bytes_transferred);
+                    _recv_head_node-&gt;<span class="pl-smi">_cur_len</span> += bytes_transferred;
+                    <span class="pl-c"><span class="pl-c">//</span> 清空 _data 缓冲区</span>
+                    <span class="pl-c1">memset</span>(_data, <span class="pl-c1">0</span>, MAX_LENGTH);
+                    <span class="pl-c"><span class="pl-c">//</span> 继续监听</span>
+                    _socket.<span class="pl-c1">async_read_some</span>(<span class="pl-c1">boost::asio::buffer</span>(_data, MAX_LENGTH),
+                                            <span class="pl-c1">std::bind</span>(&amp;CSession::handle_read, <span class="pl-c1">this</span>, std::placeholders::_1,
+                                                      std::placeholders::_2, self_shared));
+                    <span class="pl-k">return</span>;
+                }
+                <span class="pl-c"><span class="pl-c">//</span> 收到的数据比头部结构大</span>
+                <span class="pl-k">int</span> head_remain = HEAD_LENGTH - _recv_head_node-&gt;<span class="pl-smi">_cur_len</span>;
+                <span class="pl-c"><span class="pl-c">//</span> 剩余的数据拷贝进去</span>
+                <span class="pl-c1">memcpy</span>(_recv_head_node-&gt;<span class="pl-smi">_data</span> + _recv_head_node-&gt;<span class="pl-smi">_cur_len</span>, _data + copy_len, head_remain);
+                _recv_head_node-&gt;<span class="pl-smi">_cur_len</span> += head_remain;
+                copy_len += head_remain;
+                bytes_transferred -= head_remain;
+                <span class="pl-c"><span class="pl-c">//</span> 获取头部存储的数据</span>
+                <span class="pl-k">short</span> data_len = <span class="pl-c1">0</span>;
+                <span class="pl-c1">memcpy</span>(&amp;data_len, _recv_head_node-&gt;<span class="pl-smi">_data</span>, HEAD_LENGTH);
+                <span class="pl-c"><span class="pl-c">//</span> 网络字节序转换为本地字节序</span>
+                data_len = <span class="pl-c1">boost::asio::detail::socket_ops::network_to_host_short</span>(data_len);
+
+                std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Receive data length is <span class="pl-pds">"</span></span> &lt;&lt; data_len &lt;&lt; std::endl;
+                <span class="pl-k">if</span> (data_len &gt; MAX_LENGTH) {
+                    std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>invalid data length is <span class="pl-pds">"</span></span> &lt;&lt; data_len &lt;&lt; std::endl;
+                    <span class="pl-k">return</span>;
+                }
+
+                _recv_msg_node = std::make_shared&lt;MsgNode&gt;(data_len);
+                <span class="pl-c"><span class="pl-c">//</span> 剩余消息的长度小于数据长度，先将部分数据放到节点里</span>
+                <span class="pl-k">if</span> (bytes_transferred &lt; data_len) {
+                    <span class="pl-c1">memcpy</span>(_recv_msg_node-&gt;<span class="pl-smi">_data</span> + _recv_msg_node-&gt;<span class="pl-smi">_cur_len</span>, _data + copy_len, bytes_transferred);
+                    _recv_msg_node-&gt;<span class="pl-smi">_cur_len</span> += bytes_transferred;
+                    <span class="pl-c"><span class="pl-c">//</span> 重置 _data</span>
+                    <span class="pl-c1">memset</span>(_data, <span class="pl-c1">0</span>, MAX_LENGTH);
+                    <span class="pl-c"><span class="pl-c">//</span> 继续监听</span>
+                    _socket.<span class="pl-c1">async_read_some</span>(<span class="pl-c1">boost::asio::buffer</span>(_data, MAX_LENGTH),
+                                            <span class="pl-c1">std::bind</span>(&amp;CSession::handle_read, <span class="pl-c1">this</span>, std::placeholders::_1,
+                                                      std::placeholders::_2, self_shared));
+                    <span class="pl-c"><span class="pl-c">//</span> 头部处理完毕</span>
+                    _b_head_parse = <span class="pl-c1">true</span>;
+                    <span class="pl-k">return</span>;
+                }
+                <span class="pl-c"><span class="pl-c">//</span> 大于直接拷贝进去</span>
+                <span class="pl-c1">memcpy</span>(_recv_msg_node-&gt;<span class="pl-smi">_data</span> + _recv_msg_node-&gt;<span class="pl-smi">_cur_len</span>, _data + copy_len, data_len);
+                _recv_msg_node-&gt;<span class="pl-smi">_cur_len</span> += data_len;
+                copy_len += data_len;
+                bytes_transferred -= data_len;
+                _recv_msg_node-&gt;<span class="pl-smi">_data</span>[_recv_msg_node-&gt;<span class="pl-smi">_total_len</span>] = <span class="pl-s"><span class="pl-pds">'</span><span class="pl-cce">\0</span><span class="pl-pds">'</span></span>;
+                <span class="pl-c"><span class="pl-c">//</span> 调用 send 测试</span>
+<span class="pl-c"><span class="pl-c">//</span>                MsgData msgData;</span>
+<span class="pl-c"><span class="pl-c">//</span>                std::string receive_data;</span>
+<span class="pl-c"><span class="pl-c">//</span>                msgData.ParseFromString(std::string(_recv_msg_node-&gt;_data,_recv_msg_node-&gt;_total_len));</span>
+<span class="pl-c"><span class="pl-c">//</span>                std::cout &lt;&lt; "Received msg id  is " &lt;&lt; msgData.id() &lt;&lt; " msg data is " &lt;&lt; msgData.data() &lt;&lt;std:: endl;</span>
+<span class="pl-c"><span class="pl-c">//</span>                std::string return_str = "Server has received msg, msg data is " + msgData.data();</span>
+<span class="pl-c"><span class="pl-c">//</span>                MsgData msgReturn;</span>
+<span class="pl-c"><span class="pl-c">//</span>                msgReturn.set_id(msgData.id());</span>
+<span class="pl-c"><span class="pl-c">//</span>                msgReturn.set_data(return_str);</span>
+<span class="pl-c"><span class="pl-c">//</span>                msgReturn.SerializeToString(&amp;return_str);</span>
+<span class="pl-c"><span class="pl-c">//</span>                send(return_str);</span>
+<span class="pl-c"><span class="pl-c">//</span>                Json::Reader reader;</span>
+<span class="pl-c"><span class="pl-c">//</span>                Json::Value root;</span>
+<span class="pl-c"><span class="pl-c">//</span>                reader.parse(std::string(_recv_msg_node-&gt;_data, _recv_msg_node-&gt;_total_len), root);</span>
+<span class="pl-c"><span class="pl-c">//</span>                std::cout &lt;&lt; "Received msg id  is " &lt;&lt; root["id"].asInt() &lt;&lt; " msg data is '"</span>
+<span class="pl-c"><span class="pl-c">//</span>                          &lt;&lt; root["data"].asString() &lt;&lt; "'" &lt;&lt; std::endl;</span>
+<span class="pl-c"><span class="pl-c">//</span>                root["data"] = "Server has received msg, msg data is '" + root["data"].asString() + "'";</span>
+<span class="pl-c"><span class="pl-c">//</span>                send(root.toStyledString());</span>
+                <span class="pl-c1">send</span>(_recv_msg_node-&gt;<span class="pl-smi">_data</span>,_recv_msg_node-&gt;<span class="pl-smi">_total_len</span>);
+                <span class="pl-c"><span class="pl-c">//</span> 继续处理剩下的字节</span>
+                _b_head_parse = <span class="pl-c1">false</span>;
+                _recv_head_node-&gt;<span class="pl-c1">clear</span>();
+                <span class="pl-c"><span class="pl-c">//</span> 如果小于等于0，其实只能等于</span>
+                <span class="pl-k">if</span> (bytes_transferred &lt;= <span class="pl-c1">0</span>) {
+                    <span class="pl-c"><span class="pl-c">//</span> 需要继续监听</span>
+                    <span class="pl-c1">memset</span>(_data, <span class="pl-c1">0</span>, MAX_LENGTH);
+                    _socket.<span class="pl-c1">async_read_some</span>(<span class="pl-c1">boost::asio::buffer</span>(_data, MAX_LENGTH),
+                                            <span class="pl-c1">std::bind</span>(&amp;CSession::handle_read, <span class="pl-c1">this</span>, std::placeholders::_1,
+                                                      std::placeholders::_2, self_shared));
+                    <span class="pl-k">return</span>;
+                }
+                <span class="pl-c"><span class="pl-c">//</span> 继续循环即可</span>
+                <span class="pl-k">continue</span>;
+            }
+            <span class="pl-c"><span class="pl-c">//</span> 头结点处理完了，接着处理数据</span>
+            <span class="pl-k">int</span> remain_msg = _recv_msg_node-&gt;<span class="pl-smi">_total_len</span> - _recv_msg_node-&gt;<span class="pl-smi">_cur_len</span>;
+            <span class="pl-c"><span class="pl-c">//</span> 本次接收的还是不足</span>
+            <span class="pl-k">if</span> (bytes_transferred &lt; remain_msg) {
+                <span class="pl-c"><span class="pl-c">//</span> 拷贝部分，继续监听</span>
+                <span class="pl-c1">memcpy</span>(_recv_msg_node-&gt;<span class="pl-smi">_data</span> + _recv_msg_node-&gt;<span class="pl-smi">_cur_len</span>, _data + copy_len, bytes_transferred);
+                _recv_msg_node-&gt;<span class="pl-smi">_cur_len</span> += bytes_transferred;
+                <span class="pl-c1">memset</span>(_data, <span class="pl-c1">0</span>, MAX_LENGTH);
+                _socket.<span class="pl-c1">async_read_some</span>(<span class="pl-c1">boost::asio::buffer</span>(_data, MAX_LENGTH),
+                                        <span class="pl-c1">std::bind</span>(&amp;CSession::handle_read, <span class="pl-c1">this</span>, std::placeholders::_1,
+                                                  std::placeholders::_2, self_shared));
+                <span class="pl-k">return</span>;
+            }
+            <span class="pl-c"><span class="pl-c">//</span> 足够就直接拷进来</span>
+            <span class="pl-c1">memcpy</span>(_recv_msg_node-&gt;<span class="pl-smi">_data</span> + _recv_msg_node-&gt;<span class="pl-smi">_cur_len</span>, _data + copy_len, remain_msg);
+            _recv_msg_node-&gt;<span class="pl-smi">_cur_len</span> += remain_msg;
+            copy_len += remain_msg;
+            bytes_transferred -= remain_msg;
+            _recv_msg_node-&gt;<span class="pl-smi">_data</span>[_recv_msg_node-&gt;<span class="pl-smi">_total_len</span>] = <span class="pl-s"><span class="pl-pds">'</span><span class="pl-cce">\0</span><span class="pl-pds">'</span></span>;
+            <span class="pl-c"><span class="pl-c">//</span> 调用 send 测试</span>
+<span class="pl-c"><span class="pl-c">//</span>            MsgData msgData;</span>
+<span class="pl-c"><span class="pl-c">//</span>            std::string receive_data;</span>
+<span class="pl-c"><span class="pl-c">//</span>            msgData.ParseFromString(std::string(_recv_msg_node-&gt;_data,_recv_msg_node-&gt;_total_len));</span>
+<span class="pl-c"><span class="pl-c">//</span>            std::cout &lt;&lt; "Received msg id  is " &lt;&lt; msgData.id() &lt;&lt; " msg data is " &lt;&lt; msgData.data() &lt;&lt;std:: endl;</span>
+<span class="pl-c"><span class="pl-c">//</span>            std::string return_str = "Server has received msg, msg data is " + msgData.data();</span>
+<span class="pl-c"><span class="pl-c">//</span>            MsgData msgReturn;</span>
+<span class="pl-c"><span class="pl-c">//</span>            msgReturn.set_id(msgData.id());</span>
+<span class="pl-c"><span class="pl-c">//</span>            msgReturn.set_data(return_str);</span>
+<span class="pl-c"><span class="pl-c">//</span>            msgReturn.SerializeToString(&amp;return_str);</span>
+<span class="pl-c"><span class="pl-c">//</span>            send(return_str);</span>
+
+<span class="pl-c"><span class="pl-c">//</span>            Json::Reader reader;</span>
+<span class="pl-c"><span class="pl-c">//</span>            Json::Value root;</span>
+<span class="pl-c"><span class="pl-c">//</span>            reader.parse(std::string(_recv_msg_node-&gt;_data, _recv_msg_node-&gt;_total_len), root);</span>
+<span class="pl-c"><span class="pl-c">//</span>            std::cout &lt;&lt; "Received msg id  is " &lt;&lt; root["id"].asInt() &lt;&lt; " msg data is '"</span>
+<span class="pl-c"><span class="pl-c">//</span>                      &lt;&lt; root["data"].asString() &lt;&lt; "'" &lt;&lt; std::endl;</span>
+<span class="pl-c"><span class="pl-c">//</span>            root["data"] = "Server has received msg, msg data is '" + root["data"].asString() + "'";</span>
+<span class="pl-c"><span class="pl-c">//</span>            send(root.toStyledString());</span>
+            <span class="pl-c1">send</span>(_recv_msg_node-&gt;<span class="pl-smi">_data</span>,_recv_msg_node-&gt;<span class="pl-smi">_total_len</span>);
+
+            <span class="pl-c"><span class="pl-c">//</span> 继续处理</span>
+            _b_head_parse = <span class="pl-c1">false</span>;
+            _recv_head_node-&gt;<span class="pl-c1">clear</span>();
+
+            <span class="pl-c"><span class="pl-c">//</span> 不剩下数据了</span>
+            <span class="pl-k">if</span> (bytes_transferred &lt;= <span class="pl-c1">0</span>) {
+                <span class="pl-c1">memset</span>(_data, <span class="pl-c1">0</span>, MAX_LENGTH);
+                _socket.<span class="pl-c1">async_read_some</span>(<span class="pl-c1">boost::asio::buffer</span>(_data, MAX_LENGTH),
+                                        <span class="pl-c1">std::bind</span>(&amp;CSession::handle_read, <span class="pl-c1">this</span>, std::placeholders::_1,
+                                                  std::placeholders::_2, self_shared));
+                <span class="pl-k">return</span>;
+            }
+            <span class="pl-c"><span class="pl-c">//</span> 继续循环即可</span>
+            <span class="pl-k">continue</span>;
+        }
+    } <span class="pl-k">catch</span> (std::<span class="pl-c1">exception</span> &amp;e) {
+        std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Error occurred: <span class="pl-pds">"</span></span> &lt;&lt; e.<span class="pl-c1">what</span>() &lt;&lt; std::endl;
+    }
+}
+
+<span class="pl-k">void</span> <span class="pl-en">CSession::handle_write</span>(<span class="pl-k">const</span> boost::system::error_code &amp;errorCode, std::shared_ptr&lt;CSession&gt; self_shared) {
+    <span class="pl-k">try</span> {
+        <span class="pl-k">if</span> (errorCode.<span class="pl-c1">value</span>() != <span class="pl-c1">0</span>) {
+            std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Error occurred int write: <span class="pl-pds">"</span></span> &lt;&lt; errorCode.<span class="pl-c1">message</span>() &lt;&lt; std::endl;
+            <span class="pl-c"><span class="pl-c">//</span> 移除连接</span>
+            _server-&gt;<span class="pl-c1">clear_session</span>(_uuid);
+            <span class="pl-k">return</span>;
+        }
+        std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Writing to client successfully, start read from client<span class="pl-cce">\n</span><span class="pl-pds">"</span></span>;
+
+        <span class="pl-c"><span class="pl-c">//</span> 调用回调函数表示已经写完</span>
+        <span class="pl-c"><span class="pl-c">//</span> 上锁</span>
+        std::lock_guard&lt;std::mutex&gt; <span class="pl-c1">lock</span>(_send_lock);
+        <span class="pl-c"><span class="pl-c">//</span> 弹出队列元素</span>
+        _send_que.<span class="pl-c1">pop</span>();
+        <span class="pl-c"><span class="pl-c">//</span> 队列是否还有剩下的消息</span>
+        <span class="pl-k">if</span> (!_send_que.<span class="pl-c1">empty</span>()) {
+            <span class="pl-c"><span class="pl-c">//</span> 接着发，直到队列为空</span>
+            <span class="pl-k">auto</span> &amp;msgNode = _send_que.<span class="pl-c1">front</span>();
+            <span class="pl-c1">boost::asio::async_write</span>(_socket, <span class="pl-c1">boost::asio::buffer</span>(msgNode-&gt;<span class="pl-smi">_data</span>, msgNode-&gt;<span class="pl-smi">_total_len</span>),
+                                     <span class="pl-c1">std::bind</span>(&amp;CSession::handle_write, <span class="pl-c1">this</span>, std::placeholders::_1, self_shared));
+        }
+    } <span class="pl-k">catch</span> (std::<span class="pl-c1">exception</span> &amp;e) {
+        std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Error occurred: <span class="pl-pds">"</span></span> &lt;&lt; e.<span class="pl-c1">what</span>() &lt;&lt; std::endl;
+    }
+}
+
+<span class="pl-k">void</span> <span class="pl-en">CSession::send</span>(<span class="pl-k">char</span> *msg, <span class="pl-k">int</span> max_length) {
+    <span class="pl-c"><span class="pl-c">//</span> 发送队列里是否还有没法完的数据</span>
+    <span class="pl-k">bool</span> pending = <span class="pl-c1">false</span>;
+    <span class="pl-c"><span class="pl-c">//</span> 上锁</span>
+    std::lock_guard&lt;std::mutex&gt; <span class="pl-c1">lock</span>(_send_lock);
+    <span class="pl-k">int</span> send_que_size = _send_que.<span class="pl-c1">size</span>();
+    <span class="pl-k">if</span> (send_que_size &gt; MAX_SENDQUE) {
+        std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>session: <span class="pl-pds">"</span></span> &lt;&lt; _uuid &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span> send que fulled, size is <span class="pl-pds">"</span></span> &lt;&lt; MAX_SENDQUE &lt;&lt; std::endl;
+        <span class="pl-k">return</span>;
+    }
+
+    <span class="pl-c"><span class="pl-c">//</span> 加入发送队列</span>
+    _send_que.<span class="pl-c1">push</span>(std::make_shared&lt;MsgNode&gt;(msg, max_length));
+
+    <span class="pl-k">if</span> (send_que_size &gt; <span class="pl-c1">0</span>) {
+        <span class="pl-c"><span class="pl-c">//</span> 之前的还没发送完</span>
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-k">auto</span> &amp;msgNode = _send_que.<span class="pl-c1">front</span>();
+    <span class="pl-c"><span class="pl-c">//</span> 之前的全发完了，直接发本次的</span>
+    <span class="pl-c1">boost::asio::async_write</span>(_socket, <span class="pl-c1">boost::asio::buffer</span>(msgNode-&gt;<span class="pl-smi">_data</span>, msgNode-&gt;<span class="pl-smi">_total_len</span>),
+                             <span class="pl-c1">std::bind</span>(&amp;CSession::handle_write, <span class="pl-c1">this</span>, std::placeholders::_1, <span class="pl-c1">shared_from_this</span>()));
+}
+
+<span class="pl-c"><span class="pl-c">//</span> 打印二进制数据</span>
+<span class="pl-k">void</span> <span class="pl-en">CSession::printRecvData</span>(<span class="pl-k">char</span> *data, <span class="pl-k">int</span> length) {
+    std::stringstream ss;
+    std::string result = <span class="pl-s"><span class="pl-pds">"</span>0x<span class="pl-pds">"</span></span>;
+    <span class="pl-k">for</span> (<span class="pl-k">int</span> i = <span class="pl-c1">0</span>; i &lt; length; i++) {
+        std::string hexstr;
+        ss &lt;&lt; std::hex &lt;&lt; <span class="pl-c1">std::setw</span>(<span class="pl-c1">2</span>) &lt;&lt; <span class="pl-c1">std::setfill</span>(<span class="pl-s"><span class="pl-pds">'</span>0<span class="pl-pds">'</span></span>) &lt;&lt; <span class="pl-c1">int</span>(data[i]) &lt;&lt; std::endl;
+        ss &gt;&gt; hexstr;
+        result += hexstr;
+    }
+    std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>receive raw data is : <span class="pl-pds">"</span></span> &lt;&lt; result &lt;&lt; std::endl;;
+}
+
+<span class="pl-k">void</span> <span class="pl-en">CSession::send</span>(std::string msg) {
+    std::lock_guard&lt;std::mutex&gt; <span class="pl-c1">lock</span>(_send_lock);
+
+    <span class="pl-k">int</span> send_que_size = _send_que.<span class="pl-c1">size</span>();
+    <span class="pl-k">if</span> (send_que_size &gt; MAX_SENDQUE) {
+        std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>session: <span class="pl-pds">"</span></span> &lt;&lt; _uuid &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span> send que fulled, size is <span class="pl-pds">"</span></span> &lt;&lt; MAX_SENDQUE &lt;&lt; std::endl;
+        <span class="pl-k">return</span>;
+    }
+    _send_que.<span class="pl-c1">push</span>(std::make_shared&lt;MsgNode&gt;(msg.<span class="pl-c1">c_str</span>(), msg.<span class="pl-c1">size</span>()));
+    <span class="pl-k">if</span> (send_que_size &gt; <span class="pl-c1">0</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-k">auto</span> &amp;msgNode = _send_que.<span class="pl-c1">front</span>();
+    <span class="pl-c1">boost::asio::async_write</span>(_socket, <span class="pl-c1">boost::asio::buffer</span>(msgNode-&gt;<span class="pl-smi">_data</span>, msgNode-&gt;<span class="pl-smi">_total_len</span>),
+                             <span class="pl-c1">std::bind</span>(&amp;CSession::handle_write, <span class="pl-c1">this</span>, std::placeholders::_1, <span class="pl-c1">shared_from_this</span>()));
+}
+
+<span class="pl-k">void</span> <span class="pl-en">CSession::handle_read_head</span>(<span class="pl-k">const</span> boost::system::error_code &amp;errorCode, <span class="pl-c1">size_t</span> bytes_transferred,
+                                std::shared_ptr&lt;CSession&gt; self_shared) {
+    <span class="pl-k">if</span> (errorCode.<span class="pl-c1">value</span>() != <span class="pl-c1">0</span>) {
+        std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Error occurred in read head: <span class="pl-pds">"</span></span> &lt;&lt; errorCode.<span class="pl-c1">message</span>() &lt;&lt; std::endl;
+        <span class="pl-c"><span class="pl-c">//</span> 移除连接</span>
+        _server-&gt;<span class="pl-c1">clear_session</span>(_uuid);
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-k">if</span> (bytes_transferred &lt; HEAD_LENGTH) {
+        std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Error occurred in read head: <span class="pl-pds">"</span></span> &lt;&lt; errorCode.<span class="pl-c1">message</span>() &lt;&lt; std::endl;
+        <span class="pl-c"><span class="pl-c">//</span> 移除连接</span>
+        _server-&gt;<span class="pl-c1">clear_session</span>(_uuid);
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-c"><span class="pl-c">//</span> 解析包头数据</span>
+    <span class="pl-k">short</span> data_len = <span class="pl-c1">0</span>;
+    <span class="pl-c1">memcpy</span>(&amp;data_len, _recv_head_node-&gt;<span class="pl-smi">_data</span>, HEAD_LENGTH);
+    <span class="pl-c"><span class="pl-c">//</span> 字节序处理</span>
+    data_len = <span class="pl-c1">boost::asio::detail::socket_ops::network_to_host_short</span>(data_len);
+    <span class="pl-k">if</span> (data_len &gt; MAX_LENGTH) {
+        std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Invalid data length :<span class="pl-pds">"</span></span> &lt;&lt; data_len &lt;&lt; std::endl;
+        _server-&gt;<span class="pl-c1">clear_session</span>(_uuid);
+        <span class="pl-k">return</span>;
+    }
+
+
+    _recv_msg_node = std::make_shared&lt;MsgNode&gt;(data_len);
+
+    <span class="pl-c1">boost::asio::async_read</span>(_socket, <span class="pl-c1">boost::asio::buffer</span>(_recv_msg_node-&gt;<span class="pl-smi">_data</span>, _recv_msg_node-&gt;<span class="pl-smi">_total_len</span>),
+                            <span class="pl-c1">std::bind</span>(&amp;CSession::handle_read_msg, <span class="pl-c1">this</span>, std::placeholders::_1, std::placeholders::_2,
+                                      <span class="pl-c1">shared_from_this</span>()));
+}
+
+<span class="pl-k">void</span> <span class="pl-en">CSession::handle_read_msg</span>(<span class="pl-k">const</span> boost::system::error_code &amp;errorCode, <span class="pl-c1">size_t</span> bytes_transferred,
+                               std::shared_ptr&lt;CSession&gt; self_shared) {
+    <span class="pl-k">if</span> (errorCode.<span class="pl-c1">value</span>() != <span class="pl-c1">0</span>) {
+        std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Error occurred in read msg: <span class="pl-pds">"</span></span> &lt;&lt; errorCode.<span class="pl-c1">message</span>() &lt;&lt; std::endl;
+        <span class="pl-c"><span class="pl-c">//</span> 移除连接</span>
+        _server-&gt;<span class="pl-c1">clear_session</span>(_uuid);
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-c"><span class="pl-c">//</span> 测试粘包</span>
+    <span class="pl-c1">printRecvData</span>(_recv_msg_node-&gt;<span class="pl-smi">_data</span>, bytes_transferred);
+    std::chrono::milliseconds <span class="pl-smi">dura</span>(<span class="pl-c1">2000</span>);
+    <span class="pl-c1">std::this_thread::sleep_for</span>(dura);
+    _recv_msg_node-&gt;<span class="pl-smi">_data</span>[_recv_msg_node-&gt;<span class="pl-smi">_total_len</span>] = <span class="pl-s"><span class="pl-pds">'</span><span class="pl-cce">\0</span><span class="pl-pds">'</span></span>;
+    std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>receive data is <span class="pl-pds">"</span></span> &lt;&lt; _recv_msg_node-&gt;<span class="pl-smi">_data</span> &lt;&lt; std::endl;
+    <span class="pl-c1">send</span>(_recv_msg_node-&gt;<span class="pl-smi">_data</span>, _recv_msg_node-&gt;<span class="pl-smi">_total_len</span>);
+    <span class="pl-c"><span class="pl-c">//</span> 再次接收头部数据</span>
+    _recv_head_node-&gt;<span class="pl-c1">clear</span>();
+    <span class="pl-c1">boost::asio::async_read</span>(_socket, <span class="pl-c1">boost::asio::buffer</span>(_recv_head_node-&gt;<span class="pl-smi">_data</span>, HEAD_LENGTH),
+                            <span class="pl-c1">std::bind</span>(&amp;CSession::handle_read_head, <span class="pl-c1">this</span>, std::placeholders::_1, std::placeholders::_2,
+                                      <span class="pl-c1">shared_from_this</span>()));
+}</pre></div></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://proacane.github.io">Proacane的个人微博</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","proacane/proacane.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+<script src='https://blog.meekdai.com/Gmeek/plugins/GmeekTOC.js'></script><script src='https://blog.meekdai.com/Gmeek/plugins/lightbox.js'></script>
+
+</html>
