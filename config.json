@@ -2,6 +2,7 @@
     "title":"Proacane的个人微博",
     "subTitle":"学无止境",
     "avatarUrl":"https://github.com/proacane/proacane.github.io/blob/main/static/avatar.svg",
+    "faviconUrl":"https://github.com/proacane/proacane.github.io/blob/main/static/avatar.svg",
     "GMEEK_VERSION":"last",
     "script":"<script src='https://blog.meekdai.com/Gmeek/plugins/GmeekTOC.js'></script><script src='https://blog.meekdai.com/Gmeek/plugins/lightbox.js'></script>"
 }
