@@ -580,7 +580,66 @@ int length(List*l){
     }
     return res;
 }
+// 尾插法创建单链表
+bool insertTail(List *l) {
+    int x;
+    printf("Enter value (9999 to quit): ");
+    scanf("%d", &x);
 
+    // 初始化链表
+    if (x == 9999) {
+        return true; // 如果一开始就退出，不需要创建链表
+    }
+    Node *head = (Node *) malloc(sizeof(Node));
+    if (head == NULL) {
+        return false; // 内存分配失败
+    }
+    head->data = x;
+    head->next = NULL;
+    *l = head; // 将头结点赋给链表
+    // q是最后一个结点
+    Node *q = head;
+    // 循环插入数据
+    while (true) {
+        printf("Enter value (9999 to quit): ");
+        scanf("%d", &x);
+        if (x == 9999) {
+            break;
+        }
+        Node *newNode = (Node *) malloc(sizeof(Node));
+        newNode->data = x;
+        newNode->next = NULL;
+        q->next = newNode;
+        q = newNode;
+    }
+    return true;
+}
+// 头插法
+bool insertHead(List *l) {
+    Node *p;
+    int x;
+    printf("Enter value (9999 to quit): ");
+    scanf("%d", &x);
+    if (x == 9999) {
+        return true ;
+    }
+    *l = (Node *) malloc(sizeof(Node));
+    (*l)->next = NULL;
+    p = *l;
+    p->data = x;
+    while(true){
+        printf("Enter value (9999 to quit): ");
+        scanf("%d", &x);
+        if(x== 9999){
+            break;
+        }
+        p = (Node *) malloc(sizeof(Node));
+        p->data = x;
+        p->next = *l;
+        *l = p;
+    }
+    return true;
+}
 ```
 带头结点:
 ```c
@@ -800,6 +859,43 @@ int length(List*l){
         p = p->next;
     }
     return res;
+}
+bool insertTail(List *l) {
+    *l = (Node *) malloc(sizeof(Node));
+    (*l)->next = NULL;
+    int x;
+    // q指向尾结点
+    Node *p,*q = *l;
+    printf("Enter value (9999 to quit): ");
+    scanf("%d", &x);
+    while(x!= 9999){
+        p = (Node *) malloc(sizeof(Node));
+        p->data = x;
+        p->next = NULL;
+        q->next = p;
+        q = p;
+        printf("Enter value (9999 to quit): ");
+        scanf("%d", &x);
+    }
+    return true;
+}
+
+bool insertHead(List *l) {
+    Node *p;
+    int x;
+    *l = (Node *) malloc(sizeof(Node));
+    (*l)->next = NULL;
+    printf("Enter value (9999 to quit): ");
+    scanf("%d", &x);
+    while (x != 9999) {
+        p = (Node *) malloc(sizeof(Node));
+        p->data = x;
+        p->next = (*l)->next;
+        (*l)->next = p;
+        printf("Enter value (9999 to quit): ");
+        scanf("%d", &x);
+    }
+    return true;
 }
 ```
 代码地址：https://github.com/proacane/DataStructure
