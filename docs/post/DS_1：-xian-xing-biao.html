@@ -102,7 +102,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <h2>顺序表</h2>
 <p>用顺序存储的方式实现线性表，即把逻辑上相邻的元素存储在物理位置上也相邻的存储单元中，元素之间的关系由存储单元的邻接关系来体现。类似于数组<br>
 <a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/93c9e5f4-5257-48d9-8ede-c9a410369491"><img src="https://github.com/user-attachments/assets/93c9e5f4-5257-48d9-8ede-c9a410369491" alt="image" style="max-width: 100%;"></a></p>
-<h3>实现</h3>
+<h3>顺序表实现</h3>
 <ol>
 <li>静态分配：在初始化时就指定好顺序表的内存大小<br>
 C语言分配内存：malloc(分配的连续内存大小)，返回一个指针，需要强转为指定类型，free用来释放内存</li>
@@ -412,13 +412,14 @@ C语言分配内存：malloc(分配的连续内存大小)，返回一个指针�
 <h2>单链表</h2>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/06700b48-9440-435a-b084-29adae3a1b3b"><img src="https://github.com/user-attachments/assets/06700b48-9440-435a-b084-29adae3a1b3b" alt="image" style="max-width: 100%;"></a><br>
 可以带头结点，也可以不带，带头结点对链表的操作会比较方便</p>
-<h3>实现</h3>
+<h3>单链表实现</h3>
 <ol>
 <li>初始化</li>
 <li>插入：按位置插入（i从0开始），指定结点的后插，指定结点的前插</li>
 <li>删除：按位序删除，删除指定结点</li>
 <li>内存回收</li>
 <li>查找：按值、按位</li>
+<li>头插法、尾插法</li>
 </ol>
 <p>不带头结点:</p>
 <div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-k">#include</span> <span class="pl-s">&lt;stdio.h&gt;</span>
