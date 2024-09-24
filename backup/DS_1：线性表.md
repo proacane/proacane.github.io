@@ -332,15 +332,10 @@ int main() {
 2. 插入：按位置插入（i从0开始），指定结点的后插，指定结点的前插
 3. 删除：按位序删除，删除指定结点
 4. 内存回收
+5. 查找：按值、按位
 
 不带头结点:
 ```c
-/**
- *  FileName: SingleListNH.c
- *  CreateTime: 2024/9/24 13:51
- *  Description: 不带头结点的单向链表
- *  Author: ACAね
-*/
 #include <stdio.h>
 #include <stdbool.h>
 #include <malloc.h>
@@ -535,7 +530,7 @@ bool removeNode2(Node *p) {
         return false;
     }
     Node *q = p->next;
-    if(q == NULL){
+    if (q == NULL) {
         free(q);
         printf("Removed Node and replaced data with next node\n");
         return true;
@@ -547,47 +542,47 @@ bool removeNode2(Node *p) {
     return true;
 }
 
-int main() {
-    List myList;
-    initList(&myList);
-
-    // 测试插入操作
-    insert(&myList, 0, 10);
-    insert(&myList, 1, 20);
-    insert(&myList, 2, 30);
-    print(&myList);
-
-    // 测试在特定节点后插入
-    insertAfterNode(myList, 40);
-    print(&myList);
-
-    // 测试在特定节点前插入
-    insertBeforeNode1(&myList, myList->next, 15);
-    print(&myList);
-
-    // 测试删除节点
-    Type removedData;
-    removeNode1(&myList, myList->next); // 删除第二个节点
-//    printf("Removed data: %d\n", removedData);
-    print(&myList);
-
-    // 测试替换节点
-    removeNode2(myList); // 替换第一个节点
-    print(&myList);
-
-    // 测试销毁链表
-    destructor(&myList);
-    return 0;
+Node *getElementByPos(List *l, int i) {
+    if (i < 0 || *l == NULL) {
+        return NULL;
+    }
+    int j = 0;
+    Node *p = *l;
+    while (p != NULL && j < i) {
+        p = p->next;
+        j++;
+    }
+    return p;
 }
+
+Node *getElementByValue(List *l, Type e) {
+    if (*l == NULL) {
+        return NULL;
+    }
+    Node *p = *l;
+    while (p != NULL && p->data != e) {
+        p = p->next;
+    }
+
+    return p;
+}
+
+int length(List*l){
+    if(*l == NULL){
+        return 0;
+    }
+    int res = 0;
+    Node* p = *l;
+    while(p!= NULL){
+        res++;
+        p = p->next;
+    }
+    return res;
+}
+
 ```
 带头结点:
 ```c
-/**
- *  FileName: SingleListH.c
- *  CreateTime: 2024/9/24 13:56
- *  Description: 带头结点的单向链表
- *  Author: ACAね
-*/
 #include <stdio.h>
 #include <stdbool.h>
 #include <malloc.h>
@@ -769,32 +764,41 @@ bool removeNode2(Node *p) {
     return true;
 }
 
-int main() {
-    List myList;
-    if (!initList(&myList)) {
-        printf("Failed to initialize list.\n");
-        return -1;
+Node *getElementByPos(List *l, int i) {
+    if (i < 1 || *l == NULL) {
+        return NULL;
     }
+    int j = 0;
+    Node *p = *l;
+    while (p != NULL && j < i) {
+        p = p->next;
+        j++;
+    }
+    return p;
+}
 
-    // 测试插入操作
-    insert(&myList, 1, 10);
-    insert(&myList, 1, 20);
-    insert(&myList, 1, 30);
-    print(&myList);
+Node *getElementByValue(List *l, Type e) {
+    if (*l == NULL) {
+        return NULL;
+    }
+    Node *p = (*l)->next;
+    while (p != NULL && p->data != e) {
+        p = p->next;
+    }
+    return p;
+}
 
-    // 测试删除元素
-    Type removedData;
-    removeEle(&myList, 2, &removedData); // 删除第二个节点
-    printf("Removed data: %d\n", removedData);
-    print(&myList);
-
-    // 测试删除节点
-    removeNode1(&myList, myList->next); // 删除第一个实际数据节点
-    print(&myList);
-
-    // 测试销毁链表
-    destructor(&myList);
-    return 0;
+int length(List*l){
+    if(*l == NULL){
+        return 0;
+    }
+    int res = 0;
+    Node* p = (*l)->next;
+    while(p!= NULL){
+        res++;
+        p = p->next;
+    }
+    return res;
 }
 ```
 代码地址：https://github.com/proacane/DataStructure
