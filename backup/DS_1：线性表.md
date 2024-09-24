@@ -334,6 +334,7 @@ int main() {
 4. 内存回收
 5. 查找：按值、按位
 6. 头插法、尾插法
+7. 反转链表
 
 不带头结点:
 ```c
@@ -640,6 +641,21 @@ bool insertHead(List *l) {
     }
     return true;
 }
+void reverse(List *l) {
+    if (*l == NULL || (*l)->next == NULL) {
+        return;
+    }
+    Node *cur = *l;
+    Node *pre = NULL;
+    Node *temp;
+    while (cur != NULL) {
+        temp = cur->next;
+        cur->next = pre;
+        pre = cur;
+        cur = temp;
+    }
+    *l = pre;
+}
 ```
 带头结点:
 ```c
@@ -896,6 +912,21 @@ bool insertHead(List *l) {
         scanf("%d", &x);
     }
     return true;
+}
+void reverse(List* l){
+    if((*l)->next == NULL){
+        return ;
+    }
+    Node* cur = (*l)->next;
+    Node* pre = NULL;
+    Node* temp;
+    while(cur!= NULL){
+        temp = cur->next;
+        cur->next = pre ;
+        pre = cur;
+        cur = temp;
+    }
+    (*l)->next = pre    ;
 }
 ```
 代码地址：https://github.com/proacane/DataStructure
