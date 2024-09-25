@@ -929,4 +929,618 @@ void reverse(List* l){
     (*l)->next = pre    ;
 }
 ```
+## 双向链表
+可以根据当前结点找到前一个结点，依然分为带头结点与不带头结点两部分来实现
+### 双向链表实现
+1. 初始化
+2. 插入：按位置插入（i从0开始），指定结点的后插，指定结点的前插
+3. 删除：按位序删除，删除指定结点
+4. 内存回收
+5. 查找：按值、按位
+6. 头插法、尾插法
+不带头结点：
+```c
+#include <stdio.h>
+#include <malloc.h>
+
+#define Type int
+
+typedef struct Node {
+    struct Node *next;
+    struct Node *prev;
+    Type data;
+} Node;
+typedef Node *LinkedList;
+
+void initList(LinkedList *l) {
+    *l = NULL;
+}
+
+void destructor(LinkedList *l) {
+    Node *p = *l;
+    while (p != NULL) {
+        Node *temp = p;
+        p = p->next;
+        free(temp);
+    }
+    *l = NULL;
+}
+
+void insert(LinkedList *l, int i, Type e) {
+    if (i < 0) {
+        printf("Index cannot be negative\n");
+        return;
+    }
+
+    Node *newNode = (Node *) malloc(sizeof(Node));
+    if (newNode == NULL) {
+        printf("Can't allocate memory\n");
+        return;
+    }
+    newNode->data = e;
+
+    if (i == 0) {
+        newNode->prev = NULL;
+        newNode->next = *l;
+        if ((*l) != NULL) {
+            (*l)->prev = newNode;
+        }
+        *l = newNode;
+        return;
+    }
+
+    int j = 0;
+    Node *p = *l;
+    while (j < i - 1 && p != NULL) {
+        p = p->next;
+        j++;
+    }
+    if (p == NULL) {
+        printf("i > Length of list");
+        free(newNode);
+        return;
+    }
+    newNode->prev = p;
+    newNode->next = p->next;
+    p->next = newNode;
+    if (newNode->next != NULL) {
+        newNode->next->prev = newNode;
+    }
+}
+
+void insertAfterNode(LinkedList *l, Node *p, Type e) {
+    if (*l == NULL || p == NULL) {
+        return;
+    }
+    Node *q = *l;
+    while (q != p && q != NULL) {
+        q = q->next;
+    }
+    if (q == NULL) {
+        // p 不在链表中
+        return;
+    }
+    // 插到q的后面
+    Node *newNode = (Node *) malloc(sizeof(Node));
+    if (newNode == NULL) {
+        printf("Can't allocate memory\n");
+        return;
+    }
+    newNode->data = e;
+    newNode->prev = q;
+    newNode->next = q->next;
+    q->next = newNode;
+    if (newNode->next != NULL) {
+        newNode->next->prev = newNode;
+    }
+}
+
+void insertBeforeNode(LinkedList *l, Node *p, Type e) {
+    if (*l == NULL || p == NULL) {
+        return;
+    }
+    Node *q = *l;
+    while (q != NULL && q != p) {
+        q = q->next;
+    }
+    if (q == NULL) {
+        return;
+    }
+    // 插到q的前面
+    Node *newNode = (Node *) malloc(sizeof(Node));
+    if (newNode == NULL) {
+        printf("Can't allocate memory\n");
+        return;
+    }
+    newNode->data = e;
+    newNode->next = q;
+    newNode->prev = q->prev;
+    q->prev = newNode;
+    if (newNode->prev) {
+        newNode->prev->next = newNode;
+    } else {
+        *l = newNode;
+    }
+}
+
+void deleteByIndex(LinkedList *l, int i, Type *e) {
+    if (*l == NULL || i < 0) {
+        return;
+    }
+    Node *p = *l;
+    if (i == 0) {
+        *e = p->data;
+        *l = p->next;
+        if (*l != NULL) {
+            (*l)->prev = NULL;
+        }
+        free(p);
+        return;
+    }
+    int j = 0;
+    while (j < i && p != NULL) {
+        p = p->next;
+        j++;
+    }
+    if (p == NULL) {
+        return;
+    }
+    // 要删除的就是p结点
+    *e = p->data;
+    p->prev->next = p->next;
+    if (p->next) {
+        p->next->prev = p->prev;
+    }
+    p->prev = NULL;
+    p->next = NULL;
+    free(p);
+}
+
+void deleteNode(LinkedList *l, Node *p) {
+    if (*l == NULL || p == NULL) {
+        return;
+    }
+    Node *q = *l;
+    while (q != p && q != NULL) {
+        q = q->next;
+    }
+    if (q == NULL) {
+        return;
+    }
+    // 删除q结点
+    if (q->prev != NULL) {
+        // q 不是第一个结点
+        q->prev->next = q->next;
+    } else {
+        // 更新第一个结点
+        *l = q->next;
+    }
+    if (q->next != NULL) {
+        // q 不是最后一个结点
+        q->next->prev = q->prev;
+    }
+    free(q);
+}
+
+Node *getElementByValue(LinkedList *l, Type e) {
+    if (*l == NULL) {
+        return NULL;
+    }
+    Node *p = *l;
+    while (p != NULL && p->data != e) {
+        p = p->next;
+    }
+    return p;
+}
+
+Node *getElementByIndex(LinkedList *l, int i) {
+    if (i < 0 || *l == NULL) {
+        return NULL;
+    }
+    int j = 0;
+    Node *p = *l;
+    while (p != NULL && j < i) {
+        p = p->next;
+        j++;
+    }
+    return p;
+}
+
+void initListHead(LinkedList *l) {
+    int x;
+    printf("Enter value (9999 to quit): ");
+    scanf("%d", &x);
+    if (x == 9999) {
+        return;
+    }
+    *l = (Node *) malloc(sizeof(Node));
+    if (*l == NULL) {
+        return;
+    }
+    (*l)->prev = NULL;
+    (*l)->next = NULL;
+    (*l)->data = x;
+    Node *p = *l;
+    while (1) {
+        printf("Enter value (9999 to quit): ");
+        scanf("%d", &x);
+        if (x == 9999) {
+            break;
+        }
+        Node *newNode = (Node *) malloc(sizeof(Node));
+        if (newNode == NULL) { // 检查内存分配
+            break;
+        }
+        newNode->data = x;
+        newNode->prev = NULL;
+        newNode->next = p;
+        p->prev = newNode;
+        p = newNode;
+    }
+    *l = p;
+}
+
+void initListTail(LinkedList *l) {
+    int x;
+    printf("Enter value (9999 to quit): ");
+    scanf("%d", &x);
+    if (x == 9999) {
+        *l = NULL;
+        return;
+    }
+    *l = (Node *) malloc(sizeof(Node));
+    if (*l == NULL) {
+        return;
+    }
+    (*l)->prev = NULL;
+    (*l)->next = NULL;
+    (*l)->data = x;
+    Node *p = *l;
+    while (1) {
+        printf("Enter value (9999 to quit): ");
+        scanf("%d", &x);
+        if (x == 9999) {
+            break;
+        }
+        Node *newNode = (Node *) malloc(sizeof(Node));
+        if (newNode == NULL) { // 检查内存分配
+            break;
+        }
+        newNode->data = x;
+        newNode->prev = p;
+        newNode->next = NULL;
+        p->next = newNode;
+        p = newNode;
+    }
+}
+
+int main() {
+    LinkedList list;
+    initList(&list);
+
+    // 使用头插法初始化链表
+    initListTail(&list);
+
+    // 打印链表内容
+    printf("Current list: ");
+    Node *temp = list;
+    while (temp != NULL) {
+        printf("%d ", temp->data);
+        temp = temp->next;
+    }
+    printf("\n");
+
+    // 插入示例
+    insert(&list, 0, 100);
+    insert(&list, 1, 200);
+    insert(&list, 2, 300);
+    insert(&list, 10, 400); // 测试超出范围
+    printf("After inserts: ");
+    temp = list;
+    while (temp != NULL) {
+        printf("%d ", temp->data);
+        temp = temp->next;
+    }
+    printf("\n");
+
+    // 删除示例
+    Type e;
+    deleteByIndex(&list, 0, &e);
+    printf("Deleted node with value %d from index 0\n", e);
+    printf("After deletion: ");
+    temp = list;
+    while (temp != NULL) {
+        printf("%d ", temp->data);
+        temp = temp->next;
+    }
+    printf("\n");
+
+    // 销毁链表
+    destructor(&list);
+    printf("List destroyed.\n");
+
+    return 0;
+}
+```
+带头结点:
+```c
+#include <stdio.h>
+#include <malloc.h>
+
+#define Type int
+
+typedef struct Node {
+    struct Node *next;
+    struct Node *prev;
+    Type data;
+} Node;
+typedef Node *LinkedList;
+
+void initList(LinkedList *l) {
+    *l = (Node *) malloc(sizeof(Node));
+    if (*l == NULL) {
+        printf("Can't allocate memory\n");
+        return;
+    }
+    (*l)->next = NULL;
+    (*l)->prev = NULL;
+}
+
+void destructor(LinkedList *l) {
+    Node *p = (*l)->next;
+    while (p != NULL) {
+        Node *temp = p->next;
+        p = p->next;
+        free(temp);
+    }
+    free(*l);
+    *l = NULL;
+}
+
+void insert(LinkedList *l, int i, Type e) {
+    if (i < 1 || (*l) == NULL) {
+        return;
+    }
+    Node *p = *l;
+    int j = 0;
+    while (p != NULL && j < i - 1) {
+        p = p->next;
+        j++;
+    }
+    // 插入到p的下一个
+    if (p == NULL) {
+        printf("Index out of bounds\n");
+        return;
+    }
+    Node *newNode = (Node *) malloc(sizeof(Node));
+    if (newNode == NULL) {
+        printf("Can't allocate memory\n");
+        return;
+    }
+    newNode->data = e;
+    newNode->prev = p;
+    newNode->next = p->next;
+    if (p->next != NULL) {
+        p->next->prev = newNode;
+    }
+    p->next = newNode;
+}
+
+void insertAfterNode(LinkedList *l, Node *p, Type e) {
+    if (*l == NULL || p == NULL) {
+        return;
+    }
+    Node *q = *l;
+    while (q != NULL && q != p) {
+        q = q->next;
+    }
+    // 插入到 q 后面
+    if (q == NULL) {
+        // p 不是链表的一部分
+        return;
+    }
+    Node *newNode = (Node *) malloc(sizeof(Node));
+    if (newNode == NULL) {
+        printf("Can't allocate memory\n");
+        return;
+    }
+    newNode->data = e;
+    newNode->prev = q;
+    newNode->next = q->next;
+    if (q->next != NULL) {
+        q->next->prev = newNode;
+    }
+    q->next = newNode;
+}
+
+void insertBeforeNode(LinkedList *l, Node *p, Type e) {
+    if (*l == NULL || p == NULL || *l == p) {
+        // p 不能是头结点
+        return;
+    }
+    Node *q = *l;
+    while (q != NULL && q != p) {
+        q = q->next;
+    }
+    // 插入到 q 前面
+    if (q == NULL) {
+        // p 不是链表的一部分
+        return;
+    }
+    Node *newNode = (Node *) malloc(sizeof(Node));
+    if (newNode == NULL) {
+        printf("Can't allocate memory\n");
+        return;
+    }
+    newNode->data = e;
+    newNode->prev = q->prev;
+    newNode->next = q;
+    q->prev->next = newNode;
+}
+
+void deleteByIndex(LinkedList *l, int i, Type *e) {
+    if (*l == NULL || (*l)->next == NULL || i < 1) {
+        return;
+    }
+    int j = 0;
+    Node *p = *l;
+    while (p != NULL && j < i) {
+        p = p->next;
+        j++;
+    }
+    if (p == NULL) {
+        return;
+    }
+    *e = p->data;
+    p->prev->next = p->next;
+    if (p->next != NULL) {
+        p->next->prev = p->prev;
+    }
+    free(p);
+}
+
+void deleteNode(LinkedList *l, Node *p) {
+    if (*l == NULL || *l == p) {
+        return;
+    }
+    Node *q = (*l)->next;
+    while (q != NULL && q != p) {
+        q = q->next;
+    }
+    if (q == NULL) {
+        return;
+    }
+    // 删除q
+    q->prev->next = q->next;
+    if (q->next != NULL) {
+        q->next->prev = q->prev;
+    }
+    free(q);
+}
+
+Node *getElementByValue(LinkedList *l, Type e) {
+    if (*l == NULL) {
+        return NULL;
+    }
+    Node *p = (*l)->next;
+    while (p != NULL && p->data != e) {
+        p = p->next;
+    }
+    return p;
+}
+
+Node *getElementByIndex(LinkedList *l, int i) {
+    if (i < 1 || *l == NULL) {
+        return NULL;
+    }
+    int j = 1;
+    Node *p = (*l)->next;
+    while (p != NULL && j < i) {
+        p = p->next;
+        j++;
+    }
+    return p;
+}
+
+void initListHead(LinkedList *l) {
+    int x;
+    printf("Enter value (9999 to quit): ");
+    scanf("%d", &x);
+    if (x == 9999) {
+        return;
+    }
+    Node *q = (Node *) malloc(sizeof(Node));
+    if (q == NULL) {
+        return;
+    }
+    q->prev = *l;
+    q->next = NULL;
+    q->data = x;
+    (*l)->next = q;
+    while (1) {
+        printf("Enter value (9999 to quit): ");
+        scanf("%d", &x);
+        if (x == 9999) {
+            break;
+        }
+        Node *newNode = (Node *) malloc(sizeof(Node));
+        if (newNode == NULL) { // 检查内存分配
+            break;
+        }
+        newNode->data = x;
+        newNode->prev = *l;
+        newNode->next = (*l)->next;
+        if ((*l)->next != NULL) {
+            (*l)->next->prev = newNode;
+        }
+        (*l)->next = newNode;
+    }
+}
+
+void initListTail(LinkedList *l) {
+    int x;
+    printf("Enter value (9999 to quit): ");
+    scanf("%d", &x);
+    if (x == 9999) {
+        return;
+    }
+    // q 指向链表末尾的结点
+    Node *q = (Node *) malloc(sizeof(Node));
+    if (q == NULL) {
+        return;
+    }
+    q->prev = *l;
+    q->next = NULL;
+    q->data = x;
+    (*l)->next = q;
+    while (1) {
+        printf("Enter value (9999 to quit): ");
+        scanf("%d", &x);
+        if (x == 9999) {
+            break;
+        }
+        Node *newNode = (Node *) malloc(sizeof(Node));
+        if (newNode == NULL) { // 检查内存分配
+            break;
+        }
+        newNode->data = x;
+        newNode->prev = q;
+        newNode->next = NULL;
+        q->next = newNode;
+        q = newNode;
+    }
+}
+
+int main() {
+    LinkedList l;
+    initList(&l);
+
+//    initListHead(&l); // 测试头插法
+//    printf("List after head insertion:\n");
+//    for (Node *p = l->next; p != NULL; p = p->next) {
+//        printf("%d ", p->data);
+//    }
+//    printf("\n");
+//    destructor(&l);
+
+//    initList(&l);
+    initListTail(&l); // 测试尾插法
+    printf("List after tail insertion:\n");
+    for (Node *p = l->next; p != NULL; p = p->next) {
+        printf("%d ", p->data);
+    }
+    printf("\n");
+
+    Type e;
+    deleteByIndex(&l, 2, &e); // 删除第二个节点
+    printf("List after deleting index 2:\n");
+    for (Node *p = l->next; p != NULL; p = p->next) {
+        printf("%d ", p->data);
+    }
+    printf("\n");
+
+    destructor(&l); // 清理链表
+    return 0;
+}
+```
 代码地址：https://github.com/proacane/DataStructure

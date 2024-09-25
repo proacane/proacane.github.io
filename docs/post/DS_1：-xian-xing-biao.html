@@ -1011,6 +1011,618 @@ C语言分配内存：malloc(分配的连续内存大小)，返回一个指针�
     }
     (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">pre</span>    ;
 }</pre></div>
+<h2>双向链表</h2>
+<p>可以根据当前结点找到前一个结点，依然分为带头结点与不带头结点两部分来实现</p>
+<h3>双向链表实现</h3>
+<ol>
+<li>初始化</li>
+<li>插入：按位置插入（i从0开始），指定结点的后插，指定结点的前插</li>
+<li>删除：按位序删除，删除指定结点</li>
+<li>内存回收</li>
+<li>查找：按值、按位</li>
+<li>头插法、尾插法<br>
+不带头结点：</li>
+</ol>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-k">#include</span> <span class="pl-s">&lt;stdio.h&gt;</span>
+<span class="pl-k">#include</span> <span class="pl-s">&lt;malloc.h&gt;</span>
+
+<span class="pl-k">#define</span> <span class="pl-s1">Type</span> int
+
+<span class="pl-k">typedef</span> <span class="pl-k">struct</span> <span class="pl-smi">Node</span> {
+    <span class="pl-k">struct</span> <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-c1">next</span>;
+    <span class="pl-k">struct</span> <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-c1">prev</span>;
+    <span class="pl-smi">Type</span> <span class="pl-c1">data</span>;
+} <span class="pl-smi">Node</span>;
+<span class="pl-k">typedef</span> <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-smi">LinkedList</span>;
+
+<span class="pl-smi">void</span> <span class="pl-en">initList</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>) {
+    <span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">destructor</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>) {
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">p</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">temp</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span>;
+        <span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+        <span class="pl-en">free</span>(<span class="pl-s1">temp</span>);
+    }
+    <span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">insert</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>, <span class="pl-smi">int</span> <span class="pl-s1">i</span>, <span class="pl-smi">Type</span> <span class="pl-s1">e</span>) {
+    <span class="pl-k">if</span> (<span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">0</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"Index cannot be negative\n"</span>);
+        <span class="pl-k">return</span>;
+    }
+
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">newNode</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+    <span class="pl-k">if</span> (<span class="pl-s1">newNode</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"Can't allocate memory\n"</span>);
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span> <span class="pl-c1">=</span> <span class="pl-s1">e</span>;
+
+    <span class="pl-k">if</span> (<span class="pl-s1">i</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span>) {
+        <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+        <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>;
+        <span class="pl-k">if</span> ((<span class="pl-c1">*</span><span class="pl-s1">l</span>) <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+            (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+        }
+        <span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+        <span class="pl-k">return</span>;
+    }
+
+    <span class="pl-smi">int</span> <span class="pl-s1">j</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">j</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">i</span> <span class="pl-c1">-</span> <span class="pl-c1">1</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">p</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+        <span class="pl-s1">j</span><span class="pl-c1">++</span>;
+    }
+    <span class="pl-k">if</span> (<span class="pl-s1">p</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"i &gt; Length of list"</span>);
+        <span class="pl-en">free</span>(<span class="pl-s1">newNode</span>);
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span>;
+    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+    <span class="pl-k">if</span> (<span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+    }
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">insertAfterNode</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>, <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span>, <span class="pl-smi">Type</span> <span class="pl-s1">e</span>) {
+    <span class="pl-k">if</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span> <span class="pl-c1">||</span> <span class="pl-s1">p</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">q</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">q</span> <span class="pl-c1">!=</span> <span class="pl-s1">p</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">q</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-s1">q</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    }
+    <span class="pl-k">if</span> (<span class="pl-s1">q</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-c">// p 不在链表中</span>
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-c">// 插到q的后面</span>
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">newNode</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+    <span class="pl-k">if</span> (<span class="pl-s1">newNode</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"Can't allocate memory\n"</span>);
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span> <span class="pl-c1">=</span> <span class="pl-s1">e</span>;
+    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span>;
+    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+    <span class="pl-k">if</span> (<span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+    }
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">insertBeforeNode</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>, <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span>, <span class="pl-smi">Type</span> <span class="pl-s1">e</span>) {
+    <span class="pl-k">if</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span> <span class="pl-c1">||</span> <span class="pl-s1">p</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">q</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">q</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">q</span> <span class="pl-c1">!=</span> <span class="pl-s1">p</span>) {
+        <span class="pl-s1">q</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    }
+    <span class="pl-k">if</span> (<span class="pl-s1">q</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-c">// 插到q的前面</span>
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">newNode</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+    <span class="pl-k">if</span> (<span class="pl-s1">newNode</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"Can't allocate memory\n"</span>);
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span> <span class="pl-c1">=</span> <span class="pl-s1">e</span>;
+    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span>;
+    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span>;
+    <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+    <span class="pl-k">if</span> (<span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span>) {
+        <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+    } <span class="pl-k">else</span> {
+        <span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+    }
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">deleteByIndex</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>, <span class="pl-smi">int</span> <span class="pl-s1">i</span>, <span class="pl-smi">Type</span> <span class="pl-c1">*</span><span class="pl-s1">e</span>) {
+    <span class="pl-k">if</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span> <span class="pl-c1">||</span> <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">0</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>;
+    <span class="pl-k">if</span> (<span class="pl-s1">i</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span>) {
+        <span class="pl-c1">*</span><span class="pl-s1">e</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>;
+        <span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+        <span class="pl-k">if</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+            (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+        }
+        <span class="pl-en">free</span>(<span class="pl-s1">p</span>);
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-smi">int</span> <span class="pl-s1">j</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">j</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">i</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">p</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+        <span class="pl-s1">j</span><span class="pl-c1">++</span>;
+    }
+    <span class="pl-k">if</span> (<span class="pl-s1">p</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-c">// 要删除的就是p结点</span>
+    <span class="pl-c1">*</span><span class="pl-s1">e</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>;
+    <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    <span class="pl-k">if</span> (<span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>) {
+        <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span>;
+    }
+    <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+    <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+    <span class="pl-en">free</span>(<span class="pl-s1">p</span>);
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">deleteNode</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>, <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span>) {
+    <span class="pl-k">if</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span> <span class="pl-c1">||</span> <span class="pl-s1">p</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">q</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">q</span> <span class="pl-c1">!=</span> <span class="pl-s1">p</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">q</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-s1">q</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    }
+    <span class="pl-k">if</span> (<span class="pl-s1">q</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-c">// 删除q结点</span>
+    <span class="pl-k">if</span> (<span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-c">// q 不是第一个结点</span>
+        <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    } <span class="pl-k">else</span> {
+        <span class="pl-c">// 更新第一个结点</span>
+        <span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    }
+    <span class="pl-k">if</span> (<span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-c">// q 不是最后一个结点</span>
+        <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span>;
+    }
+    <span class="pl-en">free</span>(<span class="pl-s1">q</span>);
+}
+
+<span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-en">getElementByValue</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>, <span class="pl-smi">Type</span> <span class="pl-s1">e</span>) {
+    <span class="pl-k">if</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span> <span class="pl-c1">NULL</span>;
+    }
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">p</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span> <span class="pl-c1">!=</span> <span class="pl-s1">e</span>) {
+        <span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    }
+    <span class="pl-k">return</span> <span class="pl-s1">p</span>;
+}
+
+<span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-en">getElementByIndex</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>, <span class="pl-smi">int</span> <span class="pl-s1">i</span>) {
+    <span class="pl-k">if</span> (<span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">0</span> <span class="pl-c1">||</span> <span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span> <span class="pl-c1">NULL</span>;
+    }
+    <span class="pl-smi">int</span> <span class="pl-s1">j</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">p</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">j</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">i</span>) {
+        <span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+        <span class="pl-s1">j</span><span class="pl-c1">++</span>;
+    }
+    <span class="pl-k">return</span> <span class="pl-s1">p</span>;
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">initListHead</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>) {
+    <span class="pl-smi">int</span> <span class="pl-s1">x</span>;
+    <span class="pl-en">printf</span>(<span class="pl-s">"Enter value (9999 to quit): "</span>);
+    <span class="pl-en">scanf</span>(<span class="pl-s">"%d"</span>, <span class="pl-c1">&amp;</span><span class="pl-s1">x</span>);
+    <span class="pl-k">if</span> (<span class="pl-s1">x</span> <span class="pl-c1">==</span> <span class="pl-c1">9999</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+    <span class="pl-k">if</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span>;
+    }
+    (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+    (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+    (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">data</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span>;
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>;
+    <span class="pl-k">while</span> (<span class="pl-c1">1</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"Enter value (9999 to quit): "</span>);
+        <span class="pl-en">scanf</span>(<span class="pl-s">"%d"</span>, <span class="pl-c1">&amp;</span><span class="pl-s1">x</span>);
+        <span class="pl-k">if</span> (<span class="pl-s1">x</span> <span class="pl-c1">==</span> <span class="pl-c1">9999</span>) {
+            <span class="pl-k">break</span>;
+        }
+        <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">newNode</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+        <span class="pl-k">if</span> (<span class="pl-s1">newNode</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) { <span class="pl-c">// 检查内存分配</span>
+            <span class="pl-k">break</span>;
+        }
+        <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span>;
+        <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+        <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span>;
+        <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+        <span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+    }
+    <span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span>;
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">initListTail</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>) {
+    <span class="pl-smi">int</span> <span class="pl-s1">x</span>;
+    <span class="pl-en">printf</span>(<span class="pl-s">"Enter value (9999 to quit): "</span>);
+    <span class="pl-en">scanf</span>(<span class="pl-s">"%d"</span>, <span class="pl-c1">&amp;</span><span class="pl-s1">x</span>);
+    <span class="pl-k">if</span> (<span class="pl-s1">x</span> <span class="pl-c1">==</span> <span class="pl-c1">9999</span>) {
+        <span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+    <span class="pl-k">if</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span>;
+    }
+    (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+    (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+    (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">data</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span>;
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>;
+    <span class="pl-k">while</span> (<span class="pl-c1">1</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"Enter value (9999 to quit): "</span>);
+        <span class="pl-en">scanf</span>(<span class="pl-s">"%d"</span>, <span class="pl-c1">&amp;</span><span class="pl-s1">x</span>);
+        <span class="pl-k">if</span> (<span class="pl-s1">x</span> <span class="pl-c1">==</span> <span class="pl-c1">9999</span>) {
+            <span class="pl-k">break</span>;
+        }
+        <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">newNode</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+        <span class="pl-k">if</span> (<span class="pl-s1">newNode</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) { <span class="pl-c">// 检查内存分配</span>
+            <span class="pl-k">break</span>;
+        }
+        <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span>;
+        <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span>;
+        <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+        <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+        <span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+    }
+}
+
+<span class="pl-smi">int</span> <span class="pl-en">main</span>() {
+    <span class="pl-smi">LinkedList</span> <span class="pl-s1">list</span>;
+    <span class="pl-en">initList</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">list</span>);
+
+    <span class="pl-c">// 使用头插法初始化链表</span>
+    <span class="pl-en">initListTail</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">list</span>);
+
+    <span class="pl-c">// 打印链表内容</span>
+    <span class="pl-en">printf</span>(<span class="pl-s">"Current list: "</span>);
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">temp</span> <span class="pl-c1">=</span> <span class="pl-s1">list</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">temp</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"%d "</span>, <span class="pl-s1">temp</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>);
+        <span class="pl-s1">temp</span> <span class="pl-c1">=</span> <span class="pl-s1">temp</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    }
+    <span class="pl-en">printf</span>(<span class="pl-s">"\n"</span>);
+
+    <span class="pl-c">// 插入示例</span>
+    <span class="pl-en">insert</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">list</span>, <span class="pl-c1">0</span>, <span class="pl-c1">100</span>);
+    <span class="pl-en">insert</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">list</span>, <span class="pl-c1">1</span>, <span class="pl-c1">200</span>);
+    <span class="pl-en">insert</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">list</span>, <span class="pl-c1">2</span>, <span class="pl-c1">300</span>);
+    <span class="pl-en">insert</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">list</span>, <span class="pl-c1">10</span>, <span class="pl-c1">400</span>); <span class="pl-c">// 测试超出范围</span>
+    <span class="pl-en">printf</span>(<span class="pl-s">"After inserts: "</span>);
+    <span class="pl-s1">temp</span> <span class="pl-c1">=</span> <span class="pl-s1">list</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">temp</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"%d "</span>, <span class="pl-s1">temp</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>);
+        <span class="pl-s1">temp</span> <span class="pl-c1">=</span> <span class="pl-s1">temp</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    }
+    <span class="pl-en">printf</span>(<span class="pl-s">"\n"</span>);
+
+    <span class="pl-c">// 删除示例</span>
+    <span class="pl-smi">Type</span> <span class="pl-s1">e</span>;
+    <span class="pl-en">deleteByIndex</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">list</span>, <span class="pl-c1">0</span>, <span class="pl-c1">&amp;</span><span class="pl-s1">e</span>);
+    <span class="pl-en">printf</span>(<span class="pl-s">"Deleted node with value %d from index 0\n"</span>, <span class="pl-s1">e</span>);
+    <span class="pl-en">printf</span>(<span class="pl-s">"After deletion: "</span>);
+    <span class="pl-s1">temp</span> <span class="pl-c1">=</span> <span class="pl-s1">list</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">temp</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"%d "</span>, <span class="pl-s1">temp</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>);
+        <span class="pl-s1">temp</span> <span class="pl-c1">=</span> <span class="pl-s1">temp</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    }
+    <span class="pl-en">printf</span>(<span class="pl-s">"\n"</span>);
+
+    <span class="pl-c">// 销毁链表</span>
+    <span class="pl-en">destructor</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">list</span>);
+    <span class="pl-en">printf</span>(<span class="pl-s">"List destroyed.\n"</span>);
+
+    <span class="pl-k">return</span> <span class="pl-c1">0</span>;
+}</pre></div>
+<p>带头结点:</p>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-k">#include</span> <span class="pl-s">&lt;stdio.h&gt;</span>
+<span class="pl-k">#include</span> <span class="pl-s">&lt;malloc.h&gt;</span>
+
+<span class="pl-k">#define</span> <span class="pl-s1">Type</span> int
+
+<span class="pl-k">typedef</span> <span class="pl-k">struct</span> <span class="pl-smi">Node</span> {
+    <span class="pl-k">struct</span> <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-c1">next</span>;
+    <span class="pl-k">struct</span> <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-c1">prev</span>;
+    <span class="pl-smi">Type</span> <span class="pl-c1">data</span>;
+} <span class="pl-smi">Node</span>;
+<span class="pl-k">typedef</span> <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-smi">LinkedList</span>;
+
+<span class="pl-smi">void</span> <span class="pl-en">initList</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>) {
+    <span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+    <span class="pl-k">if</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"Can't allocate memory\n"</span>);
+        <span class="pl-k">return</span>;
+    }
+    (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+    (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">destructor</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>) {
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span> <span class="pl-c1">=</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">p</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">temp</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+        <span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+        <span class="pl-en">free</span>(<span class="pl-s1">temp</span>);
+    }
+    <span class="pl-en">free</span>(<span class="pl-c1">*</span><span class="pl-s1">l</span>);
+    <span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">insert</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>, <span class="pl-smi">int</span> <span class="pl-s1">i</span>, <span class="pl-smi">Type</span> <span class="pl-s1">e</span>) {
+    <span class="pl-k">if</span> (<span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">1</span> <span class="pl-c1">||</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span>) <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>;
+    <span class="pl-smi">int</span> <span class="pl-s1">j</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">p</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">j</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">i</span> <span class="pl-c1">-</span> <span class="pl-c1">1</span>) {
+        <span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+        <span class="pl-s1">j</span><span class="pl-c1">++</span>;
+    }
+    <span class="pl-c">// 插入到p的下一个</span>
+    <span class="pl-k">if</span> (<span class="pl-s1">p</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"Index out of bounds\n"</span>);
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">newNode</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+    <span class="pl-k">if</span> (<span class="pl-s1">newNode</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"Can't allocate memory\n"</span>);
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span> <span class="pl-c1">=</span> <span class="pl-s1">e</span>;
+    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span>;
+    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    <span class="pl-k">if</span> (<span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+    }
+    <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">insertAfterNode</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>, <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span>, <span class="pl-smi">Type</span> <span class="pl-s1">e</span>) {
+    <span class="pl-k">if</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span> <span class="pl-c1">||</span> <span class="pl-s1">p</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">q</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">q</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">q</span> <span class="pl-c1">!=</span> <span class="pl-s1">p</span>) {
+        <span class="pl-s1">q</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    }
+    <span class="pl-c">// 插入到 q 后面</span>
+    <span class="pl-k">if</span> (<span class="pl-s1">q</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-c">// p 不是链表的一部分</span>
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">newNode</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+    <span class="pl-k">if</span> (<span class="pl-s1">newNode</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"Can't allocate memory\n"</span>);
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span> <span class="pl-c1">=</span> <span class="pl-s1">e</span>;
+    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span>;
+    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    <span class="pl-k">if</span> (<span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+    }
+    <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">insertBeforeNode</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>, <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span>, <span class="pl-smi">Type</span> <span class="pl-s1">e</span>) {
+    <span class="pl-k">if</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span> <span class="pl-c1">||</span> <span class="pl-s1">p</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span> <span class="pl-c1">||</span> <span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">==</span> <span class="pl-s1">p</span>) {
+        <span class="pl-c">// p 不能是头结点</span>
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">q</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">q</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">q</span> <span class="pl-c1">!=</span> <span class="pl-s1">p</span>) {
+        <span class="pl-s1">q</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    }
+    <span class="pl-c">// 插入到 q 前面</span>
+    <span class="pl-k">if</span> (<span class="pl-s1">q</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-c">// p 不是链表的一部分</span>
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">newNode</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+    <span class="pl-k">if</span> (<span class="pl-s1">newNode</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"Can't allocate memory\n"</span>);
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span> <span class="pl-c1">=</span> <span class="pl-s1">e</span>;
+    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span>;
+    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span>;
+    <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">deleteByIndex</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>, <span class="pl-smi">int</span> <span class="pl-s1">i</span>, <span class="pl-smi">Type</span> <span class="pl-c1">*</span><span class="pl-s1">e</span>) {
+    <span class="pl-k">if</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span> <span class="pl-c1">||</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span> <span class="pl-c1">||</span> <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">1</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-smi">int</span> <span class="pl-s1">j</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">p</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">j</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">i</span>) {
+        <span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+        <span class="pl-s1">j</span><span class="pl-c1">++</span>;
+    }
+    <span class="pl-k">if</span> (<span class="pl-s1">p</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-c1">*</span><span class="pl-s1">e</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>;
+    <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    <span class="pl-k">if</span> (<span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span>;
+    }
+    <span class="pl-en">free</span>(<span class="pl-s1">p</span>);
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">deleteNode</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>, <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span>) {
+    <span class="pl-k">if</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span> <span class="pl-c1">||</span> <span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">==</span> <span class="pl-s1">p</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">q</span> <span class="pl-c1">=</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">q</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">q</span> <span class="pl-c1">!=</span> <span class="pl-s1">p</span>) {
+        <span class="pl-s1">q</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    }
+    <span class="pl-k">if</span> (<span class="pl-s1">q</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-c">// 删除q</span>
+    <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    <span class="pl-k">if</span> (<span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span>;
+    }
+    <span class="pl-en">free</span>(<span class="pl-s1">q</span>);
+}
+
+<span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-en">getElementByValue</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>, <span class="pl-smi">Type</span> <span class="pl-s1">e</span>) {
+    <span class="pl-k">if</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span> <span class="pl-c1">NULL</span>;
+    }
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span> <span class="pl-c1">=</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">p</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span> <span class="pl-c1">!=</span> <span class="pl-s1">e</span>) {
+        <span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    }
+    <span class="pl-k">return</span> <span class="pl-s1">p</span>;
+}
+
+<span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-en">getElementByIndex</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>, <span class="pl-smi">int</span> <span class="pl-s1">i</span>) {
+    <span class="pl-k">if</span> (<span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">1</span> <span class="pl-c1">||</span> <span class="pl-c1">*</span><span class="pl-s1">l</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span> <span class="pl-c1">NULL</span>;
+    }
+    <span class="pl-smi">int</span> <span class="pl-s1">j</span> <span class="pl-c1">=</span> <span class="pl-c1">1</span>;
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span> <span class="pl-c1">=</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">p</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">j</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">i</span>) {
+        <span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+        <span class="pl-s1">j</span><span class="pl-c1">++</span>;
+    }
+    <span class="pl-k">return</span> <span class="pl-s1">p</span>;
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">initListHead</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>) {
+    <span class="pl-smi">int</span> <span class="pl-s1">x</span>;
+    <span class="pl-en">printf</span>(<span class="pl-s">"Enter value (9999 to quit): "</span>);
+    <span class="pl-en">scanf</span>(<span class="pl-s">"%d"</span>, <span class="pl-c1">&amp;</span><span class="pl-s1">x</span>);
+    <span class="pl-k">if</span> (<span class="pl-s1">x</span> <span class="pl-c1">==</span> <span class="pl-c1">9999</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">q</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+    <span class="pl-k">if</span> (<span class="pl-s1">q</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>;
+    <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+    <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span>;
+    (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span>;
+    <span class="pl-k">while</span> (<span class="pl-c1">1</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"Enter value (9999 to quit): "</span>);
+        <span class="pl-en">scanf</span>(<span class="pl-s">"%d"</span>, <span class="pl-c1">&amp;</span><span class="pl-s1">x</span>);
+        <span class="pl-k">if</span> (<span class="pl-s1">x</span> <span class="pl-c1">==</span> <span class="pl-c1">9999</span>) {
+            <span class="pl-k">break</span>;
+        }
+        <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">newNode</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+        <span class="pl-k">if</span> (<span class="pl-s1">newNode</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) { <span class="pl-c">// 检查内存分配</span>
+            <span class="pl-k">break</span>;
+        }
+        <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span>;
+        <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>;
+        <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+        <span class="pl-k">if</span> ((<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+            (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">next</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+        }
+        (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+    }
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">initListTail</span>(<span class="pl-smi">LinkedList</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>) {
+    <span class="pl-smi">int</span> <span class="pl-s1">x</span>;
+    <span class="pl-en">printf</span>(<span class="pl-s">"Enter value (9999 to quit): "</span>);
+    <span class="pl-en">scanf</span>(<span class="pl-s">"%d"</span>, <span class="pl-c1">&amp;</span><span class="pl-s1">x</span>);
+    <span class="pl-k">if</span> (<span class="pl-s1">x</span> <span class="pl-c1">==</span> <span class="pl-c1">9999</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-c">// q 指向链表末尾的结点</span>
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">q</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+    <span class="pl-k">if</span> (<span class="pl-s1">q</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">l</span>;
+    <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+    <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span>;
+    (<span class="pl-c1">*</span><span class="pl-s1">l</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span>;
+    <span class="pl-k">while</span> (<span class="pl-c1">1</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"Enter value (9999 to quit): "</span>);
+        <span class="pl-en">scanf</span>(<span class="pl-s">"%d"</span>, <span class="pl-c1">&amp;</span><span class="pl-s1">x</span>);
+        <span class="pl-k">if</span> (<span class="pl-s1">x</span> <span class="pl-c1">==</span> <span class="pl-c1">9999</span>) {
+            <span class="pl-k">break</span>;
+        }
+        <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">newNode</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+        <span class="pl-k">if</span> (<span class="pl-s1">newNode</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) { <span class="pl-c">// 检查内存分配</span>
+            <span class="pl-k">break</span>;
+        }
+        <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span> <span class="pl-c1">=</span> <span class="pl-s1">x</span>;
+        <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">prev</span> <span class="pl-c1">=</span> <span class="pl-s1">q</span>;
+        <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+        <span class="pl-s1">q</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+        <span class="pl-s1">q</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+    }
+}
+
+<span class="pl-smi">int</span> <span class="pl-en">main</span>() {
+    <span class="pl-smi">LinkedList</span> <span class="pl-s1">l</span>;
+    <span class="pl-en">initList</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">l</span>);
+
+<span class="pl-c">//    initListHead(&amp;l); // 测试头插法</span>
+<span class="pl-c">//    printf("List after head insertion:\n");</span>
+<span class="pl-c">//    for (Node *p = l-&gt;next; p != NULL; p = p-&gt;next) {</span>
+<span class="pl-c">//        printf("%d ", p-&gt;data);</span>
+<span class="pl-c">//    }</span>
+<span class="pl-c">//    printf("\n");</span>
+<span class="pl-c">//    destructor(&amp;l);</span>
+
+<span class="pl-c">//    initList(&amp;l);</span>
+    <span class="pl-en">initListTail</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">l</span>); <span class="pl-c">// 测试尾插法</span>
+    <span class="pl-en">printf</span>(<span class="pl-s">"List after tail insertion:\n"</span>);
+    <span class="pl-k">for</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-s1">l</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>; <span class="pl-s1">p</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>; <span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"%d "</span>, <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>);
+    }
+    <span class="pl-en">printf</span>(<span class="pl-s">"\n"</span>);
+
+    <span class="pl-smi">Type</span> <span class="pl-s1">e</span>;
+    <span class="pl-en">deleteByIndex</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">l</span>, <span class="pl-c1">2</span>, <span class="pl-c1">&amp;</span><span class="pl-s1">e</span>); <span class="pl-c">// 删除第二个节点</span>
+    <span class="pl-en">printf</span>(<span class="pl-s">"List after deleting index 2:\n"</span>);
+    <span class="pl-k">for</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-s1">l</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>; <span class="pl-s1">p</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>; <span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"%d "</span>, <span class="pl-s1">p</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>);
+    }
+    <span class="pl-en">printf</span>(<span class="pl-s">"\n"</span>);
+
+    <span class="pl-en">destructor</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">l</span>); <span class="pl-c">// 清理链表</span>
+    <span class="pl-k">return</span> <span class="pl-c1">0</span>;
+}</pre></div>
 <p>代码地址：<a href="https://github.com/proacane/DataStructure">https://github.com/proacane/DataStructure</a></p></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
