@@ -187,3 +187,4 @@ Type front(stack *s) {
     return (*s)->next->data;
 }
 ```
+代码地址：https://github.com/proacane/DataStructure
