@@ -1623,6 +1623,16 @@ C语言分配内存：malloc(分配的连续内存大小)，返回一个指针�
     <span class="pl-en">destructor</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">l</span>); <span class="pl-c">// 清理链表</span>
     <span class="pl-k">return</span> <span class="pl-c1">0</span>;
 }</pre></div>
+<h2>循环链表</h2>
+<p>就是在普通链表的基础上，增加了第一个结点和最后一个结点的互相指向<br>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/5f38a32b-a0d9-4428-b1d6-57d7f971dc03"><img src="https://github.com/user-attachments/assets/5f38a32b-a0d9-4428-b1d6-57d7f971dc03" alt="image" style="max-width: 100%;"></a><br>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/b9183338-f0d7-4518-9d63-8cbeaa746362"><img src="https://github.com/user-attachments/assets/b9183338-f0d7-4518-9d63-8cbeaa746362" alt="image" style="max-width: 100%;"></a></p>
+<h2>静态链表</h2>
+<p>给链表分配一片连续的内存空间，本质上跟数组没啥区别，就是将数组作为了链表使用</p>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-k">typedef</span> <span class="pl-k">struct</span> <span class="pl-smi">Node</span>{
+    <span class="pl-smi">int</span> <span class="pl-c1">data</span>;
+    <span class="pl-smi">int</span> <span class="pl-c1">next</span>;
+}<span class="pl-smi"></span>;</pre></div>
 <p>代码地址：<a href="https://github.com/proacane/DataStructure">https://github.com/proacane/DataStructure</a></p></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 

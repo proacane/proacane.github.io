@@ -1543,4 +1543,16 @@ int main() {
     return 0;
 }
 ```
+## 循环链表
+就是在普通链表的基础上，增加了第一个结点和最后一个结点的互相指向
+![image](https://github.com/user-attachments/assets/5f38a32b-a0d9-4428-b1d6-57d7f971dc03)
+![image](https://github.com/user-attachments/assets/b9183338-f0d7-4518-9d63-8cbeaa746362)
+## 静态链表
+给链表分配一片连续的内存空间，本质上跟数组没啥区别，就是将数组作为了链表使用
+```C
+typedef struct Node{
+    int data;
+    int next;
+};
+```
 代码地址：https://github.com/proacane/DataStructure
