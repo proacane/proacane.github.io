@@ -1,5 +1,26 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Proacane的个人微博</title><link>https://proacane.github.io</link><description>学无止境</description><copyright>Proacane的个人微博</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true</url><title>avatar</title><link>https://proacane.github.io</link></image><lastBuildDate>Thu, 26 Sep 2024 07:24:00 +0000</lastBuildDate><managingEditor>Proacane的个人微博</managingEditor><ttl>60</ttl><webMaster>Proacane的个人微博</webMaster><item><title>DS_2：栈</title><link>https://proacane.github.io/post/DS_2%EF%BC%9A-zhan.html</link><description># 栈&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Proacane的个人微博</title><link>https://proacane.github.io</link><description>学无止境</description><copyright>Proacane的个人微博</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true</url><title>avatar</title><link>https://proacane.github.io</link></image><lastBuildDate>Thu, 26 Sep 2024 07:28:17 +0000</lastBuildDate><managingEditor>Proacane的个人微博</managingEditor><ttl>60</ttl><webMaster>Proacane的个人微博</webMaster><item><title>操作系统概述</title><link>https://proacane.github.io/post/cao-zuo-xi-tong-gai-shu.html</link><description># 操作系统的概念&#13;
+操作系统（Operating System， OS）是指控制和**管理**整个计算机系统的**硬件和软件**资源，并合理地组织调度计算机的工作和资源的分配；以**提供给用户和其他软件方便的接口和环境**；它是计算机系统中**最基本的系统软件**&#13;
+# 特征&#13;
+操作系统的4个特征：&#13;
+1. 并发&#13;
+2. 共享&#13;
+3. 虚拟&#13;
+4. 异步&#13;
+其中，并发、共享是操作系统最基本的特征，并且二者相互依存&#13;
+## 并发&#13;
+并发是指两个或多个事件在同一时间间隔内发生，在宏观看来是同时发生的，但是微观上是交替运行的；&#13;
+操作系统的并发指的是可以同时存在多个运行的程序&#13;
+并行：指多个事件在同一时刻同时发生&#13;
+单核 cpu 同一时刻只能运行一个进程，只能并发&#13;
+多核 cpu 同一时刻可以运行多个进程，既存在并发、也存在并行&#13;
+## 共享&#13;
+共享：指系统中的资源可以被多个并发执行的进程使用&#13;
+互斥共享：系统中的某些资源，虽然可以提供给多个进程使用，但一个时间段内只允许一个进程访问该资源，例如摄像头等资源&#13;
+同时共享：系统中的某些资源，允许一个时间段内由多个进程“同时”对它们进行访问，例如磁盘的读写&#13;
+从共享的定义就可以看出来，若操作系统没有并发性，共享就没有意义；没有共享性，并发也没有意义&#13;
+## 虚拟&#13;
+虚拟是指把一个物理上的实体变为若干个逻辑上的对应物。</description><guid isPermaLink="true">https://proacane.github.io/post/cao-zuo-xi-tong-gai-shu.html</guid><pubDate>Thu, 26 Sep 2024 07:22:55 +0000</pubDate></item><item><title>DS_2：栈</title><link>https://proacane.github.io/post/DS_2%EF%BC%9A-zhan.html</link><description># 栈&#13;
 定义：只允许在一端进行操作（插入、删除）的线性表&#13;
 基本操作：&#13;
 1. 初始化栈&#13;
