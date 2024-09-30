@@ -78,3 +78,40 @@ cpu执行关中断指令后，就不会对中断进行检查，所以具有原�
 2. PCB移入相应队列
 3. 执行另一个进程，更新其PCB
 4. 根据PCB恢复新进程运行的环境
+# 进程通信
+多个进程之间产生数据交互。需要操作系统的支持
+每个进程拥有的内存地址互相独立，进程之前不可以直接访问
+![image](https://github.com/user-attachments/assets/5ef7a1f6-e74f-4953-8029-98928397d732)
+## 共享存储
+进程可以向操作系统申请共享存储区，这片区域其它进程也可以访问,为了避免原子性问题，各个进程对共享内存的访问是互斥的
+![image](https://github.com/user-attachments/assets/1a325e70-9bf8-4370-9808-61cf9a7bee8e)
+基于存储区的共享：，操作系统在内存中划出一块共享存储区，数据的形式、存放位置都由通信进程控制，而不是操作系统，这种共享方式速度很快，是一种高级通信方式
+基于数据结构的共享：比如共享空间里只能放一个长度为10的数组，这种方式速度慢、限制多，是一种低级通信方式
+## 消息传递
+进程间的数据交换以格式化的消息为单位，进程通过操作系统提供的`发送消息、接收消息`两个原语进行数据交换
+![image](https://github.com/user-attachments/assets/7c3a0021-cd01-4520-a437-c4788d3eb451)
+又可划分为直接通信方式和间接通信方式：
+直接通信方式：消息发送进程指明接收进程的ID
+间接通信方式：消息先发送到中间实体（信箱）中
+### 直接通信方式
+进程p向进程q通信，进程q先创建包含消息头和消息体的消息节点，调用发送原语，指明进程q的PID，操作系统内核接受到后，将该消息放到进程q的消息队列中，进程q接收时，指定接收的进程PID，在进程q的pcb的消息队列中进行接收
+![image](https://github.com/user-attachments/assets/b2a55983-415e-4d24-9367-2d64c552e858)
+👇
+![image](https://github.com/user-attachments/assets/2b201493-5ea9-4805-bb14-16746d6494ce)
+👇
+![image](https://github.com/user-attachments/assets/5aa612e6-ac7b-46a9-a082-d9ec97e19ea6)
+👇
+![image](https://github.com/user-attachments/assets/4738c3a8-29ff-4b2c-919e-b8cefcb65f1c)
+### 间接通信方式
+进程p创建消息节点，发送给A信箱
+![image](https://github.com/user-attachments/assets/bb1bb7d5-2921-4455-8dc3-61150b05152b)
+进程q可以指定从哪个信箱接受消息
+![image](https://github.com/user-attachments/assets/0a5b97f6-4c70-438a-bf29-1648a89b46a4)
+## 管道通信
+一个管道的数据的传递只能是单向的，也就是半双工通信
+![image](https://github.com/user-attachments/assets/b54d7978-3de8-411f-b564-e0939611a868)
+若需要实现双向同时通信，需要设置两个管道
+![image](https://github.com/user-attachments/assets/ee623da0-2f30-4b3d-a012-75c6eebf376e)
+对管道的访问是互斥的，当管道写满时，写进程就会被阻塞，等待读进程将数据读走；当管道为空时，读进程就会被阻塞
+管道就是在内存中开辟一个大小固定的内存缓冲区，进程q在读取数据的时候不能随机读取，只能按顺序依次读取,，管道区域类似于循环队列
+管道的数据一旦被读取，就失效了，所以多个进程读取同一个管道时，可能会产生数据混乱；解决方案：1.一个管道允许多个写进程，读进程只能有一个；2.允许多个写进程，多个读进程，但系统会让各个读进程轮流从管道中读取（Linux）
