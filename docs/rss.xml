@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Proacane的个人微博</title><link>https://proacane.github.io</link><description>学无止境</description><copyright>Proacane的个人微博</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true</url><title>avatar</title><link>https://proacane.github.io</link></image><lastBuildDate>Sat, 28 Sep 2024 07:28:13 +0000</lastBuildDate><managingEditor>Proacane的个人微博</managingEditor><ttl>60</ttl><webMaster>Proacane的个人微博</webMaster><item><title>DS3：字符串</title><link>https://proacane.github.io/post/DS3%EF%BC%9A-zi-fu-chuan.html</link><description># 字符串&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Proacane的个人微博</title><link>https://proacane.github.io</link><description>学无止境</description><copyright>Proacane的个人微博</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true</url><title>avatar</title><link>https://proacane.github.io</link></image><lastBuildDate>Mon, 30 Sep 2024 06:21:41 +0000</lastBuildDate><managingEditor>Proacane的个人微博</managingEditor><ttl>60</ttl><webMaster>Proacane的个人微博</webMaster><item><title>DS_3：字符串</title><link>https://proacane.github.io/post/DS_3%EF%BC%9A-zi-fu-chuan.html</link><description># 字符串&#13;
 由零个或多个字符组成的有限序列&#13;
 1. 子串：串中任意个连续的字符组成的子序列&#13;
 2. 主串：包含子串的串&#13;
@@ -131,7 +131,7 @@ int index(string*s,string* t){&#13;
     }&#13;
     return -1;&#13;
 }&#13;
-```。</description><guid isPermaLink="true">https://proacane.github.io/post/DS3%EF%BC%9A-zi-fu-chuan.html</guid><pubDate>Sat, 28 Sep 2024 07:27:52 +0000</pubDate></item><item><title>OS_1：进程管理</title><link>https://proacane.github.io/post/OS_1%EF%BC%9A-jin-cheng-guan-li.html</link><description># 进程的概念、组成、特征&#13;
+```。</description><guid isPermaLink="true">https://proacane.github.io/post/DS_3%EF%BC%9A-zi-fu-chuan.html</guid><pubDate>Sat, 28 Sep 2024 07:27:52 +0000</pubDate></item><item><title>OS_1：进程管理</title><link>https://proacane.github.io/post/OS_1%EF%BC%9A-jin-cheng-guan-li.html</link><description># 进程的概念、组成、特征&#13;
 ## 概念&#13;
 进程可以理解为程序的一次执行，同一个程序可以创建多个进程&#13;
 ## 组成&#13;
