@@ -29,6 +29,7 @@
 10. 比较大小
 实现依然是分为顺序存储和链式存储
 ## 顺序存储实现
+顺序存储内部的 char 数组，可以使用静态数组，也可以使用动态分配，这里使用静态数组
 顺序存储有几种不同的实现方案:
 1. char数组从索引0开始存放字符，使用单独的变量存储字符串长度
 2. char数组索引0存储长度，后面存放字符
@@ -142,7 +143,257 @@ int index(string*s,string* t){
     }
     return -1;
 }
-```。">
+```
+## 链式存储实现
+链式存储的每个节点可以放1个或多个字符，这里存放4个字符
+```C
+#define MAX_CHARS 4
+typedef struct Node {
+    // 每个节点存放4个字符
+    char data[MAX_CHARS];
+    struct Node *next;
+} Node;
+typedef Node *string;
+
+void constructor(string *s) {
+    *s = (Node *) malloc(sizeof(Node));
+    if (*s == NULL) {
+        printf('Failed to allocate memory\n');
+        return;
+    }
+    (*s)->next = NULL;
+    for (int i = 0; i < MAX_CHARS; ++i) {
+        (*s)->data[i] = '\0';
+    }
+}
+
+void destructor(string *s) {
+    Node *current = *s;
+    while (current != NULL) {
+        Node *temp = current;
+        current = current->next;
+        free(temp);
+    }
+    *s = NULL;
+}
+
+int size(string *s) {
+    Node *current = *s;
+    int totalLen = 0;
+    while (current != NULL) {
+        for (int i = 0; i < MAX_CHARS; i++) {
+            if (current->data[i] == '\0') {
+                return totalLen;
+            }
+            totalLen++;
+        }
+        current = current->next;
+    }
+    return totalLen;
+}
+
+bool isEmpty(string *s) {
+    return (*s == NULL || (*s)->data[0] == '\0');
+}
+
+void assign(string *s, const char *t, int len) {
+    if (t[0] == '\0') {
+        return;
+    }
+    destructor(s);
+    constructor(s);
+    Node *current = *s;
+    for (int i = 0; i < len; i++) {
+        if (i != 0 && i % MAX_CHARS == 0) {
+            // 创建新节点
+            Node *newNode = (Node *) malloc(sizeof(Node));
+            if (newNode == NULL) {
+                printf('Failed to allocate memory\n');
+                return;
+            }
+            newNode->next = NULL;
+            for (int k = 0; k < MAX_CHARS; ++k) {
+                newNode->data[k] = '\0';
+            }
+            current->next = newNode;
+            current = newNode;
+        }
+        current->data[i % MAX_CHARS] = t[i];
+    }
+}
+
+void printStr(string *s) {
+    Node *current = *s;
+    while (current != NULL) {
+        for (int i = 0; i < MAX_CHARS; i++) {
+            if (current->data[i] != '\0') {
+                printf('%c', current->data[i]);
+            }
+        }
+        current = current->next;
+    }
+    printf('\n');
+}
+
+bool concat(string *dest, string *s, string *t) {
+    destructor(dest);
+    constructor(dest);
+    Node *current = *s;
+    Node *destCurrent = *dest;
+    int i = 0;
+    // s 拼到 dest
+    while (current != NULL) {
+        for (int j = 0; j < MAX_CHARS; j++) {
+            if (current->data[j] == '\0') {
+                break;
+            }
+            destCurrent->data[i++] = current->data[j];
+            if (i == MAX_CHARS) {
+                // 创建新节点
+                Node *newNode = (Node *) malloc(sizeof(Node));
+                if (newNode == NULL) {
+                    printf('Failed to allocate memory\n');
+                    return false;
+                }
+                newNode->next = NULL;
+                for (int k = 0; k < MAX_CHARS; ++k) {
+                    newNode->data[k] = '\0';
+                }
+                destCurrent->next = newNode;
+                destCurrent = newNode;
+                i = 0;
+            }
+        }
+        current = current->next;
+    }
+
+    // 拼接完了 s，从 dest当前节点的第 i位拼接 t
+    current = *t;
+    while (current != NULL) {
+        for (int j = 0; j < MAX_CHARS; j++) {
+            if (current->data[j] == '\0') {
+                break;
+            }
+            destCurrent->data[i++] = current->data[j];
+            // dest的节点满了，创建新节点
+            if (i == MAX_CHARS) {
+                Node *newNode = (Node *) malloc(sizeof(Node));
+                if (newNode == NULL) {
+                    printf('Failed to allocate memory\n');
+                    return false;
+                }
+                newNode->next = NULL;
+                for (int k = 0; k < MAX_CHARS; ++k) {
+                    newNode->data[k] = '\0';
+                }
+                destCurrent->next = newNode;
+                destCurrent = newNode;
+                i = 0;
+            }
+        }
+        current = current->next;
+    }
+    return true;
+}
+
+bool substr(string *dest, string *s, int pos, int len) {
+    destructor(dest);
+    constructor(dest);
+    int strLen = size(s);
+    if (pos + len > strLen) {
+        return false;
+    }
+    // 从第几个节点开始截取
+    int i = pos / MAX_CHARS;
+    // 从节点的第几位开始截取
+    int j = pos % MAX_CHARS;
+    Node *current = *s;
+    // 移动到第 i 个节点
+    while (i > 0 && current != NULL) {
+        current = current->next;
+        i--;
+    }
+
+    if (current == NULL) {
+        return false; // 如果没有足够的节点
+    }
+
+    Node *destCurrent = *dest;
+    int destIndex = 0;
+
+    // 开始向 dest 中添加字符
+    for (int k = 0; k < len; k++) {
+        // 截取完了一个节点
+        if (j == MAX_CHARS) {
+            current = current->next;
+            j = 0;
+        }
+        // dest的节点放满了
+        if (destIndex == MAX_CHARS) {
+            // 创建新节点
+            Node *newNode = (Node *) malloc(sizeof(Node));
+            if (newNode == NULL) {
+                printf('Failed to allocate memory\n');
+                return false;
+            }
+            newNode->next = NULL;
+            for (int l = 0; l < MAX_CHARS; ++l) {
+                newNode->data[l] = '\0';
+            }
+            destCurrent->next = newNode;
+            destCurrent = newNode;
+            destIndex = 0;
+        }
+        destCurrent->data[destIndex++] = current->data[j++];
+    }
+    return true;
+}
+
+// s1>s2 返回值大于0
+int compare(string *s1, string *s2) {
+    Node *current1 = *s1;
+    Node *current2 = *s2;
+    while (current1 != NULL && current2 != NULL) {
+        for (int i = 0; i < MAX_CHARS; i++) {
+            if (current1->data[i] == '\0' || current2->data[i] == '\0') {
+                return current1->data[i] - current2->data[i];
+            }
+
+            if (current1->data[i] != current2->data[i]) {
+                return current1->data[i] - current2->data[i];
+            }
+        }
+        current1 = current1->next;
+        current2 = current2->next;
+    }
+    return size(s1) - size(s2);
+}
+
+int indexOfString(string *s, string *t) {
+    int sSize = size(s);
+    int tSize = size(t);
+    if (tSize > sSize) {
+        return -1;
+    }
+
+    string sub = NULL;
+    int i = 0;
+    while (i <= sSize - tSize) {
+        if (!substr(&sub, s, i, tSize)) {
+            destructor(&sub);
+            return -1;
+        };
+        if (compare(&sub, t) == 0) {
+            destructor(&sub);
+            return i;
+        }
+        i++;
+    }
+    destructor(&sub);
+    return -1;
+}
+```
+初始化的时候可能初始化为NULL比较好，这里就不作更改了。">
 <meta property="og:title" content="DS_3：字符串">
 <meta property="og:description" content="# 字符串
 由零个或多个字符组成的有限序列
@@ -163,6 +414,7 @@ int index(string*s,string* t){
 10. 比较大小
 实现依然是分为顺序存储和链式存储
 ## 顺序存储实现
+顺序存储内部的 char 数组，可以使用静态数组，也可以使用动态分配，这里使用静态数组
 顺序存储有几种不同的实现方案:
 1. char数组从索引0开始存放字符，使用单独的变量存储字符串长度
 2. char数组索引0存储长度，后面存放字符
@@ -276,7 +528,257 @@ int index(string*s,string* t){
     }
     return -1;
 }
-```。">
+```
+## 链式存储实现
+链式存储的每个节点可以放1个或多个字符，这里存放4个字符
+```C
+#define MAX_CHARS 4
+typedef struct Node {
+    // 每个节点存放4个字符
+    char data[MAX_CHARS];
+    struct Node *next;
+} Node;
+typedef Node *string;
+
+void constructor(string *s) {
+    *s = (Node *) malloc(sizeof(Node));
+    if (*s == NULL) {
+        printf('Failed to allocate memory\n');
+        return;
+    }
+    (*s)->next = NULL;
+    for (int i = 0; i < MAX_CHARS; ++i) {
+        (*s)->data[i] = '\0';
+    }
+}
+
+void destructor(string *s) {
+    Node *current = *s;
+    while (current != NULL) {
+        Node *temp = current;
+        current = current->next;
+        free(temp);
+    }
+    *s = NULL;
+}
+
+int size(string *s) {
+    Node *current = *s;
+    int totalLen = 0;
+    while (current != NULL) {
+        for (int i = 0; i < MAX_CHARS; i++) {
+            if (current->data[i] == '\0') {
+                return totalLen;
+            }
+            totalLen++;
+        }
+        current = current->next;
+    }
+    return totalLen;
+}
+
+bool isEmpty(string *s) {
+    return (*s == NULL || (*s)->data[0] == '\0');
+}
+
+void assign(string *s, const char *t, int len) {
+    if (t[0] == '\0') {
+        return;
+    }
+    destructor(s);
+    constructor(s);
+    Node *current = *s;
+    for (int i = 0; i < len; i++) {
+        if (i != 0 && i % MAX_CHARS == 0) {
+            // 创建新节点
+            Node *newNode = (Node *) malloc(sizeof(Node));
+            if (newNode == NULL) {
+                printf('Failed to allocate memory\n');
+                return;
+            }
+            newNode->next = NULL;
+            for (int k = 0; k < MAX_CHARS; ++k) {
+                newNode->data[k] = '\0';
+            }
+            current->next = newNode;
+            current = newNode;
+        }
+        current->data[i % MAX_CHARS] = t[i];
+    }
+}
+
+void printStr(string *s) {
+    Node *current = *s;
+    while (current != NULL) {
+        for (int i = 0; i < MAX_CHARS; i++) {
+            if (current->data[i] != '\0') {
+                printf('%c', current->data[i]);
+            }
+        }
+        current = current->next;
+    }
+    printf('\n');
+}
+
+bool concat(string *dest, string *s, string *t) {
+    destructor(dest);
+    constructor(dest);
+    Node *current = *s;
+    Node *destCurrent = *dest;
+    int i = 0;
+    // s 拼到 dest
+    while (current != NULL) {
+        for (int j = 0; j < MAX_CHARS; j++) {
+            if (current->data[j] == '\0') {
+                break;
+            }
+            destCurrent->data[i++] = current->data[j];
+            if (i == MAX_CHARS) {
+                // 创建新节点
+                Node *newNode = (Node *) malloc(sizeof(Node));
+                if (newNode == NULL) {
+                    printf('Failed to allocate memory\n');
+                    return false;
+                }
+                newNode->next = NULL;
+                for (int k = 0; k < MAX_CHARS; ++k) {
+                    newNode->data[k] = '\0';
+                }
+                destCurrent->next = newNode;
+                destCurrent = newNode;
+                i = 0;
+            }
+        }
+        current = current->next;
+    }
+
+    // 拼接完了 s，从 dest当前节点的第 i位拼接 t
+    current = *t;
+    while (current != NULL) {
+        for (int j = 0; j < MAX_CHARS; j++) {
+            if (current->data[j] == '\0') {
+                break;
+            }
+            destCurrent->data[i++] = current->data[j];
+            // dest的节点满了，创建新节点
+            if (i == MAX_CHARS) {
+                Node *newNode = (Node *) malloc(sizeof(Node));
+                if (newNode == NULL) {
+                    printf('Failed to allocate memory\n');
+                    return false;
+                }
+                newNode->next = NULL;
+                for (int k = 0; k < MAX_CHARS; ++k) {
+                    newNode->data[k] = '\0';
+                }
+                destCurrent->next = newNode;
+                destCurrent = newNode;
+                i = 0;
+            }
+        }
+        current = current->next;
+    }
+    return true;
+}
+
+bool substr(string *dest, string *s, int pos, int len) {
+    destructor(dest);
+    constructor(dest);
+    int strLen = size(s);
+    if (pos + len > strLen) {
+        return false;
+    }
+    // 从第几个节点开始截取
+    int i = pos / MAX_CHARS;
+    // 从节点的第几位开始截取
+    int j = pos % MAX_CHARS;
+    Node *current = *s;
+    // 移动到第 i 个节点
+    while (i > 0 && current != NULL) {
+        current = current->next;
+        i--;
+    }
+
+    if (current == NULL) {
+        return false; // 如果没有足够的节点
+    }
+
+    Node *destCurrent = *dest;
+    int destIndex = 0;
+
+    // 开始向 dest 中添加字符
+    for (int k = 0; k < len; k++) {
+        // 截取完了一个节点
+        if (j == MAX_CHARS) {
+            current = current->next;
+            j = 0;
+        }
+        // dest的节点放满了
+        if (destIndex == MAX_CHARS) {
+            // 创建新节点
+            Node *newNode = (Node *) malloc(sizeof(Node));
+            if (newNode == NULL) {
+                printf('Failed to allocate memory\n');
+                return false;
+            }
+            newNode->next = NULL;
+            for (int l = 0; l < MAX_CHARS; ++l) {
+                newNode->data[l] = '\0';
+            }
+            destCurrent->next = newNode;
+            destCurrent = newNode;
+            destIndex = 0;
+        }
+        destCurrent->data[destIndex++] = current->data[j++];
+    }
+    return true;
+}
+
+// s1>s2 返回值大于0
+int compare(string *s1, string *s2) {
+    Node *current1 = *s1;
+    Node *current2 = *s2;
+    while (current1 != NULL && current2 != NULL) {
+        for (int i = 0; i < MAX_CHARS; i++) {
+            if (current1->data[i] == '\0' || current2->data[i] == '\0') {
+                return current1->data[i] - current2->data[i];
+            }
+
+            if (current1->data[i] != current2->data[i]) {
+                return current1->data[i] - current2->data[i];
+            }
+        }
+        current1 = current1->next;
+        current2 = current2->next;
+    }
+    return size(s1) - size(s2);
+}
+
+int indexOfString(string *s, string *t) {
+    int sSize = size(s);
+    int tSize = size(t);
+    if (tSize > sSize) {
+        return -1;
+    }
+
+    string sub = NULL;
+    int i = 0;
+    while (i <= sSize - tSize) {
+        if (!substr(&sub, s, i, tSize)) {
+            destructor(&sub);
+            return -1;
+        };
+        if (compare(&sub, t) == 0) {
+            destructor(&sub);
+            return i;
+        }
+        i++;
+    }
+    destructor(&sub);
+    return -1;
+}
+```
+初始化的时候可能初始化为NULL比较好，这里就不作更改了。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://proacane.github.io/post/DS_3%EF%BC%9A-zi-fu-chuan.html">
 <meta property="og:image" content="https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true">
@@ -368,7 +870,8 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 实现依然是分为顺序存储和链式存储</li>
 </ol>
 <h2>顺序存储实现</h2>
-<p>顺序存储有几种不同的实现方案:</p>
+<p>顺序存储内部的 char 数组，可以使用静态数组，也可以使用动态分配，这里使用静态数组<br>
+顺序存储有几种不同的实现方案:</p>
 <ol>
 <li>char数组从索引0开始存放字符，使用单独的变量存储字符串长度</li>
 <li>char数组索引0存储长度，后面存放字符</li>
@@ -481,7 +984,255 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
         <span class="pl-s1">i</span><span class="pl-c1">++</span>;
     }
     <span class="pl-k">return</span> <span class="pl-c1">-1</span>;
-}</pre></div></div>
+}</pre></div>
+<h2>链式存储实现</h2>
+<p>链式存储的每个节点可以放1个或多个字符，这里存放4个字符</p>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-k">#define</span> <span class="pl-c1">MAX_CHARS</span> 4
+<span class="pl-k">typedef</span> <span class="pl-k">struct</span> <span class="pl-smi">Node</span> {
+    <span class="pl-c">// 每个节点存放4个字符</span>
+    <span class="pl-smi">char</span> <span class="pl-c1">data</span>[<span class="pl-c1">MAX_CHARS</span>];
+    <span class="pl-k">struct</span> <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-c1">next</span>;
+} <span class="pl-smi">Node</span>;
+<span class="pl-k">typedef</span> <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-smi">string</span>;
+
+<span class="pl-smi">void</span> <span class="pl-en">constructor</span>(<span class="pl-smi">string</span> <span class="pl-c1">*</span><span class="pl-s1">s</span>) {
+    <span class="pl-c1">*</span><span class="pl-s1">s</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+    <span class="pl-k">if</span> (<span class="pl-c1">*</span><span class="pl-s1">s</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-en">printf</span>(<span class="pl-s">"Failed to allocate memory\n"</span>);
+        <span class="pl-k">return</span>;
+    }
+    (<span class="pl-c1">*</span><span class="pl-s1">s</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+    <span class="pl-k">for</span> (<span class="pl-smi">int</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">MAX_CHARS</span>; <span class="pl-c1">++</span><span class="pl-s1">i</span>) {
+        (<span class="pl-c1">*</span><span class="pl-s1">s</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">i</span>] <span class="pl-c1">=</span> <span class="pl-c1">'\0'</span>;
+    }
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">destructor</span>(<span class="pl-smi">string</span> <span class="pl-c1">*</span><span class="pl-s1">s</span>) {
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">current</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">s</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">current</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">temp</span> <span class="pl-c1">=</span> <span class="pl-s1">current</span>;
+        <span class="pl-s1">current</span> <span class="pl-c1">=</span> <span class="pl-s1">current</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+        <span class="pl-en">free</span>(<span class="pl-s1">temp</span>);
+    }
+    <span class="pl-c1">*</span><span class="pl-s1">s</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+}
+
+<span class="pl-smi">int</span> <span class="pl-en">size</span>(<span class="pl-smi">string</span> <span class="pl-c1">*</span><span class="pl-s1">s</span>) {
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">current</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">s</span>;
+    <span class="pl-smi">int</span> <span class="pl-s1">totalLen</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">current</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">for</span> (<span class="pl-smi">int</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">MAX_CHARS</span>; <span class="pl-s1">i</span><span class="pl-c1">++</span>) {
+            <span class="pl-k">if</span> (<span class="pl-s1">current</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">i</span>] <span class="pl-c1">==</span> <span class="pl-c1">'\0'</span>) {
+                <span class="pl-k">return</span> <span class="pl-s1">totalLen</span>;
+            }
+            <span class="pl-s1">totalLen</span><span class="pl-c1">++</span>;
+        }
+        <span class="pl-s1">current</span> <span class="pl-c1">=</span> <span class="pl-s1">current</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    }
+    <span class="pl-k">return</span> <span class="pl-s1">totalLen</span>;
+}
+
+<span class="pl-smi">bool</span> <span class="pl-en">isEmpty</span>(<span class="pl-smi">string</span> <span class="pl-c1">*</span><span class="pl-s1">s</span>) {
+    <span class="pl-k">return</span> (<span class="pl-c1">*</span><span class="pl-s1">s</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span> <span class="pl-c1">||</span> (<span class="pl-c1">*</span><span class="pl-s1">s</span>)<span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-c1">0</span>] <span class="pl-c1">==</span> <span class="pl-c1">'\0'</span>);
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">assign</span>(<span class="pl-smi">string</span> <span class="pl-c1">*</span><span class="pl-s1">s</span>, <span class="pl-k">const</span> <span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-s1">t</span>, <span class="pl-smi">int</span> <span class="pl-s1">len</span>) {
+    <span class="pl-k">if</span> (<span class="pl-s1">t</span>[<span class="pl-c1">0</span>] <span class="pl-c1">==</span> <span class="pl-c1">'\0'</span>) {
+        <span class="pl-k">return</span>;
+    }
+    <span class="pl-en">destructor</span>(<span class="pl-s1">s</span>);
+    <span class="pl-en">constructor</span>(<span class="pl-s1">s</span>);
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">current</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">s</span>;
+    <span class="pl-k">for</span> (<span class="pl-smi">int</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">len</span>; <span class="pl-s1">i</span><span class="pl-c1">++</span>) {
+        <span class="pl-k">if</span> (<span class="pl-s1">i</span> <span class="pl-c1">!=</span> <span class="pl-c1">0</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">i</span> % <span class="pl-c1">MAX_CHARS</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span>) {
+            <span class="pl-c">// 创建新节点</span>
+            <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">newNode</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+            <span class="pl-k">if</span> (<span class="pl-s1">newNode</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+                <span class="pl-en">printf</span>(<span class="pl-s">"Failed to allocate memory\n"</span>);
+                <span class="pl-k">return</span>;
+            }
+            <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+            <span class="pl-k">for</span> (<span class="pl-smi">int</span> <span class="pl-s1">k</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">k</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">MAX_CHARS</span>; <span class="pl-c1">++</span><span class="pl-s1">k</span>) {
+                <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">k</span>] <span class="pl-c1">=</span> <span class="pl-c1">'\0'</span>;
+            }
+            <span class="pl-s1">current</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+            <span class="pl-s1">current</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+        }
+        <span class="pl-s1">current</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">i</span> % <span class="pl-c1">MAX_CHARS</span>] <span class="pl-c1">=</span> <span class="pl-s1">t</span>[<span class="pl-s1">i</span>];
+    }
+}
+
+<span class="pl-smi">void</span> <span class="pl-en">printStr</span>(<span class="pl-smi">string</span> <span class="pl-c1">*</span><span class="pl-s1">s</span>) {
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">current</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">s</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">current</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">for</span> (<span class="pl-smi">int</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">MAX_CHARS</span>; <span class="pl-s1">i</span><span class="pl-c1">++</span>) {
+            <span class="pl-k">if</span> (<span class="pl-s1">current</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">i</span>] <span class="pl-c1">!=</span> <span class="pl-c1">'\0'</span>) {
+                <span class="pl-en">printf</span>(<span class="pl-s">"%c"</span>, <span class="pl-s1">current</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">i</span>]);
+            }
+        }
+        <span class="pl-s1">current</span> <span class="pl-c1">=</span> <span class="pl-s1">current</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    }
+    <span class="pl-en">printf</span>(<span class="pl-s">"\n"</span>);
+}
+
+<span class="pl-smi">bool</span> <span class="pl-en">concat</span>(<span class="pl-smi">string</span> <span class="pl-c1">*</span><span class="pl-s1">dest</span>, <span class="pl-smi">string</span> <span class="pl-c1">*</span><span class="pl-s1">s</span>, <span class="pl-smi">string</span> <span class="pl-c1">*</span><span class="pl-s1">t</span>) {
+    <span class="pl-en">destructor</span>(<span class="pl-s1">dest</span>);
+    <span class="pl-en">constructor</span>(<span class="pl-s1">dest</span>);
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">current</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">s</span>;
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">destCurrent</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">dest</span>;
+    <span class="pl-smi">int</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+    <span class="pl-c">// s 拼到 dest</span>
+    <span class="pl-k">while</span> (<span class="pl-s1">current</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">for</span> (<span class="pl-smi">int</span> <span class="pl-s1">j</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">j</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">MAX_CHARS</span>; <span class="pl-s1">j</span><span class="pl-c1">++</span>) {
+            <span class="pl-k">if</span> (<span class="pl-s1">current</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">j</span>] <span class="pl-c1">==</span> <span class="pl-c1">'\0'</span>) {
+                <span class="pl-k">break</span>;
+            }
+            <span class="pl-s1">destCurrent</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">i</span><span class="pl-c1">++</span>] <span class="pl-c1">=</span> <span class="pl-s1">current</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">j</span>];
+            <span class="pl-k">if</span> (<span class="pl-s1">i</span> <span class="pl-c1">==</span> <span class="pl-c1">MAX_CHARS</span>) {
+                <span class="pl-c">// 创建新节点</span>
+                <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">newNode</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+                <span class="pl-k">if</span> (<span class="pl-s1">newNode</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+                    <span class="pl-en">printf</span>(<span class="pl-s">"Failed to allocate memory\n"</span>);
+                    <span class="pl-k">return</span> false;
+                }
+                <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+                <span class="pl-k">for</span> (<span class="pl-smi">int</span> <span class="pl-s1">k</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">k</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">MAX_CHARS</span>; <span class="pl-c1">++</span><span class="pl-s1">k</span>) {
+                    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">k</span>] <span class="pl-c1">=</span> <span class="pl-c1">'\0'</span>;
+                }
+                <span class="pl-s1">destCurrent</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+                <span class="pl-s1">destCurrent</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+                <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+            }
+        }
+        <span class="pl-s1">current</span> <span class="pl-c1">=</span> <span class="pl-s1">current</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    }
+
+    <span class="pl-c">// 拼接完了 s，从 dest当前节点的第 i位拼接 t</span>
+    <span class="pl-s1">current</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">t</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">current</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">for</span> (<span class="pl-smi">int</span> <span class="pl-s1">j</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">j</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">MAX_CHARS</span>; <span class="pl-s1">j</span><span class="pl-c1">++</span>) {
+            <span class="pl-k">if</span> (<span class="pl-s1">current</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">j</span>] <span class="pl-c1">==</span> <span class="pl-c1">'\0'</span>) {
+                <span class="pl-k">break</span>;
+            }
+            <span class="pl-s1">destCurrent</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">i</span><span class="pl-c1">++</span>] <span class="pl-c1">=</span> <span class="pl-s1">current</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">j</span>];
+            <span class="pl-c">// dest的节点满了，创建新节点</span>
+            <span class="pl-k">if</span> (<span class="pl-s1">i</span> <span class="pl-c1">==</span> <span class="pl-c1">MAX_CHARS</span>) {
+                <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">newNode</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+                <span class="pl-k">if</span> (<span class="pl-s1">newNode</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+                    <span class="pl-en">printf</span>(<span class="pl-s">"Failed to allocate memory\n"</span>);
+                    <span class="pl-k">return</span> false;
+                }
+                <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+                <span class="pl-k">for</span> (<span class="pl-smi">int</span> <span class="pl-s1">k</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">k</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">MAX_CHARS</span>; <span class="pl-c1">++</span><span class="pl-s1">k</span>) {
+                    <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">k</span>] <span class="pl-c1">=</span> <span class="pl-c1">'\0'</span>;
+                }
+                <span class="pl-s1">destCurrent</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+                <span class="pl-s1">destCurrent</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+                <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+            }
+        }
+        <span class="pl-s1">current</span> <span class="pl-c1">=</span> <span class="pl-s1">current</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    }
+    <span class="pl-k">return</span> true;
+}
+
+<span class="pl-smi">bool</span> <span class="pl-en">substr</span>(<span class="pl-smi">string</span> <span class="pl-c1">*</span><span class="pl-s1">dest</span>, <span class="pl-smi">string</span> <span class="pl-c1">*</span><span class="pl-s1">s</span>, <span class="pl-smi">int</span> <span class="pl-s1">pos</span>, <span class="pl-smi">int</span> <span class="pl-s1">len</span>) {
+    <span class="pl-en">destructor</span>(<span class="pl-s1">dest</span>);
+    <span class="pl-en">constructor</span>(<span class="pl-s1">dest</span>);
+    <span class="pl-smi">int</span> <span class="pl-s1">strLen</span> <span class="pl-c1">=</span> <span class="pl-en">size</span>(<span class="pl-s1">s</span>);
+    <span class="pl-k">if</span> (<span class="pl-s1">pos</span> <span class="pl-c1">+</span> <span class="pl-s1">len</span> <span class="pl-c1">&gt;</span> <span class="pl-s1">strLen</span>) {
+        <span class="pl-k">return</span> false;
+    }
+    <span class="pl-c">// 从第几个节点开始截取</span>
+    <span class="pl-smi">int</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-s1">pos</span> / <span class="pl-c1">MAX_CHARS</span>;
+    <span class="pl-c">// 从节点的第几位开始截取</span>
+    <span class="pl-smi">int</span> <span class="pl-s1">j</span> <span class="pl-c1">=</span> <span class="pl-s1">pos</span> % <span class="pl-c1">MAX_CHARS</span>;
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">current</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">s</span>;
+    <span class="pl-c">// 移动到第 i 个节点</span>
+    <span class="pl-k">while</span> (<span class="pl-s1">i</span> <span class="pl-c1">&gt;</span> <span class="pl-c1">0</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">current</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-s1">current</span> <span class="pl-c1">=</span> <span class="pl-s1">current</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+        <span class="pl-s1">i</span><span class="pl-c1">--</span>;
+    }
+
+    <span class="pl-k">if</span> (<span class="pl-s1">current</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">return</span> false; <span class="pl-c">// 如果没有足够的节点</span>
+    }
+
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">destCurrent</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">dest</span>;
+    <span class="pl-smi">int</span> <span class="pl-s1">destIndex</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+
+    <span class="pl-c">// 开始向 dest 中添加字符</span>
+    <span class="pl-k">for</span> (<span class="pl-smi">int</span> <span class="pl-s1">k</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">k</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">len</span>; <span class="pl-s1">k</span><span class="pl-c1">++</span>) {
+        <span class="pl-c">// 截取完了一个节点</span>
+        <span class="pl-k">if</span> (<span class="pl-s1">j</span> <span class="pl-c1">==</span> <span class="pl-c1">MAX_CHARS</span>) {
+            <span class="pl-s1">current</span> <span class="pl-c1">=</span> <span class="pl-s1">current</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+            <span class="pl-s1">j</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+        }
+        <span class="pl-c">// dest的节点放满了</span>
+        <span class="pl-k">if</span> (<span class="pl-s1">destIndex</span> <span class="pl-c1">==</span> <span class="pl-c1">MAX_CHARS</span>) {
+            <span class="pl-c">// 创建新节点</span>
+            <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">newNode</span> <span class="pl-c1">=</span> (<span class="pl-smi">Node</span> <span class="pl-c1">*</span>) <span class="pl-en">malloc</span>(<span class="pl-k">sizeof</span>(<span class="pl-s1">Node</span>));
+            <span class="pl-k">if</span> (<span class="pl-s1">newNode</span> <span class="pl-c1">==</span> <span class="pl-c1">NULL</span>) {
+                <span class="pl-en">printf</span>(<span class="pl-s">"Failed to allocate memory\n"</span>);
+                <span class="pl-k">return</span> false;
+            }
+            <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+            <span class="pl-k">for</span> (<span class="pl-smi">int</span> <span class="pl-s1">l</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">l</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">MAX_CHARS</span>; <span class="pl-c1">++</span><span class="pl-s1">l</span>) {
+                <span class="pl-s1">newNode</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">l</span>] <span class="pl-c1">=</span> <span class="pl-c1">'\0'</span>;
+            }
+            <span class="pl-s1">destCurrent</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+            <span class="pl-s1">destCurrent</span> <span class="pl-c1">=</span> <span class="pl-s1">newNode</span>;
+            <span class="pl-s1">destIndex</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+        }
+        <span class="pl-s1">destCurrent</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">destIndex</span><span class="pl-c1">++</span>] <span class="pl-c1">=</span> <span class="pl-s1">current</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">j</span><span class="pl-c1">++</span>];
+    }
+    <span class="pl-k">return</span> true;
+}
+
+<span class="pl-c">// s1&gt;s2 返回值大于0</span>
+<span class="pl-smi">int</span> <span class="pl-en">compare</span>(<span class="pl-smi">string</span> <span class="pl-c1">*</span><span class="pl-s1">s1</span>, <span class="pl-smi">string</span> <span class="pl-c1">*</span><span class="pl-s1">s2</span>) {
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">current1</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">s1</span>;
+    <span class="pl-smi">Node</span> <span class="pl-c1">*</span><span class="pl-s1">current2</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span><span class="pl-s1">s2</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">current1</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">current2</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>) {
+        <span class="pl-k">for</span> (<span class="pl-smi">int</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">MAX_CHARS</span>; <span class="pl-s1">i</span><span class="pl-c1">++</span>) {
+            <span class="pl-k">if</span> (<span class="pl-s1">current1</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">i</span>] <span class="pl-c1">==</span> <span class="pl-c1">'\0'</span> <span class="pl-c1">||</span> <span class="pl-s1">current2</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">i</span>] <span class="pl-c1">==</span> <span class="pl-c1">'\0'</span>) {
+                <span class="pl-k">return</span> <span class="pl-s1">current1</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">i</span>] <span class="pl-c1">-</span> <span class="pl-s1">current2</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">i</span>];
+            }
+
+            <span class="pl-k">if</span> (<span class="pl-s1">current1</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">i</span>] <span class="pl-c1">!=</span> <span class="pl-s1">current2</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">i</span>]) {
+                <span class="pl-k">return</span> <span class="pl-s1">current1</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">i</span>] <span class="pl-c1">-</span> <span class="pl-s1">current2</span><span class="pl-c1">-&gt;</span><span class="pl-c1">data</span>[<span class="pl-s1">i</span>];
+            }
+        }
+        <span class="pl-s1">current1</span> <span class="pl-c1">=</span> <span class="pl-s1">current1</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+        <span class="pl-s1">current2</span> <span class="pl-c1">=</span> <span class="pl-s1">current2</span><span class="pl-c1">-&gt;</span><span class="pl-c1">next</span>;
+    }
+    <span class="pl-k">return</span> <span class="pl-en">size</span>(<span class="pl-s1">s1</span>) <span class="pl-c1">-</span> <span class="pl-en">size</span>(<span class="pl-s1">s2</span>);
+}
+
+<span class="pl-smi">int</span> <span class="pl-en">indexOfString</span>(<span class="pl-smi">string</span> <span class="pl-c1">*</span><span class="pl-s1">s</span>, <span class="pl-smi">string</span> <span class="pl-c1">*</span><span class="pl-s1">t</span>) {
+    <span class="pl-smi">int</span> <span class="pl-s1">sSize</span> <span class="pl-c1">=</span> <span class="pl-en">size</span>(<span class="pl-s1">s</span>);
+    <span class="pl-smi">int</span> <span class="pl-s1">tSize</span> <span class="pl-c1">=</span> <span class="pl-en">size</span>(<span class="pl-s1">t</span>);
+    <span class="pl-k">if</span> (<span class="pl-s1">tSize</span> <span class="pl-c1">&gt;</span> <span class="pl-s1">sSize</span>) {
+        <span class="pl-k">return</span> <span class="pl-c1">-1</span>;
+    }
+
+    <span class="pl-smi">string</span> <span class="pl-s1">sub</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+    <span class="pl-smi">int</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+    <span class="pl-k">while</span> (<span class="pl-s1">i</span> &lt;= <span class="pl-s1">sSize</span> <span class="pl-c1">-</span> <span class="pl-s1">tSize</span>) {
+        <span class="pl-k">if</span> (!<span class="pl-en">substr</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">sub</span>, <span class="pl-s1">s</span>, <span class="pl-s1">i</span>, <span class="pl-s1">tSize</span>)) {
+            <span class="pl-en">destructor</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">sub</span>);
+            <span class="pl-k">return</span> <span class="pl-c1">-1</span>;
+        };
+        <span class="pl-k">if</span> (<span class="pl-en">compare</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">sub</span>, <span class="pl-s1">t</span>) <span class="pl-c1">==</span> <span class="pl-c1">0</span>) {
+            <span class="pl-en">destructor</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">sub</span>);
+            <span class="pl-k">return</span> <span class="pl-s1">i</span>;
+        }
+        <span class="pl-s1">i</span><span class="pl-c1">++</span>;
+    }
+    <span class="pl-en">destructor</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">sub</span>);
+    <span class="pl-k">return</span> <span class="pl-c1">-1</span>;
+}</pre></div>
+<p>初始化的时候可能初始化为NULL比较好，这里就不作更改了</p></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
