@@ -402,3 +402,260 @@ MainWindow::~MainWindow() {
     delete ui;
 }
 ```
+## 文件类
+为了文件传输的完整性、保存位置的灵活性，将发送的文件封装成一个类：
+```C++
+class TLVFile {
+  public:
+    enum MessageType { ID_FILE = 1, ID_TEXT = 2, ID_FOLDER = 3 };
+    TLVFile(MessageType type, const QString& fileName, const QByteArray& content);
+    // 序列化
+    QByteArray toByteArray() const;
+    // 反序列化
+    static TLVFile fromByteArray(const QByteArray& data);
+    // 获取消息类型
+    MessageType getType() const;
+    // 获取文件长度
+    qint32 getLength() const;
+    // 获取内容
+    QByteArray getContent() const;
+    // 获取文件名称
+    QString getFileName() const;
+
+  private:
+    MessageType _type;
+    qint32 _length;       // 消息长度
+    QByteArray _content;  // 消息内容
+    QString _fileName;    // 文件名称
+};
+```
+```C++
+TLVFile::TLVFile(MessageType type, const QString& fileName, const QByteArray& content) :
+    _type(type), _fileName(fileName), _content(content) {
+    _length = content.size();
+}
+
+// 获取文件名称
+QString TLVFile::getFileName() const { return _fileName; }
+
+// 序列化实现
+QByteArray TLVFile::toByteArray() const {
+    QByteArray result;
+    QDataStream stream(&result, QIODevice::WriteOnly);
+    stream << static_cast<qint32>(_type);
+    stream << _length;
+    stream << _fileName;
+    stream << _content;
+    return result;
+}
+
+// 反序列化实现
+TLVFile TLVFile::fromByteArray(const QByteArray& data) {
+    QDataStream stream(data);
+    qint32 type;
+    qint32 length;
+    QString fileName;
+    QByteArray content;
+
+    stream >> type >> length >> fileName >> content;
+
+    return TLVFile(static_cast<MessageType>(type), fileName, content);
+}
+
+TLVFile::MessageType TLVFile::getType() const { return _type; }
+
+qint32 TLVFile::getLength() const { return _length; }
+
+QByteArray TLVFile::getContent() const { return _content; }
+```
+## 创建TCP服务器
+一个客户端只能有一个TCP服务器，直接采用单例模式即可，端口号自动分配，在组播时将获取的TCP端口号进行设置，在接收到连接后，将接收任务交给线程池来处理
+```C++
+class FileTransferServer : public QObject {
+    Q_OBJECT
+  public:
+    static FileTransferServer* getInstance();
+    FileTransferServer(const FileTransferServer&) = delete;
+    FileTransferServer& operator=(const FileTransferServer&) = delete;
+    ~FileTransferServer();
+    // 开启服务器
+    void startServer();
+    // 获取服务器端口
+    quint16 getPort();
+
+  private:
+    explicit FileTransferServer(QObject* parent = nullptr);
+    QTcpServer* _server;
+    quint16 _port;
+  private slots:
+    // 处理新连接
+    void acceptConnection();
+  signals:
+};
+```
+```C++
+FileTransferServer* FileTransferServer::getInstance() {
+    static FileTransferServer instance;
+    return &instance;
+}
+
+FileTransferServer::FileTransferServer(QObject* parent) : QObject{parent}, _server(nullptr) {
+    // 限制为5个线程
+    QThreadPool::globalInstance()->setMaxThreadCount(5);
+}
+
+void FileTransferServer::acceptConnection() {
+    QTcpSocket* clientSocket = _server->nextPendingConnection();
+    qDebug() << "New connection from " << clientSocket->peerAddress().toString();
+    // 接收连接后的任务处理交给线程池
+    // TODO 接收功能实现
+    FileReceiver* receiver = new FileReceiver(clientSocket);
+    QThreadPool::globalInstance()->start(receiver);  // 将任务加入线程池
+}
+
+FileTransferServer::~FileTransferServer() {
+    if (_server) {
+        _server->close();
+    }
+}
+
+void FileTransferServer::startServer() {
+    if (!_server) {
+        _server = new QTcpServer(this);
+        connect(_server, &QTcpServer::newConnection, this, &FileTransferServer::acceptConnection);
+        // 自动分配端口
+        if (!_server->listen(QHostAddress::AnyIPv4, 0)) {
+            qWarning() << "Server failed to start!";
+        } else {
+            _port = _server->serverPort();
+            qDebug() << "Server started on port" << _port;
+        }
+    }
+}
+
+quint16 FileTransferServer::getPort() { return _port; }
+```
+## TCP发送端
+发送端获取服务端ip、端口和本地的文件路径，包装成TLVFile类型进行发送即可
+```C++
+class FileTransferClient : public QObject {
+    Q_OBJECT
+  public:
+    explicit FileTransferClient(QObject* parent = nullptr);
+    void sendFile(const QString& serverIp, quint16 serverPort, const QString& filePath);
+
+  private:
+    QTcpSocket* _socket;
+  signals:
+};
+```C++
+FileTransferClient::FileTransferClient(QObject* parent) : QObject{parent}, _socket(new QTcpSocket(this)) {}
+
+void FileTransferClient::sendFile(const QString& serverIp, quint16 serverPort, const QString& filePath) {
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        qDebug() << "Failed to open file";
+        return;
+    }
+    QByteArray fileContent = file.readAll();
+    TLVFile tlvFile(TLVFile::ID_FILE, QFileInfo(file).fileName(), fileContent);
+    // 连接到服务器
+    _socket->connectToHost(serverIp, serverPort);
+    connect(_socket, &QTcpSocket::connected, this, [=]() {
+        // 连接成功进行发送
+        _socket->write(tlvFile.toByteArray());
+        _socket->disconnectFromHost();
+    });
+}
+```
+## 多线程接收
+在服务端中，对连接的处理放到了FileReceiver中进行处理，实现如下：
+```C++
+class FileReceiver : public QRunnable {
+  public:
+    FileReceiver(QTcpSocket* socket);
+    void run() override;
+
+  private:
+    QTcpSocket* _socket;
+};
+```
+```C++
+FileReceiver::FileReceiver(QTcpSocket* socket) : _socket(socket) {}
+
+void FileReceiver::run() {
+    qDebug() << "FileReceiver thread started.";
+
+    while (_socket->waitForReadyRead()) {
+        QByteArray data = _socket->readAll();
+
+        // 反序列化 TLV 数据
+        TLVFile tlvFile = TLVFile::fromByteArray(data);
+
+        if (tlvFile.getType() == TLVFile::ID_FILE) {
+            QString fileName = tlvFile.getFileName();
+            // 验证并保存文件
+            // 让用户选择保存路径
+            QString savePath = QFileDialog::getSaveFileName(nullptr, "Save File", fileName);
+            if (!savePath.isEmpty()) {
+                QFile file(savePath);
+                if (file.open(QIODevice::WriteOnly)) {
+                    file.write(tlvFile.getContent());
+                    file.close();
+                    qDebug() << "File saved to" << savePath;
+                }
+            } else {
+                qWarning() << "Didn't choose right save path";
+            }
+        }
+    }
+
+    _socket->close();
+    delete _socket;
+}
+```
+## 界面操作
+点击设备列表中的设备时，缓存其ip、端口，_peer_data 是增加的QByteArray型成员变量
+```C++
+void MainWindow::on_deviceListWidget_itemClicked(QListWidgetItem* item) {
+    // 获取选中的 item 的ip、端口
+    _peer_data = item->data(Qt::UserRole).toByteArray();
+    if (_peer_data.isEmpty()) {
+        qWarning() << "Selected ip port is null";
+    }
+}
+```
+点击上传文件时，选择文件路径
+```C++
+void MainWindow::on_btn_add_file_clicked() {
+    QString fileName = QFileDialog::getOpenFileName(this, "选择文件", "",
+                                                    "所有文件 (*.*);;文本文件 (*.txt);;图像文件 (*.png *.jpg*.bmp) ");
+    if (!fileName.isEmpty()) {
+        _selected_file_path = fileName;  // 保存文件路径
+        qDebug() << "Selected file path is: " << _selected_file_path;
+        ui->btn_send->setEnabled(true);
+    }
+}
+```
+点击发送进行文件发送
+```C++
+void MainWindow::on_btn_send_clicked() {
+    // 发送文件
+    if (!ui->deviceListWidget->currentItem()) {
+        QMessageBox::warning(this, "警告", "未选择接收设备！");
+        return;
+    }
+    if (_selected_file_path.isEmpty()) {
+        QMessageBox::warning(this, "警告", "未选择文件");
+        return;
+    }
+    QDataStream stream(&_peer_data, QIODevice::ReadOnly);
+    QString ip;
+    quint16 port;
+    stream >> ip >> port;
+    if (ip.isEmpty() || port == 0) {
+        qWarning() << "Failed to parse peer ip, port";
+    }
+    _client->sendFile(ip, port, _selected_file_path);
+}
+```
