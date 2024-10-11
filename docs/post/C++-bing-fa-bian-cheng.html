@@ -11,6 +11,7 @@
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
 <meta name="description" content="# std::thread的基本操作
+## 发起线程
   在定义一个 std::thread 变量时，可以在该线程中指定要执行的函数
 ```c++
 void thread_work1(std::string str){
@@ -20,12 +21,14 @@ void thread_work1(std::string str){
 
 int main() {
     std::thread t1(thread_work1,'Hello, World!');
-    t1.join();
     return 0;
 }
-```。">
+```
+## 线程等待
+当线程启动时，线程可能不会立即执行，如果在局部作用域启动了一个线程，或者main函数中，很可能子线程没运行就被回收了，回收时会调用线程的析构函数，执行terminate操作。">
 <meta property="og:title" content="C++并发编程">
 <meta property="og:description" content="# std::thread的基本操作
+## 发起线程
   在定义一个 std::thread 变量时，可以在该线程中指定要执行的函数
 ```c++
 void thread_work1(std::string str){
@@ -35,10 +38,11 @@ void thread_work1(std::string str){
 
 int main() {
     std::thread t1(thread_work1,'Hello, World!');
-    t1.join();
     return 0;
 }
-```。">
+```
+## 线程等待
+当线程启动时，线程可能不会立即执行，如果在局部作用域启动了一个线程，或者main函数中，很可能子线程没运行就被回收了，回收时会调用线程的析构函数，执行terminate操作。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://proacane.github.io/post/C%2B%2B-bing-fa-bian-cheng.html">
 <meta property="og:image" content="https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true">
@@ -110,6 +114,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
     <div id="content">
 <div class="markdown-body" id="postBody"><h1>std::thread的基本操作</h1>
+<h2>发起线程</h2>
 <p>在定义一个 std::thread 变量时，可以在该线程中指定要执行的函数</p>
 <div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">void</span> <span class="pl-en">thread_work1</span>(std::string str){
     std::cout&lt;&lt;<span class="pl-s"><span class="pl-pds">"</span>Thread work 1 start<span class="pl-pds">"</span></span>&lt;&lt;std::endl;
@@ -118,8 +123,112 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 
 <span class="pl-k">int</span> <span class="pl-en">main</span>() {
     std::thread <span class="pl-smi">t1</span>(thread_work1,<span class="pl-s"><span class="pl-pds">"</span>Hello, World!<span class="pl-pds">"</span></span>);
+    <span class="pl-k">return</span> <span class="pl-c1">0</span>;
+}</pre></div>
+<h2>线程等待</h2>
+<p>当线程启动时，线程可能不会立即执行，如果在局部作用域启动了一个线程，或者main函数中，很可能子线程没运行就被回收了，回收时会调用线程的析构函数，执行terminate操作。为了防止主线程退出或者局部作用域结束导致子线程被析构的情况，可以通过join函数，让主线程等待子线程运行，等子线程运行结束后再结束主线程</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">void</span> <span class="pl-en">thread_work1</span>(<span class="pl-k">const</span> std::string &amp;str){
+    <span class="pl-c1">spdlog::info</span>(<span class="pl-s"><span class="pl-pds">"</span>str is {}<span class="pl-pds">"</span></span>,str);
+}
+
+<span class="pl-k">int</span> <span class="pl-en">main</span>() {
+    <span class="pl-c"><span class="pl-c">//</span> 设置 spdlog 显示线程 ID 的日志格式</span>
+    <span class="pl-c1">spdlog::set_pattern</span>(<span class="pl-s"><span class="pl-pds">"</span>[%Y-%m-%d %H:%M:%S] [Thread %t] [%l] %v<span class="pl-pds">"</span></span>);
+    std::thread <span class="pl-smi">t1</span>(thread_work1,<span class="pl-s"><span class="pl-pds">"</span>Hello, World!<span class="pl-pds">"</span></span>);
+    <span class="pl-c"><span class="pl-c">//</span> 主线程等待t1线程执行完</span>
+    <span class="pl-c1">spdlog::info</span>(<span class="pl-s"><span class="pl-pds">"</span>this is main thread<span class="pl-pds">"</span></span>);
     t1.<span class="pl-c1">join</span>();
     <span class="pl-k">return</span> <span class="pl-c1">0</span>;
+}</pre></div>
+<h2>仿函数作为参数</h2>
+<p>在构造std::thread 对象时，也可以将仿函数作为参数传递，使得线程执行仿函数的内容</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">class</span> <span class="pl-en">background_task</span> {
+<span class="pl-k">public:</span>
+    <span class="pl-k">void</span> <span class="pl-en">operator</span>()(<span class="pl-k">const</span> std::string &amp;str) {
+        <span class="pl-c1">log</span>(str);
+    }
+};
+    std::thread <span class="pl-en">t2</span>(background_task(),"hello world");
+    std::thread t3{<span class="pl-c1">background_task</span>(), <span class="pl-s"><span class="pl-pds">"</span>hello world<span class="pl-pds">"</span></span>};</pre></div>
+<p>直接传递 background_task() 是错误的，这样会使得编译器将本应创建的线程当作一个函数对象，返回值是 std::thread，参数是一个函数指针</p>
+<h2>lambda 表达式</h2>
+<p>lambda 表达式也可以作为参数传递给std::thread</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"> std::thread <span class="pl-en">t4</span>([](<span class="pl-k">const</span> std::string&amp; str){
+        <span class="pl-c1">log</span>(str);
+    },<span class="pl-s"><span class="pl-pds">"</span>Lambda thread<span class="pl-pds">"</span></span>);
+    t4.join();</pre></div>
+<h2>detach</h2>
+<p>线程允许通过 detach 将其分离到后台运行，C++ concurrent programing书中称其为守护线程</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">struct</span> <span class="pl-en">func</span>{
+    <span class="pl-k">int</span>&amp; _i;
+    <span class="pl-k">explicit</span> <span class="pl-en">func</span>(<span class="pl-k">int</span> &amp;i):_i(i){};
+    <span class="pl-k">void</span> <span class="pl-en">operator</span>()(){
+        <span class="pl-k">for</span>(<span class="pl-k">int</span> i = <span class="pl-c1">0</span>;i &lt; <span class="pl-c1">3</span>;i++){
+            _i = i;
+            <span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">"</span>_i is <span class="pl-pds">"</span></span>+<span class="pl-c1">std::to_string</span>(_i));
+            <span class="pl-c1">std::this_thread::sleep_for</span>(<span class="pl-c1">std::chrono::seconds</span>(<span class="pl-c1">1</span>));
+        }
+    }
+};
+
+<span class="pl-k">void</span> <span class="pl-en">oops</span>(){
+    <span class="pl-k">int</span> some_local_state = <span class="pl-c1">0</span>;
+    func <span class="pl-smi">myfunc</span>(some_local_state);
+    std::thread <span class="pl-smi">functhread</span>(myfunc);
+    <span class="pl-c"><span class="pl-c">//</span>隐患，访问局部变量，局部变量可能会随着}结束而回收或随着主线程退出而回收</span>
+    functhread.<span class="pl-c1">detach</span>();
+}
+
+<span class="pl-k">int</span> <span class="pl-en">main</span>() {
+    <span class="pl-c1">oops</span>();
+    <span class="pl-c"><span class="pl-c">//</span>防止主线程退出过快，需要停顿一下，让子线程跑起来detach</span>
+    <span class="pl-c1">std::this_thread::sleep_for</span>(<span class="pl-c1">std::chrono::seconds</span>(<span class="pl-c1">1</span>));
+}</pre></div>
+<p>因为 <code class="notranslate">some_local_state</code> 是局部变量，当oops()调用结束后<code class="notranslate">some_local_state</code>可能就被释放了，而线程通过detach还在后台运行，所以会崩溃<br>
+为了解决在线程中使用局部变量的问题，可以采取如下措施：</p>
+<ul>
+<li>通过智能指针传递参数，因为引用计数会随着赋值增加，可保证局部变量在使用期间不被释放，这也就是我们之前提到的伪闭包策略。</li>
+<li>将局部变量的值作为参数传递，这么做需要局部变量有拷贝复制的功能，而且拷贝耗费空间和效率。</li>
+<li>将线程运行的方式修改为join，这样能保证局部变量被释放前线程已经运行结束。但是这么做可能会影响运行逻辑。<br>
+上面的例子有如下几种修改方式：</li>
+</ul>
+<ol>
+<li>some_local_state 作为oops的参数传递（智能指针或值传递）</li>
+</ol>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">struct</span> <span class="pl-en">func</span>{
+   <span class="pl-k">int</span>&amp; _i;
+   <span class="pl-k">explicit</span> <span class="pl-en">func</span>(<span class="pl-k">int</span> &amp;i):_i(i){};
+   <span class="pl-k">void</span> <span class="pl-en">operator</span>()(){
+       <span class="pl-k">for</span>(<span class="pl-k">int</span> i = <span class="pl-c1">0</span>;i &lt; <span class="pl-c1">3</span>;i++){
+           _i = i;
+           <span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">"</span>_i is <span class="pl-pds">"</span></span>+<span class="pl-c1">std::to_string</span>(_i));
+           <span class="pl-c1">std::this_thread::sleep_for</span>(<span class="pl-c1">std::chrono::seconds</span>(<span class="pl-c1">1</span>));
+       }
+   }
+};
+
+<span class="pl-k">void</span> <span class="pl-en">oops</span>(<span class="pl-k">int</span> &amp;i){
+   func <span class="pl-smi">myfunc</span>(i);
+   std::thread <span class="pl-smi">functhread</span>(myfunc);
+   functhread.<span class="pl-c1">detach</span>();
+}
+
+<span class="pl-k">int</span> <span class="pl-en">main</span>() {
+   <span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">"</span>This is main thread<span class="pl-pds">"</span></span>);
+   <span class="pl-k">int</span> some_local_state = <span class="pl-c1">0</span>;
+   <span class="pl-c1">oops</span>(some_local_state);
+   <span class="pl-c"><span class="pl-c">//</span>防止主线程退出过快，需要停顿一下，让子线程跑起来detach</span>
+   <span class="pl-c1">std::this_thread::sleep_for</span>(<span class="pl-c1">std::chrono::seconds</span>(<span class="pl-c1">5</span>));
+   <span class="pl-k">return</span> <span class="pl-c1">0</span>;
+}</pre></div>
+<ol start="2">
+<li>使用join</li>
+</ol>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">void</span> <span class="pl-en">use_join</span>() {
+    <span class="pl-k">int</span> some_local_state = <span class="pl-c1">0</span>;
+    func <span class="pl-smi">myfunc</span>(some_local_state);
+    std::thread <span class="pl-smi">functhread</span>(myfunc);
+    functhread.<span class="pl-c1">join</span>();
 }</pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
