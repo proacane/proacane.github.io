@@ -1,20 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Proacane的个人微博</title><link>https://proacane.github.io</link><description>学无止境</description><copyright>Proacane的个人微博</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true</url><title>avatar</title><link>https://proacane.github.io</link></image><lastBuildDate>Fri, 11 Oct 2024 06:43:45 +0000</lastBuildDate><managingEditor>Proacane的个人微博</managingEditor><ttl>60</ttl><webMaster>Proacane的个人微博</webMaster><item><title>C++并发编程</title><link>https://proacane.github.io/post/C%2B%2B-bing-fa-bian-cheng.html</link><description># std::thread的基本操作&#13;
-## 发起线程&#13;
-  在定义一个 std::thread 变量时，可以在该线程中指定要执行的函数&#13;
-```c++&#13;
-void thread_work1(std::string str){&#13;
-    std::cout&lt;&lt;'Thread work 1 start'&lt;&lt;std::endl;&#13;
-    std::cout&lt;&lt;'str is '&lt;&lt;str&lt;&lt;std::endl;&#13;
-}&#13;
-&#13;
-int main() {&#13;
-    std::thread t1(thread_work1,'Hello, World!');&#13;
-    return 0;&#13;
-}&#13;
-```&#13;
-## 线程等待&#13;
-当线程启动时，线程可能不会立即执行，如果在局部作用域启动了一个线程，或者main函数中，很可能子线程没运行就被回收了，回收时会调用线程的析构函数，执行terminate操作。</description><guid isPermaLink="true">https://proacane.github.io/post/C%2B%2B-bing-fa-bian-cheng.html</guid><pubDate>Thu, 10 Oct 2024 05:55:51 +0000</pubDate></item><item><title>QT实现局域网文件传输软件</title><link>https://proacane.github.io/post/QT-shi-xian-ju-yu-wang-wen-jian-chuan-shu-ruan-jian.html</link><description># 总体架构&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Proacane的个人微博</title><link>https://proacane.github.io</link><description>学无止境</description><copyright>Proacane的个人微博</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true</url><title>avatar</title><link>https://proacane.github.io</link></image><lastBuildDate>Sat, 19 Oct 2024 06:50:49 +0000</lastBuildDate><managingEditor>Proacane的个人微博</managingEditor><ttl>60</ttl><webMaster>Proacane的个人微博</webMaster><item><title>C++并发编程</title><link>https://proacane.github.io/post/C%2B%2B-bing-fa-bian-cheng.html</link><description>记录《C++Concurrency In Action》的学习过程&#13;
+# 并发&#13;
+并发的两种方式：真正的并行与任务切换&#13;
+![image](https://github.com/user-attachments/assets/11994029-b407-4a19-9374-de8ad04bc5de)&#13;
+## 多进程并发&#13;
+将应用程序分为多个独立的进程同时运行；不同的进程可以通过信号、套接字等渠道进行通信，但是这种进程间的通信复杂，且速度慢。</description><guid isPermaLink="true">https://proacane.github.io/post/C%2B%2B-bing-fa-bian-cheng.html</guid><pubDate>Thu, 10 Oct 2024 05:55:51 +0000</pubDate></item><item><title>QT实现局域网文件传输软件</title><link>https://proacane.github.io/post/QT-shi-xian-ju-yu-wang-wen-jian-chuan-shu-ruan-jian.html</link><description># 总体架构&#13;
 软件通过 UDP 组播查询局域网内的设备，每个设备可以选择指定用户进行发送文件；接收文件时可以指定保存路径；系统支持多线程&#13;
 &#13;
 # 实现思路&#13;
