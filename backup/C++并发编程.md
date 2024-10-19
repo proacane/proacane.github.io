@@ -125,3 +125,93 @@ void f()
 线程执行到④时，局部变量就要被销毁，调用`thread_guard`的析构，也就是t的`join`；`thread_guard`的拷贝构造函数和拷贝赋值标记为`delete`是很有必要的，这样可以防止记录的线程混乱
 #### 后台运行线程
 detach分离的线程称为**守护线程**，这种线程的特点就是长时间运行，线程的生命周期可能会从应用的起始到结束，可能会在后台监视文件系统，还有可能对缓存进行清理，亦或对数据结构进行优化。另外，分离线程只能确定线程什么时候结束，发后即忘(fire and forget)的任务使用到就是分离线程。
+## 传递参数
+`std::thread`构造函数传入的函数有参数的话，依次添加即可，这些参数会拷贝到新线程的内存空间中（与临时变量一样），**即使函数中的参数是引用的形式，拷贝操作也会执行**
+### 类型转换
+```C++
+void f(int i, std::string const& s);
+std::thread t(f, 3, "hello");
+```
+上述代码创建了一个调用f(3, "hello")的线程，函数要求一个`std::string`对象作为第二个参数，但这里用的是`const char *`类型，线程上下文自动完成类型转换，如果指向动态变量的指针作为参数，就需要注意了：
+```C++
+void f(int i,std::string const& s);
+void oops(int some_param)
+{
+  char buffer[1024]; // 1
+  sprintf(buffer, "%i",some_param);
+  std::thread t(f,3,buffer); // 2
+  t.detach();
+}
+```
+buffer①是一个指向局部变量的指针变量，这个局部变量通过buffer传递到新线程中②。函数`oops`可能在buffer转换为`std::string`之前结束，buffer可能会引用已经销毁的内存；解决方法就是显式转换为`std::string`
+```C++
+void f(int i,std::string const& s);
+void not_oops(int some_param)
+{
+  char buffer[1024];
+  sprintf(buffer,"%i",some_param);
+  std::thread t(f,3,std::string(buffer));  // 使用std::string，避免悬空指针
+  t.detach();
+}
+```
+### 引用参数
+`std::thread`构造传入的函数参数为引用类型，需要将参数显示转化为引用对象传递给线程的构造函数，否则编译不通过
+```C++
+ void change_param(int& param) {
+        param++;
+    }
+    void ref_oops(int some_param) {
+        std::cout << "before change , param is " << some_param << std::endl;
+        //需使用引用显示转换
+        std::thread  t2(change_param, some_param);
+        t2.join();
+        std::cout << "after change , param is " << some_param << std::endl;
+    }
+```
+就像上文说的，`std::thread`会无视参数类型，永远都会拷贝已提供的变量，内部代码会将拷贝的参数以右值的方式进行传递，会尝试以这个右值为实参调用`change_param`这个函数，而该函数的参数是非常量引用做参数，所以编译出错；
+通过`std::ref`将参数转换成引用的形式
+`std::thread  t2(change_param, std::ref(some_param));`
+这样`change_param`就会收到`some_param`的引用了
+### 类的成员函数
+需要让线程执行类的成员函数时：
+```C++
+class X
+{
+public:
+    void do_lengthy_work() {
+        std::cout << "do_lengthy_work " << std::endl;
+    }
+};
+void bind_class_oops() {
+    X my_x;
+    std::thread t(&X::do_lengthy_work, &my_x);
+    t.join();
+}
+```
+第一个参数是要执行的成员函数指针，第二个参数是类的地址，后面的参数依次就是成员函数的参数
+```C++
+class X
+{
+public:
+  void do_lengthy_work(int);
+};
+X my_x;
+int num(0);
+std::thread t(&X::do_lengthy_work, &my_x, num);
+```
+### std::move
+如果传递给线程的参数是独占的（不支持拷贝构造和拷贝赋值），就通过`std::move`将变量的所有权转移给新线程
+```C++
+void deal_unique(std::unique_ptr<int> p) {
+    std::cout << "unique ptr data is " << *p << std::endl;
+    (*p)++;
+    std::cout << "after unique ptr data is " << *p << std::endl;
+}
+void move_oops() {
+    auto p = std::make_unique<int>(100);
+    std::thread  t(deal_unique, std::move(p));
+    t.join();
+    //不能再使用p了，p已经被move废弃
+   // std::cout << "after unique ptr data is " << *p << std::endl;
+}
+```

@@ -239,7 +239,83 @@ std::thread <span class="pl-en">my_thread</span>(f);</pre></div>
 }    <span class="pl-c"><span class="pl-c">//</span> 4</span></pre></div>
 <p>线程执行到④时，局部变量就要被销毁，调用<code class="notranslate">thread_guard</code>的析构，也就是t的<code class="notranslate">join</code>；<code class="notranslate">thread_guard</code>的拷贝构造函数和拷贝赋值标记为<code class="notranslate">delete</code>是很有必要的，这样可以防止记录的线程混乱</p>
 <h4>后台运行线程</h4>
-<p>detach分离的线程称为<strong>守护线程</strong>，这种线程的特点就是长时间运行，线程的生命周期可能会从应用的起始到结束，可能会在后台监视文件系统，还有可能对缓存进行清理，亦或对数据结构进行优化。另外，分离线程只能确定线程什么时候结束，发后即忘(fire and forget)的任务使用到就是分离线程。</p></div>
+<p>detach分离的线程称为<strong>守护线程</strong>，这种线程的特点就是长时间运行，线程的生命周期可能会从应用的起始到结束，可能会在后台监视文件系统，还有可能对缓存进行清理，亦或对数据结构进行优化。另外，分离线程只能确定线程什么时候结束，发后即忘(fire and forget)的任务使用到就是分离线程。</p>
+<h2>传递参数</h2>
+<p><code class="notranslate">std::thread</code>构造函数传入的函数有参数的话，依次添加即可，这些参数会拷贝到新线程的内存空间中（与临时变量一样），<strong>即使函数中的参数是引用的形式，拷贝操作也会执行</strong></p>
+<h3>类型转换</h3>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">void</span> <span class="pl-en">f</span>(<span class="pl-k">int</span> i, std::string <span class="pl-k">const</span>&amp; s);
+std::thread <span class="pl-en">t</span>(f, <span class="pl-c1">3</span>, <span class="pl-s"><span class="pl-pds">"</span>hello<span class="pl-pds">"</span></span>);</pre></div>
+<p>上述代码创建了一个调用f(3, "hello")的线程，函数要求一个<code class="notranslate">std::string</code>对象作为第二个参数，但这里用的是<code class="notranslate">const char *</code>类型，线程上下文自动完成类型转换，如果指向动态变量的指针作为参数，就需要注意了：</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">void</span> <span class="pl-en">f</span>(<span class="pl-k">int</span> i,std::string <span class="pl-k">const</span>&amp; s);
+<span class="pl-k">void</span> <span class="pl-en">oops</span>(<span class="pl-k">int</span> some_param)
+{
+  <span class="pl-k">char</span> buffer[<span class="pl-c1">1024</span>]; <span class="pl-c"><span class="pl-c">//</span> 1</span>
+  <span class="pl-c1">sprintf</span>(buffer, <span class="pl-s"><span class="pl-pds">"</span>%i<span class="pl-pds">"</span></span>,some_param);
+  std::thread <span class="pl-smi">t</span>(f,<span class="pl-c1">3</span>,buffer); <span class="pl-c"><span class="pl-c">//</span> 2</span>
+  t.<span class="pl-c1">detach</span>();
+}</pre></div>
+<p>buffer①是一个指向局部变量的指针变量，这个局部变量通过buffer传递到新线程中②。函数<code class="notranslate">oops</code>可能在buffer转换为<code class="notranslate">std::string</code>之前结束，buffer可能会引用已经销毁的内存；解决方法就是显式转换为<code class="notranslate">std::string</code></p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">void</span> <span class="pl-en">f</span>(<span class="pl-k">int</span> i,std::string <span class="pl-k">const</span>&amp; s);
+<span class="pl-k">void</span> <span class="pl-en">not_oops</span>(<span class="pl-k">int</span> some_param)
+{
+  <span class="pl-k">char</span> buffer[<span class="pl-c1">1024</span>];
+  <span class="pl-c1">sprintf</span>(buffer,<span class="pl-s"><span class="pl-pds">"</span>%i<span class="pl-pds">"</span></span>,some_param);
+  std::thread <span class="pl-smi">t</span>(f,<span class="pl-c1">3</span>,<span class="pl-c1">std::string</span>(buffer));  <span class="pl-c"><span class="pl-c">//</span> 使用std::string，避免悬空指针</span>
+  t.<span class="pl-c1">detach</span>();
+}</pre></div>
+<h3>引用参数</h3>
+<p><code class="notranslate">std::thread</code>构造传入的函数参数为引用类型，需要将参数显示转化为引用对象传递给线程的构造函数，否则编译不通过</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"> <span class="pl-k">void</span> <span class="pl-en">change_param</span>(<span class="pl-k">int</span>&amp; param) {
+        param++;
+    }
+    <span class="pl-k">void</span> <span class="pl-en">ref_oops</span>(<span class="pl-k">int</span> some_param) {
+        std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>before change , param is <span class="pl-pds">"</span></span> &lt;&lt; some_param &lt;&lt; std::endl;
+        <span class="pl-c"><span class="pl-c">//</span>需使用引用显示转换</span>
+        std::thread  <span class="pl-smi">t2</span>(change_param, some_param);
+        t2.<span class="pl-c1">join</span>();
+        std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>after change , param is <span class="pl-pds">"</span></span> &lt;&lt; some_param &lt;&lt; std::endl;
+    }</pre></div>
+<p>就像上文说的，<code class="notranslate">std::thread</code>会无视参数类型，永远都会拷贝已提供的变量，内部代码会将拷贝的参数以右值的方式进行传递，会尝试以这个右值为实参调用<code class="notranslate">change_param</code>这个函数，而该函数的参数是非常量引用做参数，所以编译出错；<br>
+通过<code class="notranslate">std::ref</code>将参数转换成引用的形式<br>
+<code class="notranslate">std::thread  t2(change_param, std::ref(some_param));</code><br>
+这样<code class="notranslate">change_param</code>就会收到<code class="notranslate">some_param</code>的引用了</p>
+<h3>类的成员函数</h3>
+<p>需要让线程执行类的成员函数时：</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">class</span> <span class="pl-en">X</span>
+{
+<span class="pl-k">public:</span>
+    <span class="pl-k">void</span> <span class="pl-en">do_lengthy_work</span>() {
+        std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>do_lengthy_work <span class="pl-pds">"</span></span> &lt;&lt; std::endl;
+    }
+};
+<span class="pl-k">void</span> <span class="pl-en">bind_class_oops</span>() {
+    X my_x;
+    std::thread <span class="pl-smi">t</span>(&amp;X::do_lengthy_work, &amp;my_x);
+    t.<span class="pl-c1">join</span>();
+}</pre></div>
+<p>第一个参数是要执行的成员函数指针，第二个参数是类的地址，后面的参数依次就是成员函数的参数</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">class</span> <span class="pl-en">X</span>
+{
+<span class="pl-k">public:</span>
+  <span class="pl-k">void</span> <span class="pl-en">do_lengthy_work</span>(<span class="pl-k">int</span>);
+};
+X my_x;
+<span class="pl-k">int</span> <span class="pl-en">num</span>(<span class="pl-c1">0</span>);
+std::thread <span class="pl-en">t</span>(&amp;X::do_lengthy_work, &amp;my_x, num);</pre></div>
+<h3>std::move</h3>
+<p>如果传递给线程的参数是独占的（不支持拷贝构造和拷贝赋值），就通过<code class="notranslate">std::move</code>将变量的所有权转移给新线程</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">void</span> <span class="pl-en">deal_unique</span>(std::unique_ptr&lt;<span class="pl-k">int</span>&gt; p) {
+    std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>unique ptr data is <span class="pl-pds">"</span></span> &lt;&lt; *p &lt;&lt; std::endl;
+    (*p)++;
+    std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>after unique ptr data is <span class="pl-pds">"</span></span> &lt;&lt; *p &lt;&lt; std::endl;
+}
+<span class="pl-k">void</span> <span class="pl-en">move_oops</span>() {
+    <span class="pl-k">auto</span> p = std::make_unique&lt;<span class="pl-k">int</span>&gt;(<span class="pl-c1">100</span>);
+    std::thread  <span class="pl-smi">t</span>(deal_unique, <span class="pl-c1">std::move</span>(p));
+    t.<span class="pl-c1">join</span>();
+    <span class="pl-c"><span class="pl-c">//</span>不能再使用p了，p已经被move废弃</span>
+   <span class="pl-c"><span class="pl-c">//</span> std::cout &lt;&lt; "after unique ptr data is " &lt;&lt; *p &lt;&lt; std::endl;</span>
+}</pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
