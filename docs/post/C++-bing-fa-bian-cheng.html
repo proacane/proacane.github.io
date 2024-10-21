@@ -315,6 +315,194 @@ std::thread <span class="pl-en">t</span>(&amp;X::do_lengthy_work, &amp;my_x, num
     t.<span class="pl-c1">join</span>();
     <span class="pl-c"><span class="pl-c">//</span>不能再使用p了，p已经被move废弃</span>
    <span class="pl-c"><span class="pl-c">//</span> std::cout &lt;&lt; "after unique ptr data is " &lt;&lt; *p &lt;&lt; std::endl;</span>
+}</pre></div>
+<h2>线程归属权</h2>
+<p>每个线程都有其所属权，也就是有对应的变量(std::thread)管理，<code class="notranslate">std::thread</code>对象不可以拷贝构造和拷贝赋值，所以只能通过移动和局部变量返回的方式将线程变量管理的线程转移给其它线程变量管理:</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">void</span> <span class="pl-en">some_function</span>();
+<span class="pl-k">void</span> <span class="pl-en">some_other_function</span>();
+std::thread <span class="pl-en">t1</span>(some_function);            <span class="pl-c"><span class="pl-c">//</span> 1</span>
+std::thread t2=std::move(t1);            <span class="pl-c"><span class="pl-c">//</span> 2</span>
+t1=std::thread(some_other_function);    <span class="pl-c"><span class="pl-c">//</span> 3</span>
+std::thread t3;                            <span class="pl-c"><span class="pl-c">//</span> 4</span>
+t3=std::move(t2);                        <span class="pl-c"><span class="pl-c">//</span> 5</span>
+t1=std::move(t3);                        <span class="pl-c"><span class="pl-c">//</span> 6 赋值操作将使程序崩溃</span></pre></div>
+<p>新线程与变量t1关联①，当使用<code class="notranslate">std::move()</code>创建t2后②，新线程的所有权就转让给了t2，t1与新线程已经没有了关联；然后使用临时<code class="notranslate">std::thread</code>对象创建了线程③（临时对象会隐式调用<code class="notranslate">std::move()</code>，调用默认构造函数创建t3④，通过<code class="notranslate">std::move()</code>将t2关联线程的所有权转让到t3⑤；此时：t1与执行some_other_function的线程关联，t2没有关联线程，t3与执行some_function的线程关联；<br>
+最后一步尝试将t3关联的线程所有权转让给t1，但是t1已经有了关联的线程，所以会调用<code class="notranslate">std::terminate()</code>终止程序（不抛出异常）<br>
+可以在函数内部直接返回<code class="notranslate">std::thread</code>变量，因为返回局部变量时，会优先调用拷贝构造函数，没有就会调用移动构造函数</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate">std::thread <span class="pl-en">f</span>()
+{
+  <span class="pl-k">void</span> <span class="pl-smi">some_function</span>();
+  <span class="pl-k">return</span> <span class="pl-c1">std::thread</span>(some_function);
+}</pre></div>
+<h3>joining_thread类</h3>
+<p>就是直接将线程放到这个类中，析构的时候调用join，已纳入C++20；std::jthread</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">class</span> <span class="pl-en">joining_thread</span> {
+<span class="pl-k">private:</span>
+    std::thread _t;
+<span class="pl-k">public:</span>
+    <span class="pl-en">joining_thread</span>() = <span class="pl-k">default</span>;
+
+    <span class="pl-c"><span class="pl-c">//</span> 模板函数</span>
+    <span class="pl-k">template</span>&lt;<span class="pl-k">typename</span> Callable, <span class="pl-k">typename</span> ... Args&gt;
+    <span class="pl-k">explicit</span> <span class="pl-en">joining_thread</span>(Callable &amp;&amp;func, Args &amp;&amp;... args):
+            _t(std::forward&lt;Callable&gt;(func), std::forward&lt;Args&gt;(args)...) {};
+
+    <span class="pl-k">explicit</span> <span class="pl-en">joining_thread</span>(std::thread t) <span class="pl-k">noexcept</span>: _t(std::move(t)) {};
+
+    <span class="pl-en">joining_thread</span>(joining_thread &amp;&amp;other) <span class="pl-k">noexcept</span>: _t(std::move(other._t)) {};
+
+    joining_thread &amp;<span class="pl-k">operator</span>=(joining_thread &amp;&amp;other) <span class="pl-k">noexcept</span> {
+        <span class="pl-k">if</span> (<span class="pl-c1">joinAble</span>()) {
+            <span class="pl-c1">join</span>();
+        }
+        _t = <span class="pl-c1">std::move</span>(other.<span class="pl-smi">_t</span>);
+        <span class="pl-k">return</span> *<span class="pl-c1">this</span>;
+    }
+
+    joining_thread &amp;<span class="pl-k">operator</span>=(std::thread other) <span class="pl-k">noexcept</span> {
+        <span class="pl-k">if</span> (<span class="pl-c1">joinAble</span>()) {
+            <span class="pl-c1">join</span>();
+        }
+        _t = <span class="pl-c1">std::move</span>(other);
+        <span class="pl-k">return</span> *<span class="pl-c1">this</span>;
+    }
+
+    <span class="pl-en">~joining_thread</span>() {
+        <span class="pl-k">if</span> (<span class="pl-c1">joinAble</span>()) {
+            <span class="pl-c1">join</span>();
+        }
+    }
+
+    [[nodiscard]] <span class="pl-k">bool</span> <span class="pl-en">joinAble</span>() <span class="pl-k">const</span> <span class="pl-k">noexcept</span> {
+        <span class="pl-k">return</span> _t.<span class="pl-c1">joinable</span>();
+    }
+
+    <span class="pl-k">void</span> <span class="pl-en">join</span>() {
+        _t.<span class="pl-c1">join</span>();
+    }
+
+    <span class="pl-k">void</span> <span class="pl-en">detach</span>() {
+        _t.<span class="pl-c1">detach</span>();
+    }
+
+    <span class="pl-k">void</span> <span class="pl-en">swap</span>(joining_thread &amp;other) <span class="pl-k">noexcept</span> {
+        _t.<span class="pl-c1">swap</span>(other.<span class="pl-smi">_t</span>);
+    }
+
+    [[nodiscard]] std::thread::id <span class="pl-en">getId</span>() <span class="pl-k">const</span> <span class="pl-k">noexcept</span> {
+        <span class="pl-k">return</span> _t.<span class="pl-c1">get_id</span>();
+    }
+
+    std::thread &amp;<span class="pl-en">asThread</span>() <span class="pl-k">noexcept</span> {
+        <span class="pl-k">return</span> _t;
+    }
+
+    [[nodiscard]] <span class="pl-k">const</span> std::thread &amp;<span class="pl-en">asThread</span>() <span class="pl-k">const</span> <span class="pl-k">noexcept</span> {
+        <span class="pl-k">return</span> _t;
+    }
+};</pre></div>
+<p>使用joining_thread：</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">void</span> <span class="pl-en">useJoiningThread</span>() {
+    <span class="pl-c"><span class="pl-c">//</span> 调用模板构造函数</span>
+    joining_thread <span class="pl-c1">j1</span>([](<span class="pl-k">int</span> maxindex) {
+        <span class="pl-k">for</span> (<span class="pl-k">int</span> i = <span class="pl-c1">0</span>; i &lt; maxindex; i++) {
+            <span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">"</span> cur index is <span class="pl-pds">"</span></span> + <span class="pl-c1">std::to_string</span>(i));
+            <span class="pl-c1">std::this_thread::sleep_for</span>(<span class="pl-c1">std::chrono::seconds</span>(<span class="pl-c1">1</span>));
+        }
+    }, <span class="pl-c1">10</span>);
+    <span class="pl-c"><span class="pl-c">//</span> 调用用thread做参数的构造函数</span>
+    joining_thread <span class="pl-smi">j2</span>(<span class="pl-c1">std::thread</span>([](<span class="pl-k">int</span> maxindex) {
+        <span class="pl-k">for</span> (<span class="pl-k">int</span> i = <span class="pl-c1">0</span>; i &lt; maxindex; i++) {
+            <span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">"</span> cur index is <span class="pl-pds">"</span></span> + <span class="pl-c1">std::to_string</span>(i));
+            <span class="pl-c1">std::this_thread::sleep_for</span>(<span class="pl-c1">std::chrono::seconds</span>(<span class="pl-c1">1</span>));
+        }
+    }, <span class="pl-c1">10</span>));
+    <span class="pl-c"><span class="pl-c">//</span>根据thread构造j3</span>
+    joining_thread <span class="pl-smi">j3</span>(<span class="pl-c1">std::thread</span>([](<span class="pl-k">int</span> maxindex) {
+        <span class="pl-k">for</span> (<span class="pl-k">int</span> i = <span class="pl-c1">0</span>; i &lt; maxindex; i++) {
+            <span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">"</span> cur index is <span class="pl-pds">"</span></span> + <span class="pl-c1">std::to_string</span>(i));
+            <span class="pl-c1">std::this_thread::sleep_for</span>(<span class="pl-c1">std::chrono::seconds</span>(<span class="pl-c1">1</span>));
+        }
+    }, <span class="pl-c1">10</span>));
+
+    <span class="pl-c"><span class="pl-c">//</span> 将j3赋给j1</span>
+    <span class="pl-c1">j1</span> = <span class="pl-c1">std::move</span>(j3);
+}</pre></div>
+<h3>容器批量创建线程</h3>
+<p>容器要存储线程时，需要使用<code class="notranslate">emplace_back</code>方法，其参数可以直接传递构造函数需要的参数</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">void</span> <span class="pl-en">useVector</span>() {
+    std::vector&lt;std::thread&gt; threads;
+    <span class="pl-k">for</span> (<span class="pl-c1">size_t</span> i = <span class="pl-c1">0</span>; i &lt; <span class="pl-c1">10</span>; i++) {
+        threads.<span class="pl-c1">emplace_back</span>([=]() { <span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">"</span>This is thread <span class="pl-pds">"</span></span> + <span class="pl-c1">std::to_string</span>(i)); });
+    }
+    <span class="pl-k">for</span> (<span class="pl-k">auto</span> &amp;entry: threads) {
+        entry.<span class="pl-c1">join</span>();
+    }
+}</pre></div>
+<h3>确定线程数量</h3>
+<p><code class="notranslate">std::thread::hardware_concurrency()</code>可以获得并发线程的数量，实现一个并行版的<code class="notranslate">std::accumulate</code></p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"> <span class="pl-c"><span class="pl-c">//</span> 计算容器内元素总和</span>
+    <span class="pl-k">template</span>&lt;<span class="pl-k">typename</span> Iterator, <span class="pl-k">typename</span> T&gt;
+    <span class="pl-k">struct</span> <span class="pl-en">accumulate_block</span> {
+        <span class="pl-k">void</span> <span class="pl-en">operator</span>()(Iterator first, Iterator last, T &amp;res) {
+            res = <span class="pl-c1">std::accumulate</span>(first, last, res);
+        }
+    };
+
+    <span class="pl-k">template</span>&lt;<span class="pl-k">typename</span> Iterator, <span class="pl-k">typename</span> T&gt;
+    T <span class="pl-en">parallel_accumulate</span>(Iterator first, Iterator last, T init) {
+        <span class="pl-c"><span class="pl-c">//</span> 计算迭代器之间的距离</span>
+        <span class="pl-k">unsigned</span> <span class="pl-k">long</span> <span class="pl-k">const</span> length = <span class="pl-c1">std::distance</span>(first, last);
+        <span class="pl-k">if</span> (!length) {
+            <span class="pl-c"><span class="pl-c">//</span> 长度为0 1</span>
+            <span class="pl-k">return</span> init;
+        }
+        <span class="pl-c"><span class="pl-c">//</span> 每个线程最少要处理的元素数量</span>
+        <span class="pl-k">unsigned</span> <span class="pl-k">long</span> <span class="pl-k">const</span> min_per_thread = <span class="pl-c1">25</span>;
+        <span class="pl-c"><span class="pl-c">//</span> 最大线程数</span>
+        <span class="pl-k">unsigned</span> <span class="pl-k">long</span> <span class="pl-k">const</span> max_threads = (length + min_per_thread - <span class="pl-c1">1</span>) / min_per_thread;<span class="pl-c"><span class="pl-c">//</span>2</span>
+        <span class="pl-c"><span class="pl-c">//</span> 设备支持的线程数</span>
+        <span class="pl-k">unsigned</span> <span class="pl-k">long</span> <span class="pl-k">const</span> hardware_threads = <span class="pl-c1">std::thread::hardware_concurrency</span>();
+        <span class="pl-c"><span class="pl-c">//</span> 实际选用的线程数，防止产生过多的上下文切换开销</span>
+        <span class="pl-k">unsigned</span> <span class="pl-k">long</span> <span class="pl-k">const</span> num_threads = <span class="pl-c1">std::min</span>(hardware_threads != <span class="pl-c1">0</span> ? hardware_threads : <span class="pl-c1">2</span>, max_threads);<span class="pl-c"><span class="pl-c">//</span>3</span>
+        <span class="pl-c"><span class="pl-c">//</span> 每个线程实际处理的元素数量</span>
+        <span class="pl-k">unsigned</span> <span class="pl-k">long</span> <span class="pl-k">const</span> block_size = length / num_threads;<span class="pl-c"><span class="pl-c">//</span>4</span>
+        <span class="pl-c"><span class="pl-c">//</span> 存放结果</span>
+        std::vector&lt;T&gt; <span class="pl-c1">results</span>(num_threads);
+        <span class="pl-c"><span class="pl-c">//</span> 创建线程，-1是因为最后一个线程处理的数据在主线程进行处理</span>
+        std::vector&lt;std::thread&gt; <span class="pl-c1">threads</span>(num_threads - <span class="pl-c1">1</span>);<span class="pl-c"><span class="pl-c">//</span>5</span>
+        Iterator block_start = first;
+        <span class="pl-k">for</span> (<span class="pl-k">unsigned</span> <span class="pl-k">long</span> i = <span class="pl-c1">0</span>; i &lt; (num_threads - <span class="pl-c1">1</span>); i++) {
+            Iterator block_end = block_start;
+            <span class="pl-c"><span class="pl-c">//</span> 确定结束迭代器</span>
+            <span class="pl-c1">std::advance</span>(block_end, block_size);<span class="pl-c"><span class="pl-c">//</span>6</span>
+            threads[i] = <span class="pl-c1">std::thread</span>(accumulate_block&lt;Iterator, T&gt;(), block_start, block_end, &amp;results[i]);<span class="pl-c"><span class="pl-c">//</span>7</span>
+            <span class="pl-c"><span class="pl-c">//</span> 更新迭代器</span>
+            block_start = block_end;<span class="pl-c"><span class="pl-c">//</span>8</span>
+        }
+        <span class="pl-c"><span class="pl-c">//</span> 处理最后一块</span>
+        accumulate_block&lt;Iterator, T&gt;()(block_start, last, results[num_threads - <span class="pl-c1">1</span>]);<span class="pl-c"><span class="pl-c">//</span>9</span>
+        <span class="pl-k">for</span> (<span class="pl-k">auto</span> &amp;entry: threads) {
+            entry.<span class="pl-c1">join</span>();<span class="pl-c"><span class="pl-c">//</span>10</span>
+        }
+        <span class="pl-k">return</span> <span class="pl-c1">std::accumulate</span>(results.<span class="pl-c1">begin</span>(), results.<span class="pl-c1">end</span>(), init);<span class="pl-c"><span class="pl-c">//</span>11</span>
+    }</pre></div>
+<h3>识别线程</h3>
+<p>每个线程都有唯一的id，为<code class="notranslate">std::thread::id</code>类型，可以通过以下方式获取：</p>
+<ol>
+<li><code class="notranslate">std::thread</code>对象的<code class="notranslate">get_id()</code>成员函数</li>
+<li>当前线程中调用<code class="notranslate">std::this_thread::get_id()</code><br>
+如果<code class="notranslate">std::thread</code>对象没有与任何线程关联，就会返回<code class="notranslate">std::thread::type</code>默认构造值<br>
+如果需要在函数中根据线程不同来执行不同的逻辑，就可以通过这种方式：</li>
+</ol>
+<div class="highlight highlight-source-c++"><pre class="notranslate">std::thread::id master_thread;
+<span class="pl-k">void</span> <span class="pl-en">some_core_part_of_algorithm</span>()
+{
+  <span class="pl-k">if</span>(<span class="pl-c1">std::this_thread::get_id</span>()==master_thread)
+  {
+    <span class="pl-c1">do_master_thread_work</span>();
+  }
+  <span class="pl-c1">do_common_work</span>();
 }</pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 

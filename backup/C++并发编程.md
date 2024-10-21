@@ -215,3 +215,203 @@ void move_oops() {
    // std::cout << "after unique ptr data is " << *p << std::endl;
 }
 ```
+## 线程归属权
+每个线程都有其所属权，也就是有对应的变量(std::thread)管理，`std::thread`对象不可以拷贝构造和拷贝赋值，所以只能通过移动和局部变量返回的方式将线程变量管理的线程转移给其它线程变量管理:
+```C++
+void some_function();
+void some_other_function();
+std::thread t1(some_function);            // 1
+std::thread t2=std::move(t1);            // 2
+t1=std::thread(some_other_function);    // 3
+std::thread t3;                            // 4
+t3=std::move(t2);                        // 5
+t1=std::move(t3);                        // 6 赋值操作将使程序崩溃
+```
+新线程与变量t1关联①，当使用`std::move()`创建t2后②，新线程的所有权就转让给了t2，t1与新线程已经没有了关联；然后使用临时`std::thread`对象创建了线程③（临时对象会隐式调用`std::move()`，调用默认构造函数创建t3④，通过`std::move()`将t2关联线程的所有权转让到t3⑤；此时：t1与执行some_other_function的线程关联，t2没有关联线程，t3与执行some_function的线程关联；
+最后一步尝试将t3关联的线程所有权转让给t1，但是t1已经有了关联的线程，所以会调用`std::terminate()`终止程序（不抛出异常）
+可以在函数内部直接返回`std::thread`变量，因为返回局部变量时，会优先调用拷贝构造函数，没有就会调用移动构造函数
+```C++
+std::thread f()
+{
+  void some_function();
+  return std::thread(some_function);
+}
+```
+### joining_thread类
+就是直接将线程放到这个类中，析构的时候调用join，已纳入C++20；std::jthread
+```C++
+class joining_thread {
+private:
+    std::thread _t;
+public:
+    joining_thread() = default;
+
+    // 模板函数
+    template<typename Callable, typename ... Args>
+    explicit joining_thread(Callable &&func, Args &&... args):
+            _t(std::forward<Callable>(func), std::forward<Args>(args)...) {};
+
+    explicit joining_thread(std::thread t) noexcept: _t(std::move(t)) {};
+
+    joining_thread(joining_thread &&other) noexcept: _t(std::move(other._t)) {};
+
+    joining_thread &operator=(joining_thread &&other) noexcept {
+        if (joinAble()) {
+            join();
+        }
+        _t = std::move(other._t);
+        return *this;
+    }
+
+    joining_thread &operator=(std::thread other) noexcept {
+        if (joinAble()) {
+            join();
+        }
+        _t = std::move(other);
+        return *this;
+    }
+
+    ~joining_thread() {
+        if (joinAble()) {
+            join();
+        }
+    }
+
+    [[nodiscard]] bool joinAble() const noexcept {
+        return _t.joinable();
+    }
+
+    void join() {
+        _t.join();
+    }
+
+    void detach() {
+        _t.detach();
+    }
+
+    void swap(joining_thread &other) noexcept {
+        _t.swap(other._t);
+    }
+
+    [[nodiscard]] std::thread::id getId() const noexcept {
+        return _t.get_id();
+    }
+
+    std::thread &asThread() noexcept {
+        return _t;
+    }
+
+    [[nodiscard]] const std::thread &asThread() const noexcept {
+        return _t;
+    }
+};
+```
+使用joining_thread：
+```C++
+void useJoiningThread() {
+    // 调用模板构造函数
+    joining_thread j1([](int maxindex) {
+        for (int i = 0; i < maxindex; i++) {
+            log(" cur index is " + std::to_string(i));
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    }, 10);
+    // 调用用thread做参数的构造函数
+    joining_thread j2(std::thread([](int maxindex) {
+        for (int i = 0; i < maxindex; i++) {
+            log(" cur index is " + std::to_string(i));
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    }, 10));
+    //根据thread构造j3
+    joining_thread j3(std::thread([](int maxindex) {
+        for (int i = 0; i < maxindex; i++) {
+            log(" cur index is " + std::to_string(i));
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    }, 10));
+
+    // 将j3赋给j1
+    j1 = std::move(j3);
+}
+```
+### 容器批量创建线程
+容器要存储线程时，需要使用`emplace_back`方法，其参数可以直接传递构造函数需要的参数
+```C++
+void useVector() {
+    std::vector<std::thread> threads;
+    for (size_t i = 0; i < 10; i++) {
+        threads.emplace_back([=]() { log("This is thread " + std::to_string(i)); });
+    }
+    for (auto &entry: threads) {
+        entry.join();
+    }
+}
+```
+### 确定线程数量
+`std::thread::hardware_concurrency()`可以获得并发线程的数量，实现一个并行版的`std::accumulate`
+```C++
+ // 计算容器内元素总和
+    template<typename Iterator, typename T>
+    struct accumulate_block {
+        void operator()(Iterator first, Iterator last, T &res) {
+            res = std::accumulate(first, last, res);
+        }
+    };
+
+    template<typename Iterator, typename T>
+    T parallel_accumulate(Iterator first, Iterator last, T init) {
+        // 计算迭代器之间的距离
+        unsigned long const length = std::distance(first, last);
+        if (!length) {
+            // 长度为0 1
+            return init;
+        }
+        // 每个线程最少要处理的元素数量
+        unsigned long const min_per_thread = 25;
+        // 最大线程数
+        unsigned long const max_threads = (length + min_per_thread - 1) / min_per_thread;//2
+        // 设备支持的线程数
+        unsigned long const hardware_threads = std::thread::hardware_concurrency();
+        // 实际选用的线程数，防止产生过多的上下文切换开销
+        unsigned long const num_threads = std::min(hardware_threads != 0 ? hardware_threads : 2, max_threads);//3
+        // 每个线程实际处理的元素数量
+        unsigned long const block_size = length / num_threads;//4
+        // 存放结果
+        std::vector<T> results(num_threads);
+        // 创建线程，-1是因为最后一个线程处理的数据在主线程进行处理
+        std::vector<std::thread> threads(num_threads - 1);//5
+        Iterator block_start = first;
+        for (unsigned long i = 0; i < (num_threads - 1); i++) {
+            Iterator block_end = block_start;
+            // 确定结束迭代器
+            std::advance(block_end, block_size);//6
+            threads[i] = std::thread(accumulate_block<Iterator, T>(), block_start, block_end, &results[i]);//7
+            // 更新迭代器
+            block_start = block_end;//8
+        }
+        // 处理最后一块
+        accumulate_block<Iterator, T>()(block_start, last, results[num_threads - 1]);//9
+        for (auto &entry: threads) {
+            entry.join();//10
+        }
+        return std::accumulate(results.begin(), results.end(), init);//11
+    }
+```
+### 识别线程
+每个线程都有唯一的id，为`std::thread::id`类型，可以通过以下方式获取：
+1. `std::thread`对象的`get_id()`成员函数
+2. 当前线程中调用`std::this_thread::get_id()`
+如果`std::thread`对象没有与任何线程关联，就会返回`std::thread::type`默认构造值
+如果需要在函数中根据线程不同来执行不同的逻辑，就可以通过这种方式：
+```C++
+std::thread::id master_thread;
+void some_core_part_of_algorithm()
+{
+  if(std::this_thread::get_id()==master_thread)
+  {
+    do_master_thread_work();
+  }
+  do_common_work();
+}
+```
