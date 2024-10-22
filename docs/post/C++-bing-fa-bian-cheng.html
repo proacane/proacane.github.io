@@ -503,7 +503,152 @@ t1=std::move(t3);                        <span class="pl-c"><span class="pl-c">/
     <span class="pl-c1">do_master_thread_work</span>();
   }
   <span class="pl-c1">do_common_work</span>();
-}</pre></div></div>
+}</pre></div>
+<h1>共享数据</h1>
+<h2>互斥量</h2>
+<p>修改共享数据前，将数据用互斥量锁住，修改结束后，再释放，当线程使用互斥量锁住共享数据时，其他的线程都必须等到之前那个线程对数据进行解锁后，才能进行访问数据。<br>
+通过<code class="notranslate">std::mutex</code>创建互斥量实例，成员函数<code class="notranslate">lock()</code>、<code class="notranslate">unlock()</code>为上锁解锁，但是一般使用RAII模板类<code class="notranslate">std::lock_guard</code>，在构造时就进行上锁，析构时解锁<br>
+使用<code class="notranslate">std::mutex</code>进行上锁</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate">std::mutex mtx1;
+    <span class="pl-k">int</span> shared_data = <span class="pl-c1">100</span>;
+    <span class="pl-k">void</span> <span class="pl-en">use_lock</span>(){
+        <span class="pl-k">while</span>(<span class="pl-c1">true</span>){
+            mtx1.<span class="pl-c1">lock</span>();
+            shared_data++;
+            <span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">"</span>shared_data is <span class="pl-pds">"</span></span>+<span class="pl-c1">std::to_string</span>(shared_data));
+            mtx1.<span class="pl-c1">unlock</span>();
+            <span class="pl-c1">std::this_thread::sleep_for</span>(<span class="pl-c1">std::chrono::seconds</span>(<span class="pl-c1">1</span>));
+        }
+    }
+    <span class="pl-k">void</span> <span class="pl-en">test_lock</span>(){
+        std::thread <span class="pl-smi">t1</span>(use_lock);
+        std::thread <span class="pl-smi">t2</span>([](){
+            <span class="pl-k">while</span>(<span class="pl-c1">true</span>){
+                mtx1.<span class="pl-c1">lock</span>();
+                shared_data++;
+                <span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">"</span>shared_data is <span class="pl-pds">"</span></span>+<span class="pl-c1">std::to_string</span>(shared_data));
+                mtx1.<span class="pl-c1">unlock</span>();
+                <span class="pl-c1">std::this_thread::sleep_for</span>(<span class="pl-c1">std::chrono::seconds</span>(<span class="pl-c1">1</span>));
+            }
+        });
+        t1.<span class="pl-c1">join</span>();
+        t2.<span class="pl-c1">join</span>();
+    }</pre></div>
+<p>使用<code class="notranslate">lock_guard</code>进行上锁需要注意，只有当<code class="notranslate">lock_guard</code>成员析构时才会释放锁，可以使用代码块来实现<br>
+保护共享数据时，要注意是否有指针、引用、参数是否有指针或引用：</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">class</span> <span class="pl-en">some_data</span> {
+        <span class="pl-k">int</span> a;
+        std::string b;
+    <span class="pl-k">public:</span>
+        <span class="pl-k">void</span> <span class="pl-en">do_something</span>() { <span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">"</span>do something<span class="pl-pds">"</span></span>); };
+    };
+
+    <span class="pl-k">class</span> <span class="pl-en">data_wrapper</span> {
+    <span class="pl-k">private:</span>
+        some_data data;
+        std::mutex m;
+    <span class="pl-k">public:</span>
+        <span class="pl-k">template</span>&lt;<span class="pl-k">typename</span> Function&gt;
+        <span class="pl-k">void</span> <span class="pl-en">process_data</span>(Function func) {
+            std::lock_guard&lt;std::mutex&gt; <span class="pl-c1">l</span>(m);
+            <span class="pl-c1">func</span>(data);    <span class="pl-c"><span class="pl-c">//</span> 1 传递“保护”数据给用户函数</span>
+        }
+    };
+
+    some_data *unprotected;
+
+    <span class="pl-k">void</span> <span class="pl-en">malicious_function</span>(some_data &amp;protected_data) {
+        unprotected = &amp;protected_data;
+    }
+
+    data_wrapper x;
+
+    <span class="pl-k">void</span> <span class="pl-en">foo</span>() {
+        x.<span class="pl-c1">process_data</span>(malicious_function);    <span class="pl-c"><span class="pl-c">//</span> 2 传递一个恶意函数</span>
+        unprotected-&gt;<span class="pl-c1">do_something</span>();    <span class="pl-c"><span class="pl-c">//</span> 3 在无保护的情况下访问保护数据</span>
+    }</pre></div>
+<p>data_wrapper类中的data本应是线程安全的，但是由于传入了malicious_function函数，获取了其地址，后续可以直接调用unprotected来进行一些操作</p>
+<h2>如何保证数据安全</h2>
+<p>有时候我们可以将对共享数据的访问和修改聚合到一个函数，在函数内加锁保证数据的安全性。但是对于读取类型的操作，即使读取函数是线程安全的，但是返回值抛给外边使用，存在不安全性。比如一个栈对象，我们要保证其在多线程访问的时候是安全的，可以在判断栈是否为空，判断操作内部我们可以加锁，但是判断结束后返回值就不在加锁了，就会存在线程安全问题。</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">template</span>&lt;<span class="pl-k">typename</span> T&gt;
+    <span class="pl-k">class</span> <span class="pl-en">thread_safe_stack1</span> {
+    <span class="pl-k">private:</span>
+        std::stack&lt;T&gt; data;
+        <span class="pl-k">mutable</span> std::mutex m;
+    <span class="pl-k">public:</span>
+        <span class="pl-en">thread_safe_stack1</span>() = <span class="pl-k">default</span>;
+
+        <span class="pl-en">thread_safe_stack1</span>(<span class="pl-k">const</span> thread_safe_stack1 &amp;other) {
+            std::lock_guard&lt;std::mutex&gt; <span class="pl-c1">lock</span>(m);
+            data = other.<span class="pl-smi">data</span>;
+        }
+
+        thread_safe_stack1 &amp;<span class="pl-k">operator</span>=(<span class="pl-k">const</span> thread_safe_stack1 &amp;) = <span class="pl-k">delete</span>;
+
+        <span class="pl-k">void</span> <span class="pl-en">push</span>(T new_value) {
+            std::lock_guard&lt;std::mutex&gt; <span class="pl-c1">lock</span>(m);
+            data.<span class="pl-c1">push</span>(<span class="pl-c1">std::move</span>(new_value));
+        }
+
+        <span class="pl-c"><span class="pl-c">//</span> 问题代码</span>
+        T <span class="pl-en">pop</span>() {
+            std::lock_guard&lt;std::mutex&gt; <span class="pl-c1">lock</span>(m);
+            <span class="pl-k">auto</span> element = data.<span class="pl-c1">top</span>();
+            data.<span class="pl-c1">pop</span>();
+            <span class="pl-k">return</span> element;
+        }
+
+        <span class="pl-k">bool</span> <span class="pl-en">empty</span>() <span class="pl-k">const</span> {
+            std::lock_guard&lt;std::mutex&gt; <span class="pl-c1">lock</span>(m);
+            <span class="pl-k">return</span> data.<span class="pl-c1">empty</span>();
+        }
+    };</pre></div>
+<p>比如上面这个类，empty()返回时的结果可能是正确的，但是并不可靠，因为返回后锁被释放，其它线程可以对栈进行访问，可能会对栈内元素做修改，这样之前获得的empty()的数值就有问题了</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">void</span> <span class="pl-en">test_thread_safe_stack1</span>() {
+        thread_safe_stack1&lt;<span class="pl-k">int</span>&gt; safeStack1;
+        safeStack1.<span class="pl-c1">push</span>(<span class="pl-c1">1</span>);
+        std::thread <span class="pl-smi">t1</span>([&amp;safeStack1] {
+            <span class="pl-k">if</span> (!safeStack1.<span class="pl-c1">empty</span>()) {
+                <span class="pl-c1">std::this_thread::sleep_for</span>(<span class="pl-c1">std::chrono::seconds</span>(<span class="pl-c1">1</span>));
+                safeStack1.<span class="pl-c1">pop</span>();
+            }
+        });
+        std::thread <span class="pl-smi">t2</span>([&amp;safeStack1] {
+            <span class="pl-k">if</span> (!safeStack1.<span class="pl-c1">empty</span>()) {
+                <span class="pl-c1">std::this_thread::sleep_for</span>(<span class="pl-c1">std::chrono::seconds</span>(<span class="pl-c1">1</span>));
+                safeStack1.<span class="pl-c1">pop</span>();
+            }
+        });
+        t1.<span class="pl-c1">join</span>();
+        t2.<span class="pl-c1">join</span>();
+    }</pre></div>
+<p>对于这样的测试函数，t1和t2分别判断完栈非空后都进行了pop，会抛出异常，可以在pop函数中增加异常判断，如果<code class="notranslate">data.empty()</code>就会抛出异常<br>
+如果T是一个<code class="notranslate">vector&lt;int&gt;</code>类型，在pop函数中存储了element，假设程序使用的内存足够大时，可进行拷贝的空间不足，返回的element可能存在vector拷贝赋值失败，使得数据能够从栈中弹出，但是弹出的数据完全丢失了<br>
+优化上述问题的方案有如下几种：</p>
+<ol>
+<li>传入一个引用：将变量的引用作为参数，传入pop()函数中获取弹出的值：<code class="notranslate">std::vector&lt;int&gt; result; some_stack.pop(result);</code>;缺点就是需要临时构造一个实例</li>
+<li>返回指向弹出值的指针：不返回top的值，返回其指针；可以使用智能指针<code class="notranslate">std::shared_ptr</code></li>
+</ol>
+<div class="highlight highlight-source-c++"><pre class="notranslate">std::shared_ptr&lt;T&gt; <span class="pl-en">pop</span>(){
+            std::lock_guard&lt;std::mutex&gt; <span class="pl-c1">lock</span>(m);
+            <span class="pl-c"><span class="pl-c">//</span> 弹出前检查是否为空栈</span>
+            <span class="pl-k">if</span>(data.<span class="pl-c1">empty</span>()){
+                <span class="pl-k">throw</span> <span class="pl-smi">empty_stack</span>();
+            }
+            <span class="pl-c"><span class="pl-c">//</span> 获取返回值</span>
+            std::shared_ptr&lt;T&gt; <span class="pl-k">const</span> <span class="pl-smi">res</span>(std::make_shared&lt;T&gt;(data.<span class="pl-c1">top</span>()));
+            data.<span class="pl-c1">pop</span>();
+            <span class="pl-k">return</span> res;
+        }
+        <span class="pl-k">void</span> <span class="pl-en">pop</span>(T&amp; value){
+            std::lock_guard&lt;std::mutex&gt; <span class="pl-c1">lock</span>(m);
+            <span class="pl-c"><span class="pl-c">//</span> 弹出前检查是否为空栈</span>
+            <span class="pl-k">if</span>(data.<span class="pl-c1">empty</span>()){
+                <span class="pl-k">throw</span> <span class="pl-smi">empty_stack</span>();
+            }
+            value = data.<span class="pl-c1">top</span>();
+            data.<span class="pl-c1">pop</span>();
+        }</pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>

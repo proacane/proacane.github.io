@@ -415,3 +415,157 @@ void some_core_part_of_algorithm()
   do_common_work();
 }
 ```
+# 共享数据
+## 互斥量
+修改共享数据前，将数据用互斥量锁住，修改结束后，再释放，当线程使用互斥量锁住共享数据时，其他的线程都必须等到之前那个线程对数据进行解锁后，才能进行访问数据。
+通过`std::mutex`创建互斥量实例，成员函数`lock()`、`unlock()`为上锁解锁，但是一般使用RAII模板类`std::lock_guard`，在构造时就进行上锁，析构时解锁
+使用`std::mutex`进行上锁
+```C++
+std::mutex mtx1;
+    int shared_data = 100;
+    void use_lock(){
+        while(true){
+            mtx1.lock();
+            shared_data++;
+            log("shared_data is "+std::to_string(shared_data));
+            mtx1.unlock();
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    }
+    void test_lock(){
+        std::thread t1(use_lock);
+        std::thread t2([](){
+            while(true){
+                mtx1.lock();
+                shared_data++;
+                log("shared_data is "+std::to_string(shared_data));
+                mtx1.unlock();
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            }
+        });
+        t1.join();
+        t2.join();
+    }
+```
+使用`lock_guard`进行上锁需要注意，只有当`lock_guard`成员析构时才会释放锁，可以使用代码块来实现
+保护共享数据时，要注意是否有指针、引用、参数是否有指针或引用：
+```C++
+class some_data {
+        int a;
+        std::string b;
+    public:
+        void do_something() { log("do something"); };
+    };
+
+    class data_wrapper {
+    private:
+        some_data data;
+        std::mutex m;
+    public:
+        template<typename Function>
+        void process_data(Function func) {
+            std::lock_guard<std::mutex> l(m);
+            func(data);    // 1 传递“保护”数据给用户函数
+        }
+    };
+
+    some_data *unprotected;
+
+    void malicious_function(some_data &protected_data) {
+        unprotected = &protected_data;
+    }
+
+    data_wrapper x;
+
+    void foo() {
+        x.process_data(malicious_function);    // 2 传递一个恶意函数
+        unprotected->do_something();    // 3 在无保护的情况下访问保护数据
+    }
+```
+data_wrapper类中的data本应是线程安全的，但是由于传入了malicious_function函数，获取了其地址，后续可以直接调用unprotected来进行一些操作
+## 如何保证数据安全
+有时候我们可以将对共享数据的访问和修改聚合到一个函数，在函数内加锁保证数据的安全性。但是对于读取类型的操作，即使读取函数是线程安全的，但是返回值抛给外边使用，存在不安全性。比如一个栈对象，我们要保证其在多线程访问的时候是安全的，可以在判断栈是否为空，判断操作内部我们可以加锁，但是判断结束后返回值就不在加锁了，就会存在线程安全问题。
+```C++
+template<typename T>
+    class thread_safe_stack1 {
+    private:
+        std::stack<T> data;
+        mutable std::mutex m;
+    public:
+        thread_safe_stack1() = default;
+
+        thread_safe_stack1(const thread_safe_stack1 &other) {
+            std::lock_guard<std::mutex> lock(m);
+            data = other.data;
+        }
+
+        thread_safe_stack1 &operator=(const thread_safe_stack1 &) = delete;
+
+        void push(T new_value) {
+            std::lock_guard<std::mutex> lock(m);
+            data.push(std::move(new_value));
+        }
+
+        // 问题代码
+        T pop() {
+            std::lock_guard<std::mutex> lock(m);
+            auto element = data.top();
+            data.pop();
+            return element;
+        }
+
+        bool empty() const {
+            std::lock_guard<std::mutex> lock(m);
+            return data.empty();
+        }
+    };
+```
+比如上面这个类，empty()返回时的结果可能是正确的，但是并不可靠，因为返回后锁被释放，其它线程可以对栈进行访问，可能会对栈内元素做修改，这样之前获得的empty()的数值就有问题了
+```C++
+void test_thread_safe_stack1() {
+        thread_safe_stack1<int> safeStack1;
+        safeStack1.push(1);
+        std::thread t1([&safeStack1] {
+            if (!safeStack1.empty()) {
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+                safeStack1.pop();
+            }
+        });
+        std::thread t2([&safeStack1] {
+            if (!safeStack1.empty()) {
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+                safeStack1.pop();
+            }
+        });
+        t1.join();
+        t2.join();
+    }
+```
+对于这样的测试函数，t1和t2分别判断完栈非空后都进行了pop，会抛出异常，可以在pop函数中增加异常判断，如果`data.empty()`就会抛出异常
+如果T是一个`vector<int>`类型，在pop函数中存储了element，假设程序使用的内存足够大时，可进行拷贝的空间不足，返回的element可能存在vector<int>拷贝赋值失败，使得数据能够从栈中弹出，但是弹出的数据完全丢失了
+优化上述问题的方案有如下几种：
+1. 传入一个引用：将变量的引用作为参数，传入pop()函数中获取弹出的值：`std::vector<int> result;
+some_stack.pop(result);`;缺点就是需要临时构造一个实例
+2. 返回指向弹出值的指针：不返回top的值，返回其指针；可以使用智能指针`std::shared_ptr`
+```C++
+std::shared_ptr<T> pop(){
+            std::lock_guard<std::mutex> lock(m);
+            // 弹出前检查是否为空栈
+            if(data.empty()){
+                throw empty_stack();
+            }
+            // 获取返回值
+            std::shared_ptr<T> const res(std::make_shared<T>(data.top()));
+            data.pop();
+            return res;
+        }
+        void pop(T& value){
+            std::lock_guard<std::mutex> lock(m);
+            // 弹出前检查是否为空栈
+            if(data.empty()){
+                throw empty_stack();
+            }
+            value = data.top();
+            data.pop();
+        }
+```
