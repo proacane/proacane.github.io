@@ -569,3 +569,71 @@ std::shared_ptr<T> pop(){
             data.pop();
         }
 ```
+## 死锁
+死锁一般是由于调用顺序不一致造成的。当线程1先加锁A，再加锁B，而线程2先加锁B，再加锁A。那么在某一时刻就可能造成死锁。比如线程1对A已经加锁，线程2对B已经加锁，那么他们都希望彼此占有对方的锁，又不释放自己占有的锁导致了死锁。
+可以将加锁和解锁的功能封装为独立的函数，这样能保证在独立的函数里执行完操作后就解锁，不会导致一个函数里使用多个锁的情况
+```C++
+//加锁和解锁作为原子操作解耦合，各自只管理自己的功能
+void atomic_lock1() {
+    std::cout << "lock1 begin lock" << std::endl;
+    t_lock1.lock();
+    m_1 = 1024;
+    t_lock1.unlock();
+    std::cout << "lock1 end lock" << std::endl;
+}
+void atomic_lock2() {
+    std::cout << "lock2 begin lock" << std::endl;
+    t_lock2.lock();
+    m_2 = 2048;
+    t_lock2.unlock();
+    std::cout << "lock2 end lock" << std::endl;
+}
+void safe_lock1() {
+    while (true) {
+        atomic_lock1();
+        atomic_lock2();
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+}
+void safe_lock2() {
+    while (true) {
+        atomic_lock2();
+        atomic_lock1();
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+}
+```
+也可以使用`std::lock`一次锁住多个互斥量来解决死锁问题：
+```C++
+class some_big_object;
+void swap(some_big_object& lhs,some_big_object& rhs);
+class X
+{
+private:
+  some_big_object some_detail;
+  std::mutex m;
+public:
+  X(some_big_object const& sd):some_detail(sd){}
+
+  friend void swap(X& lhs, X& rhs)
+  {
+    if(&lhs==&rhs)
+      return;
+    std::lock(lhs.m,rhs.m); // 1
+    std::lock_guard<std::mutex> lock_a(lhs.m,std::adopt_lock); // 2
+    std::lock_guard<std::mutex> lock_b(rhs.m,std::adopt_lock); // 3
+    swap(lhs.some_detail,rhs.some_detail);
+  }
+};
+```
+`std::lock`获取锁的时候如果出现了异常，那么就会释放所有的锁；在锁住后，如果不使用`std::lock_guard`来管理的话，就需要手动调用互斥量的`unlock`方法来释放
+C++17提供了`std::scoped_lock`，能接受多个互斥量作为参数，与`std::lock`的区别是不需要手动解锁或交给`std::lock_guard`管理
+```C++
+void swap(X& lhs, X& rhs){
+  if(&lhs==&rhs)
+    return;
+  std::scoped_lock guard(lhs.m,rhs.m); // 1
+  swap(lhs.some_detail,rhs.some_detail);
+}
+```
+没写泛型是应用了C++17的自动推导模板参数的特性

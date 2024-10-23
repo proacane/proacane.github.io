@@ -648,7 +648,69 @@ t1=std::move(t3);                        <span class="pl-c"><span class="pl-c">/
             }
             value = data.<span class="pl-c1">top</span>();
             data.<span class="pl-c1">pop</span>();
-        }</pre></div></div>
+        }</pre></div>
+<h2>死锁</h2>
+<p>死锁一般是由于调用顺序不一致造成的。当线程1先加锁A，再加锁B，而线程2先加锁B，再加锁A。那么在某一时刻就可能造成死锁。比如线程1对A已经加锁，线程2对B已经加锁，那么他们都希望彼此占有对方的锁，又不释放自己占有的锁导致了死锁。<br>
+可以将加锁和解锁的功能封装为独立的函数，这样能保证在独立的函数里执行完操作后就解锁，不会导致一个函数里使用多个锁的情况</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-c"><span class="pl-c">//</span>加锁和解锁作为原子操作解耦合，各自只管理自己的功能</span>
+<span class="pl-k">void</span> <span class="pl-en">atomic_lock1</span>() {
+    std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>lock1 begin lock<span class="pl-pds">"</span></span> &lt;&lt; std::endl;
+    t_lock1.<span class="pl-c1">lock</span>();
+    m_1 = <span class="pl-c1">1024</span>;
+    t_lock1.<span class="pl-c1">unlock</span>();
+    std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>lock1 end lock<span class="pl-pds">"</span></span> &lt;&lt; std::endl;
+}
+<span class="pl-k">void</span> <span class="pl-en">atomic_lock2</span>() {
+    std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>lock2 begin lock<span class="pl-pds">"</span></span> &lt;&lt; std::endl;
+    t_lock2.<span class="pl-c1">lock</span>();
+    m_2 = <span class="pl-c1">2048</span>;
+    t_lock2.<span class="pl-c1">unlock</span>();
+    std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>lock2 end lock<span class="pl-pds">"</span></span> &lt;&lt; std::endl;
+}
+<span class="pl-k">void</span> <span class="pl-en">safe_lock1</span>() {
+    <span class="pl-k">while</span> (<span class="pl-c1">true</span>) {
+        <span class="pl-c1">atomic_lock1</span>();
+        <span class="pl-c1">atomic_lock2</span>();
+        <span class="pl-c1">std::this_thread::sleep_for</span>(<span class="pl-c1">std::chrono::milliseconds</span>(<span class="pl-c1">5</span>));
+    }
+}
+<span class="pl-k">void</span> <span class="pl-en">safe_lock2</span>() {
+    <span class="pl-k">while</span> (<span class="pl-c1">true</span>) {
+        <span class="pl-c1">atomic_lock2</span>();
+        <span class="pl-c1">atomic_lock1</span>();
+        <span class="pl-c1">std::this_thread::sleep_for</span>(<span class="pl-c1">std::chrono::milliseconds</span>(<span class="pl-c1">5</span>));
+    }
+}</pre></div>
+<p>也可以使用<code class="notranslate">std::lock</code>一次锁住多个互斥量来解决死锁问题：</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">class</span> <span class="pl-en">some_big_object</span>;
+<span class="pl-k">void</span> <span class="pl-en">swap</span>(some_big_object&amp; lhs,some_big_object&amp; rhs);
+<span class="pl-k">class</span> <span class="pl-en">X</span>
+{
+<span class="pl-k">private:</span>
+  some_big_object some_detail;
+  std::mutex m;
+<span class="pl-k">public:</span>
+  <span class="pl-en">X</span>(some_big_object <span class="pl-k">const</span>&amp; sd):some_detail(sd){}
+
+  <span class="pl-k">friend</span> <span class="pl-k">void</span> <span class="pl-en">swap</span>(X&amp; lhs, X&amp; rhs)
+  {
+    <span class="pl-k">if</span>(&amp;lhs==&amp;rhs)
+      <span class="pl-k">return</span>;
+    <span class="pl-c1">std::lock</span>(lhs.<span class="pl-smi">m</span>,rhs.<span class="pl-smi">m</span>); <span class="pl-c"><span class="pl-c">//</span> 1</span>
+    std::lock_guard&lt;std::mutex&gt; <span class="pl-c1">lock_a</span>(lhs.<span class="pl-smi">m</span>,std::adopt_lock); <span class="pl-c"><span class="pl-c">//</span> 2</span>
+    std::lock_guard&lt;std::mutex&gt; <span class="pl-c1">lock_b</span>(rhs.<span class="pl-smi">m</span>,std::adopt_lock); <span class="pl-c"><span class="pl-c">//</span> 3</span>
+    <span class="pl-c1">swap</span>(lhs.<span class="pl-smi">some_detail</span>,rhs.<span class="pl-smi">some_detail</span>);
+  }
+};</pre></div>
+<p><code class="notranslate">std::lock</code>获取锁的时候如果出现了异常，那么就会释放所有的锁；在锁住后，如果不使用<code class="notranslate">std::lock_guard</code>来管理的话，就需要手动调用互斥量的<code class="notranslate">unlock</code>方法来释放<br>
+C++17提供了<code class="notranslate">std::scoped_lock</code>，能接受多个互斥量作为参数，与<code class="notranslate">std::lock</code>的区别是不需要手动解锁或交给<code class="notranslate">std::lock_guard</code>管理</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">void</span> <span class="pl-en">swap</span>(X&amp; lhs, X&amp; rhs){
+  <span class="pl-k">if</span>(&amp;lhs==&amp;rhs)
+    <span class="pl-k">return</span>;
+  std::scoped_lock <span class="pl-smi">guard</span>(lhs.<span class="pl-smi">m</span>,rhs.<span class="pl-smi">m</span>); <span class="pl-c"><span class="pl-c">//</span> 1</span>
+  <span class="pl-c1">swap</span>(lhs.<span class="pl-smi">some_detail</span>,rhs.<span class="pl-smi">some_detail</span>);
+}</pre></div>
+<p>没写泛型是应用了C++17的自动推导模板参数的特性</p></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
