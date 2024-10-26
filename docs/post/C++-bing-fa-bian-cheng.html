@@ -692,8 +692,7 @@ t1=std::move(t3);                        <span class="pl-c"><span class="pl-c">/
 <span class="pl-k">public:</span>
   <span class="pl-en">X</span>(some_big_object <span class="pl-k">const</span>&amp; sd):some_detail(sd){}
 
-  <span class="pl-k">friend</span> <span class="pl-k">void</span> <span class="pl-en">swap</span>(X&amp; lhs, X&amp; rhs)
-  {
+  <span class="pl-k">friend</span> <span class="pl-k">void</span> <span class="pl-en">swap</span>(X&amp; lhs, X&amp; rhs){
     <span class="pl-k">if</span>(&amp;lhs==&amp;rhs)
       <span class="pl-k">return</span>;
     <span class="pl-c1">std::lock</span>(lhs.<span class="pl-smi">m</span>,rhs.<span class="pl-smi">m</span>); <span class="pl-c"><span class="pl-c">//</span> 1</span>
@@ -710,7 +709,149 @@ C++17提供了<code class="notranslate">std::scoped_lock</code>，能接受多�
   std::scoped_lock <span class="pl-smi">guard</span>(lhs.<span class="pl-smi">m</span>,rhs.<span class="pl-smi">m</span>); <span class="pl-c"><span class="pl-c">//</span> 1</span>
   <span class="pl-c1">swap</span>(lhs.<span class="pl-smi">some_detail</span>,rhs.<span class="pl-smi">some_detail</span>);
 }</pre></div>
-<p>没写泛型是应用了C++17的自动推导模板参数的特性</p></div>
+<p>没写泛型是应用了C++17的自动推导模板参数的特性</p>
+<h2>层级锁</h2>
+<p>给锁设置层级，通过层级来防止死锁的发生；每个层次锁对象都有一个层级值，越大就代表“高层次”；一个线程只能在当前已经上锁的层次锁的层级之下进行进一步的上锁。这样规定后，一个线程如果试图以错误的顺序上锁，就会因为层次限制报错或抛出异常，从而避免死锁的发生，下面是一段伪代码：</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate">hierarchical_mutex <span class="pl-en">high_level_mutex</span>(<span class="pl-c1">10000</span>); <span class="pl-c"><span class="pl-c">//</span> 1</span>
+hierarchical_mutex <span class="pl-en">low_level_mutex</span>(<span class="pl-c1">5000</span>);  <span class="pl-c"><span class="pl-c">//</span> 2</span>
+hierarchical_mutex <span class="pl-en">other_mutex</span>(<span class="pl-c1">6000</span>); <span class="pl-c"><span class="pl-c">//</span> 3</span>
+<span class="pl-c"><span class="pl-c">//</span> 内部不上锁</span>
+<span class="pl-k">int</span> <span class="pl-en">do_low_level_stuff</span>();
+
+<span class="pl-k">int</span> <span class="pl-en">low_level_func</span>()
+{
+  std::lock_guard&lt;hierarchical_mutex&gt; <span class="pl-c1">lk</span>(low_level_mutex); <span class="pl-c"><span class="pl-c">//</span> 4</span>
+  <span class="pl-k">return</span> <span class="pl-c1">do_low_level_stuff</span>();
+}
+
+<span class="pl-k">void</span> <span class="pl-en">high_level_stuff</span>(<span class="pl-k">int</span> some_param);
+
+<span class="pl-k">void</span> <span class="pl-en">high_level_func</span>()
+{
+  std::lock_guard&lt;hierarchical_mutex&gt; <span class="pl-c1">lk</span>(high_level_mutex); <span class="pl-c"><span class="pl-c">//</span> 6</span>
+  <span class="pl-c1">high_level_stuff</span>(<span class="pl-c1">low_level_func</span>()); <span class="pl-c"><span class="pl-c">//</span> 5</span>
+}
+
+<span class="pl-k">void</span> <span class="pl-en">thread_a</span>()  <span class="pl-c"><span class="pl-c">//</span> 7</span>
+{
+  <span class="pl-c1">high_level_func</span>();
+}
+
+<span class="pl-k">void</span> <span class="pl-en">do_other_stuff</span>();
+
+<span class="pl-k">void</span> <span class="pl-en">other_stuff</span>()
+{
+  <span class="pl-c1">high_level_func</span>();  <span class="pl-c"><span class="pl-c">//</span> 10</span>
+  <span class="pl-c1">do_other_stuff</span>();
+}
+
+<span class="pl-k">void</span> <span class="pl-en">thread_b</span>() <span class="pl-c"><span class="pl-c">//</span> 8</span>
+{
+  std::lock_guard&lt;hierarchical_mutex&gt; <span class="pl-c1">lk</span>(other_mutex); <span class="pl-c"><span class="pl-c">//</span> 9</span>
+  <span class="pl-c1">other_stuff</span>();
+}</pre></div>
+<p>有三个层级锁<code class="notranslate">hierarchical_mutex</code>实例，将其中某个实例进行上锁，后续只能获取更低级层级的锁；所以<code class="notranslate">thread_a</code>可以正常运行，<code class="notranslate">thread_b</code>由于已经获取了<code class="notranslate">other_mutex</code>的锁，而后又尝试获取<code class="notranslate">high_level_mutex</code>的锁，所以就会抛出异常<br>
+下面是层级锁的简单实现：</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate">    <span class="pl-k">class</span> <span class="pl-en">hierarchical_mutex</span> {
+    <span class="pl-k">public:</span>
+        <span class="pl-k">explicit</span> <span class="pl-en">hierarchical_mutex</span>(<span class="pl-k">unsigned</span> <span class="pl-k">long</span> value) : _hierarchy_value(value), _previous_hierarchy_value(<span class="pl-c1">0</span>) {};
+
+        <span class="pl-en">hierarchical_mutex</span>(<span class="pl-k">const</span> hierarchical_mutex &amp;) = <span class="pl-k">delete</span>;
+
+        hierarchical_mutex &amp;<span class="pl-k">operator</span>=(<span class="pl-k">const</span> hierarchical_mutex &amp;) = <span class="pl-k">delete</span>;
+        <span class="pl-k">void</span> <span class="pl-en">lock</span>(){
+            <span class="pl-c1">checkForHierarchyViolation</span>();
+            _internal_mutex.<span class="pl-c1">lock</span>();
+            <span class="pl-c1">updateHierarchyValue</span>();
+        }
+        
+        <span class="pl-k">void</span> <span class="pl-en">unlock</span>(){
+            <span class="pl-k">if</span>(_this_thread_hierarchy_value!= _hierarchy_value){
+                <span class="pl-k">throw</span> <span class="pl-smi">std::logic_error</span>(<span class="pl-s"><span class="pl-pds">"</span>mutex hierarchy violated<span class="pl-pds">"</span></span>);
+            }
+            <span class="pl-c"><span class="pl-c">//</span> 解锁，获取上一级锁</span>
+            _this_thread_hierarchy_value = _previous_hierarchy_value;
+            _internal_mutex.<span class="pl-c1">unlock</span>();
+        }
+        
+        <span class="pl-k">bool</span> <span class="pl-en">try_lock</span>(){
+            <span class="pl-c1">checkForHierarchyViolation</span>();
+            <span class="pl-k">if</span>(!_internal_mutex.<span class="pl-c1">try_lock</span>()){
+                <span class="pl-k">return</span> <span class="pl-c1">false</span>;
+            }
+            <span class="pl-c1">updateHierarchyValue</span>();
+            <span class="pl-k">return</span> <span class="pl-c1">true</span>;
+        }
+    <span class="pl-k">private:</span>
+        std::mutex _internal_mutex;
+        <span class="pl-c"><span class="pl-c">//</span> 当前层级值</span>
+        <span class="pl-k">unsigned</span> <span class="pl-k">long</span> <span class="pl-k">const</span> _hierarchy_value;
+        <span class="pl-c"><span class="pl-c">//</span> 上一次层级值</span>
+        <span class="pl-k">unsigned</span> <span class="pl-k">long</span> _previous_hierarchy_value;
+        <span class="pl-c"><span class="pl-c">//</span> 本线程记录的层级值</span>
+        <span class="pl-k">static</span> <span class="pl-k">thread_local</span> <span class="pl-k">unsigned</span> <span class="pl-k">long</span> _this_thread_hierarchy_value;
+
+        <span class="pl-c"><span class="pl-c">//</span> 检查层级锁的获取是否合法</span>
+        <span class="pl-k">void</span> <span class="pl-en">checkForHierarchyViolation</span>() <span class="pl-k">const</span> {
+            <span class="pl-k">if</span> (_this_thread_hierarchy_value &lt;= _hierarchy_value) {
+                <span class="pl-k">throw</span> <span class="pl-smi">std::logic_error</span>(<span class="pl-s"><span class="pl-pds">"</span>mutex hierarchy violated<span class="pl-pds">"</span></span>);
+            }
+        }
+
+        <span class="pl-c"><span class="pl-c">//</span> 更新持有的层级锁的值</span>
+        <span class="pl-k">void</span> <span class="pl-en">updateHierarchyValue</span>() {
+            _previous_hierarchy_value = _this_thread_hierarchy_value;
+            _this_thread_hierarchy_value = _hierarchy_value;
+        }
+    };
+<span class="pl-k">thread_local</span> <span class="pl-k">unsigned</span> <span class="pl-k">long</span> <span class="pl-en">hierarchical_mutex::_this_thread_hierarchy_value</span>(ULONG_MAX);</pre></div>
+<p><code class="notranslate">thread_local</code>关键字表示每个变量都有自己独立的副本</p>
+<h2>unique_lock</h2>
+<p>unique_lock和lock_guard基本用法相同，构造时默认加锁，析构时默认解锁，但unique_lock可以手动解锁；比<code class="notranslate">std::lock_guard</code>占用更多空间，速度也要慢一些</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate">std::mutex mtx;
+<span class="pl-k">int</span> shared_data = <span class="pl-c1">0</span>;
+<span class="pl-k">void</span> <span class="pl-en">use_unique</span>() {
+    <span class="pl-c"><span class="pl-c">//</span>lock可自动解锁，也可手动解锁</span>
+    std::unique_lock&lt;std::mutex&gt; <span class="pl-c1">lock</span>(mtx);
+    std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>lock success<span class="pl-pds">"</span></span> &lt;&lt; std::endl;
+    shared_data++;
+    lock.<span class="pl-c1">unlock</span>();
+}</pre></div>
+<p>可以通过其成员函数<code class="notranslate">owns_lock</code>来判断是否持有锁</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate">    <span class="pl-k">void</span> <span class="pl-en">ownsLock</span>(){
+        std::unique_lock&lt;std::mutex&gt; <span class="pl-c1">lock</span>(mtx);
+        share_data++;
+        <span class="pl-k">if</span>(lock.<span class="pl-c1">owns_lock</span>()){
+            <span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">"</span>Owns lock<span class="pl-pds">"</span></span>);
+        }<span class="pl-k">else</span>{
+            <span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">"</span>Doesn't own lock<span class="pl-pds">"</span></span>);
+        }
+        lock.<span class="pl-c1">unlock</span>();
+        <span class="pl-k">if</span>(lock.<span class="pl-c1">owns_lock</span>()){
+            <span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">"</span>Owns lock<span class="pl-pds">"</span></span>);
+        }<span class="pl-k">else</span>{
+            <span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">"</span>Doesn't own lock<span class="pl-pds">"</span></span>);
+        }
+    }</pre></div>
+<p>构造函数的第二个参数默认是<code class="notranslate">std::adopt_lock</code>，表示对互斥量进行管理；也可以传入<code class="notranslate">std::defer_lock</code>，表示后续手动上锁</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">void</span> <span class="pl-en">defer_lock</span>() {
+    <span class="pl-c"><span class="pl-c">//</span>延迟加锁</span>
+    std::unique_lock&lt;std::mutex&gt; <span class="pl-c1">lock</span>(mtx, std::defer_lock);
+    <span class="pl-c"><span class="pl-c">//</span>可以加锁</span>
+    lock.<span class="pl-c1">lock</span>();
+    <span class="pl-c"><span class="pl-c">//</span>可以自动析构解锁，也可以手动解锁</span>
+    lock.<span class="pl-c1">unlock</span>();
+}</pre></div>
+<p><code class="notranslate">std::unique_lock</code>管理的互斥量的所有权可以通过<code class="notranslate">std::move()</code>转移</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate">std::unique_lock &lt;std::mutex&gt;  <span class="pl-en">get_lock</span>() {
+    std::unique_lock&lt;std::mutex&gt;  <span class="pl-c1">lock</span>(mtx);
+    shared_data++;
+    <span class="pl-k">return</span> lock;
+}
+<span class="pl-k">void</span> <span class="pl-en">use_return</span>() {
+    std::unique_lock&lt;std::mutex&gt; <span class="pl-c1">lock</span>(<span class="pl-c1">get_lock</span>());
+    shared_data++;
+}</pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>

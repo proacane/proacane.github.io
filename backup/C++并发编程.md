@@ -615,8 +615,7 @@ private:
 public:
   X(some_big_object const& sd):some_detail(sd){}
 
-  friend void swap(X& lhs, X& rhs)
-  {
+  friend void swap(X& lhs, X& rhs){
     if(&lhs==&rhs)
       return;
     std::lock(lhs.m,rhs.m); // 1
@@ -637,3 +636,157 @@ void swap(X& lhs, X& rhs){
 }
 ```
 没写泛型是应用了C++17的自动推导模板参数的特性
+## 层级锁
+给锁设置层级，通过层级来防止死锁的发生；每个层次锁对象都有一个层级值，越大就代表“高层次”；一个线程只能在当前已经上锁的层次锁的层级之下进行进一步的上锁。这样规定后，一个线程如果试图以错误的顺序上锁，就会因为层次限制报错或抛出异常，从而避免死锁的发生，下面是一段伪代码：
+```C++
+hierarchical_mutex high_level_mutex(10000); // 1
+hierarchical_mutex low_level_mutex(5000);  // 2
+hierarchical_mutex other_mutex(6000); // 3
+// 内部不上锁
+int do_low_level_stuff();
+
+int low_level_func()
+{
+  std::lock_guard<hierarchical_mutex> lk(low_level_mutex); // 4
+  return do_low_level_stuff();
+}
+
+void high_level_stuff(int some_param);
+
+void high_level_func()
+{
+  std::lock_guard<hierarchical_mutex> lk(high_level_mutex); // 6
+  high_level_stuff(low_level_func()); // 5
+}
+
+void thread_a()  // 7
+{
+  high_level_func();
+}
+
+void do_other_stuff();
+
+void other_stuff()
+{
+  high_level_func();  // 10
+  do_other_stuff();
+}
+
+void thread_b() // 8
+{
+  std::lock_guard<hierarchical_mutex> lk(other_mutex); // 9
+  other_stuff();
+}
+```
+有三个层级锁`hierarchical_mutex`实例，将其中某个实例进行上锁，后续只能获取更低级层级的锁；所以`thread_a`可以正常运行，`thread_b`由于已经获取了`other_mutex`的锁，而后又尝试获取`high_level_mutex`的锁，所以就会抛出异常
+下面是层级锁的简单实现：
+```C++
+    class hierarchical_mutex {
+    public:
+        explicit hierarchical_mutex(unsigned long value) : _hierarchy_value(value), _previous_hierarchy_value(0) {};
+
+        hierarchical_mutex(const hierarchical_mutex &) = delete;
+
+        hierarchical_mutex &operator=(const hierarchical_mutex &) = delete;
+        void lock(){
+            checkForHierarchyViolation();
+            _internal_mutex.lock();
+            updateHierarchyValue();
+        }
+        
+        void unlock(){
+            if(_this_thread_hierarchy_value!= _hierarchy_value){
+                throw std::logic_error("mutex hierarchy violated");
+            }
+            // 解锁，获取上一级锁
+            _this_thread_hierarchy_value = _previous_hierarchy_value;
+            _internal_mutex.unlock();
+        }
+        
+        bool try_lock(){
+            checkForHierarchyViolation();
+            if(!_internal_mutex.try_lock()){
+                return false;
+            }
+            updateHierarchyValue();
+            return true;
+        }
+    private:
+        std::mutex _internal_mutex;
+        // 当前层级值
+        unsigned long const _hierarchy_value;
+        // 上一次层级值
+        unsigned long _previous_hierarchy_value;
+        // 本线程记录的层级值
+        static thread_local unsigned long _this_thread_hierarchy_value;
+
+        // 检查层级锁的获取是否合法
+        void checkForHierarchyViolation() const {
+            if (_this_thread_hierarchy_value <= _hierarchy_value) {
+                throw std::logic_error("mutex hierarchy violated");
+            }
+        }
+
+        // 更新持有的层级锁的值
+        void updateHierarchyValue() {
+            _previous_hierarchy_value = _this_thread_hierarchy_value;
+            _this_thread_hierarchy_value = _hierarchy_value;
+        }
+    };
+thread_local unsigned long hierarchical_mutex::_this_thread_hierarchy_value(ULONG_MAX);
+```
+`thread_local`关键字表示每个变量都有自己独立的副本
+## unique_lock
+unique_lock和lock_guard基本用法相同，构造时默认加锁，析构时默认解锁，但unique_lock可以手动解锁；比`std::lock_guard`占用更多空间，速度也要慢一些
+```C++
+std::mutex mtx;
+int shared_data = 0;
+void use_unique() {
+    //lock可自动解锁，也可手动解锁
+    std::unique_lock<std::mutex> lock(mtx);
+    std::cout << "lock success" << std::endl;
+    shared_data++;
+    lock.unlock();
+}
+```
+可以通过其成员函数`owns_lock`来判断是否持有锁
+```C++
+    void ownsLock(){
+        std::unique_lock<std::mutex> lock(mtx);
+        share_data++;
+        if(lock.owns_lock()){
+            log("Owns lock");
+        }else{
+            log("Doesn't own lock");
+        }
+        lock.unlock();
+        if(lock.owns_lock()){
+            log("Owns lock");
+        }else{
+            log("Doesn't own lock");
+        }
+    }
+```
+构造函数的第二个参数默认是`std::adopt_lock`，表示对互斥量进行管理；也可以传入`std::defer_lock`，表示后续手动上锁
+```C++
+void defer_lock() {
+    //延迟加锁
+    std::unique_lock<std::mutex> lock(mtx, std::defer_lock);
+    //可以加锁
+    lock.lock();
+    //可以自动析构解锁，也可以手动解锁
+    lock.unlock();
+}
+```
+`std::unique_lock`管理的互斥量的所有权可以通过`std::move()`转移
+```C++
+std::unique_lock <std::mutex>  get_lock() {
+    std::unique_lock<std::mutex>  lock(mtx);
+    shared_data++;
+    return lock;
+}
+void use_return() {
+    std::unique_lock<std::mutex> lock(get_lock());
+    shared_data++;
+}
+```
