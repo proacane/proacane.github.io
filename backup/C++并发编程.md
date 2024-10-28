@@ -737,7 +737,7 @@ thread_local unsigned long hierarchical_mutex::_this_thread_hierarchy_value(ULON
 ```
 `thread_local`关键字表示每个变量都有自己独立的副本
 ## unique_lock
-unique_lock和lock_guard基本用法相同，构造时默认加锁，析构时默认解锁，但unique_lock可以手动解锁；比`std::lock_guard`占用更多空间，速度也要慢一些
+unique_lock和lock_guard基本用法相同，构造时默认加锁，析构时默认解锁，但unique_lock可以手动解锁；比`std::lock_guard`占用更多空间，速度也要慢一些，需要注意的是，一旦由unique_lock进行管理，就不能调用mutex进行加锁解锁
 ```C++
 std::mutex mtx;
 int shared_data = 0;

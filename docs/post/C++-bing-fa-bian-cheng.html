@@ -807,7 +807,7 @@ hierarchical_mutex <span class="pl-en">other_mutex</span>(<span class="pl-c1">60
 <span class="pl-k">thread_local</span> <span class="pl-k">unsigned</span> <span class="pl-k">long</span> <span class="pl-en">hierarchical_mutex::_this_thread_hierarchy_value</span>(ULONG_MAX);</pre></div>
 <p><code class="notranslate">thread_local</code>关键字表示每个变量都有自己独立的副本</p>
 <h2>unique_lock</h2>
-<p>unique_lock和lock_guard基本用法相同，构造时默认加锁，析构时默认解锁，但unique_lock可以手动解锁；比<code class="notranslate">std::lock_guard</code>占用更多空间，速度也要慢一些</p>
+<p>unique_lock和lock_guard基本用法相同，构造时默认加锁，析构时默认解锁，但unique_lock可以手动解锁；比<code class="notranslate">std::lock_guard</code>占用更多空间，速度也要慢一些，需要注意的是，一旦由unique_lock进行管理，就不能调用mutex进行加锁解锁</p>
 <div class="highlight highlight-source-c++"><pre class="notranslate">std::mutex mtx;
 <span class="pl-k">int</span> shared_data = <span class="pl-c1">0</span>;
 <span class="pl-k">void</span> <span class="pl-en">use_unique</span>() {
