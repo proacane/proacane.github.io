@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="# 简介
+记录一下C#基本语法的学习
+# HelloWorld
+一个 C# 程序主要包括以下部分：
+- 命名空间声明（Namespace declaration）
+- 一个 class
+- Class 方法
+- Class 属性
+- 一个 Main 方法
+- 语句（Statements）& 表达式（Expressions）
+- 注释
+C# 文件的后缀为 .cs
+```C#
+using System;
+namespace HelloWorldApplication
+{
+   class HelloWorld
+   {
+      static void Main(string[] args)
+      {
+         /* 我的第一个 C# 程序*/
+         Console.WriteLine('Hello World');
+         Console.ReadKey();
+      }
+   }
+}
+```
+# 基本语法
+C#也是一种面向对象的编程语言。">
+<meta property="og:title" content="C#语法学习">
+<meta property="og:description" content="# 简介
+记录一下C#基本语法的学习
+# HelloWorld
+一个 C# 程序主要包括以下部分：
+- 命名空间声明（Namespace declaration）
+- 一个 class
+- Class 方法
+- Class 属性
+- 一个 Main 方法
+- 语句（Statements）& 表达式（Expressions）
+- 注释
+C# 文件的后缀为 .cs
+```C#
+using System;
+namespace HelloWorldApplication
+{
+   class HelloWorld
+   {
+      static void Main(string[] args)
+      {
+         /* 我的第一个 C# 程序*/
+         Console.WriteLine('Hello World');
+         Console.ReadKey();
+      }
+   }
+}
+```
+# 基本语法
+C#也是一种面向对象的编程语言。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://proacane.github.io/post/C%23-yu-fa-xue-xi.html">
+<meta property="og:image" content="https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true">
+<title>C#语法学习</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">C#语法学习</h1>
+<div class="title-right">
+    <a href="https://proacane.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/proacane/proacane.github.io/issues/17" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><h1>简介</h1>
+<p>记录一下C#基本语法的学习</p>
+<h1>HelloWorld</h1>
+<p>一个 C# 程序主要包括以下部分：</p>
+<ul>
+<li>命名空间声明（Namespace declaration）</li>
+<li>一个 class</li>
+<li>Class 方法</li>
+<li>Class 属性</li>
+<li>一个 Main 方法</li>
+<li>语句（Statements）&amp; 表达式（Expressions）</li>
+<li>注释<br>
+C# 文件的后缀为 .cs</li>
+</ul>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">using</span> System<span class="pl-kos">;</span>
+<span class="pl-k">namespace</span> <span class="pl-v">HelloWorldApplication</span>
+<span class="pl-kos">{</span>
+   <span class="pl-k">class</span> <span class="pl-smi">HelloWorld</span>
+   <span class="pl-kos">{</span>
+      <span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-smi">string</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">args</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-c">/* 我的第一个 C# 程序*/</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Hello World<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">ReadKey</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+   <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
+<h1>基本语法</h1>
+<p>C#也是一种面向对象的编程语言。在面向对象的程序设计方法中，程序由各种相互交互的对象组成。相同种类的对象通常具有相同的类型，或者说，是在相同的 class 中。下面是一个Rectangle类：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">using</span> System<span class="pl-kos">;</span>
+<span class="pl-k">namespace</span> <span class="pl-v">RectangleApplication</span>
+<span class="pl-kos">{</span>
+    <span class="pl-k">class</span> <span class="pl-smi">Rectangle</span>
+    <span class="pl-kos">{</span>
+        <span class="pl-c">// 成员变量</span>
+        <span class="pl-smi">double</span> <span class="pl-s1">length</span><span class="pl-kos">;</span>
+        <span class="pl-smi">double</span> <span class="pl-s1">width</span><span class="pl-kos">;</span>
+        <span class="pl-k">public</span> <span class="pl-smi">void</span> <span class="pl-en">Acceptdetails</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+        <span class="pl-kos">{</span>
+            <span class="pl-s1">length</span> <span class="pl-c1">=</span> <span class="pl-c1">4.5</span><span class="pl-kos">;</span>    
+            <span class="pl-s1">width</span> <span class="pl-c1">=</span> <span class="pl-c1">3.5</span><span class="pl-kos">;</span>
+        <span class="pl-kos">}</span>
+        <span class="pl-k">public</span> <span class="pl-smi">double</span> <span class="pl-en">GetArea</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+        <span class="pl-kos">{</span>
+            <span class="pl-k">return</span> <span class="pl-s1">length</span> <span class="pl-c1">*</span> <span class="pl-s1">width</span><span class="pl-kos">;</span>
+        <span class="pl-kos">}</span>
+        <span class="pl-k">public</span> <span class="pl-smi">void</span> <span class="pl-en">Display</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+        <span class="pl-kos">{</span>
+            Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Length: {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> length<span class="pl-kos">)</span><span class="pl-kos">;</span>
+            Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Width: {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> width<span class="pl-kos">)</span><span class="pl-kos">;</span>
+            Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Area: {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> GetArea<span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-kos">}</span>
+    <span class="pl-kos">}</span>
+    
+    <span class="pl-k">class</span> <span class="pl-smi">ExecuteRectangle</span>
+    <span class="pl-kos">{</span>
+        <span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-smi">string</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">args</span><span class="pl-kos">)</span>
+        <span class="pl-kos">{</span>
+            <span class="pl-smi">Rectangle</span> <span class="pl-s1">r</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> Rectangle<span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+            r<span class="pl-kos">.</span><span class="pl-en">Acceptdetails</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+            r<span class="pl-kos">.</span><span class="pl-en">Display</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+            Console<span class="pl-kos">.</span><span class="pl-en">ReadLine</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-kos">}</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>using关键字</h2>
+<p>表示在程序中包含命名空间，类似于C++的头文件、Java的导包</p>
+<h2>标识符</h2>
+<p>注意：如果要将关键字作为标识符，需要在前面加上@</p>
+<h2>顶级语句</h2>
+<p>可以在文件的顶层直接编写代码，无需封装方法或类<br>
+特点：</p>
+<ul>
+<li>无需类或方法：顶级语句允许你直接在文件的顶层编写代码，无需定义类或方法。</li>
+<li>文件作为入口点：包含顶级语句的文件被视为程序的入口点，类似于 C# 之前的 Main 方法。</li>
+<li>自动 Main 方法：编译器会自动生成一个 Main 方法，并将顶级语句作为 Main 方法的主体。</li>
+<li>支持局部函数：尽管不需要定义类，但顶级语句的文件中仍然可以定义局部函数。</li>
+<li>更好的可读性：对于简单的脚本或工具，顶级语句提供了更好的可读性和简洁性。</li>
+<li>适用于小型项目：顶级语句非常适合小型项目或脚本，可以快速编写和运行代码。</li>
+<li>与现有代码兼容：顶级语句可以与现有的 C# 代码库一起使用，不会影响现有代码。<br>
+传统C#代码：</li>
+</ul>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">using</span> System<span class="pl-kos">;</span>
+
+<span class="pl-k">namespace</span> <span class="pl-v">MyApp</span>
+<span class="pl-kos">{</span>
+    <span class="pl-k">class</span> <span class="pl-smi">Program</span>
+    <span class="pl-kos">{</span>
+        <span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-smi">string</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">args</span><span class="pl-kos">)</span>
+        <span class="pl-kos">{</span>
+            Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Hello, World!<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-kos">}</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
+<p>使用顶级语句的C#代码：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">using</span> System<span class="pl-kos">;</span>
+
+Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Hello, World!<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div>
+<p>需要注意：</p>
+<ul>
+<li>文件限制：顶级语句只能在一个源文件中使用。如果在一个项目中有多个使用顶级语句的文件，会导致编译错误。</li>
+<li>程序入口：如果使用顶级语句，则该文件会隐式地包含 Main 方法，并且该文件将成为程序的入口点。</li>
+<li>作用域限制：顶级语句中的代码共享一个全局作用域，这意味着可以在顶级语句中定义的变量和方法可以在整个文件中访问。</li>
+</ul>
+<h1>数据类型</h1>
+<p>C#中变量分为：值类型、引用类型、指针类型</p>
+<h2>值类型</h2>
+<p>派生自System.ValueType类，使用sizeof方法可以获得某个变量的存储大小</p>
+<h2>引用类型</h2>
+<p>引用类型指的是一个内存位置，内置的引用类型有：object、dynamic 和 string；用户自定义引用类型：class、interface 或 delegate</p>
+<h3>对象Object类型</h3>
+<p>对象（Object）类型 是 C# 通用类型系统（Common Type System - CTS）中所有数据类型的终极基类。Object 是 System.Object 类的别名。所以对象（Object）类型可以被分配任何其他类型（值类型、引用类型、预定义类型或用户自定义类型）的值。但是，在分配值之前，需要先进行类型转换。</p>
+<p>当一个值类型转换为对象类型时，则被称为 装箱；另一方面，当一个对象类型转换为值类型时，则被称为 拆箱。</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-smi">object</span> <span class="pl-s1">obj</span><span class="pl-kos">;</span>
+<span class="pl-s1">obj</span> <span class="pl-c1">=</span> <span class="pl-c1">100</span><span class="pl-kos">;</span> <span class="pl-c">// 这是装箱</span>
+<span class="pl-smi">int</span> <span class="pl-s1">a</span> <span class="pl-c1">=</span> <span class="pl-kos">(</span><span class="pl-smi">int</span><span class="pl-kos">)</span>obj<span class="pl-kos">;</span><span class="pl-c">//这是拆箱</span></pre></div>
+<h3>动态Dynamic类型</h3>
+<p>可以存储任意类型的变量，在运行时进行类型检查，所以会降低运行效率，且不易维护代码:<br>
+<code class="notranslate">dynamic &lt;variable_name&gt; = value;</code></p>
+<h3>字符串String类型</h3>
+<p>字符串（String）类型是 System.String 类的别名。它是从对象（Object）类型派生的。字符串（String）类型的值可以通过两种形式进行分配：引号和 @引号<br>
+C# string 字符串的前面可以加 @（称作"逐字字符串"）将转义字符（\）当作普通字符对待，比如：<br>
+<code class="notranslate">string str = @"C:\Windows";</code><br>
+等价于：<br>
+<code class="notranslate">string str = "C:\\Windows";</code></p>
+<h3>指针类型</h3>
+<p>与C++的指针一样</p>
+<h1>类型转换</h1>
+<h2>隐式转换</h2>
+<p>隐式转换是指将一个较小范围的数据类型转换为较大范围的数据类型时，编译器会自动完成类型转换，这些转换是 C# 默认的以安全方式进行的转换, 不会导致数据丢失。</p>
+<h2>显式转换</h2>
+<p>显式类型转换，即强制类型转换，需要程序员在代码中明确指定。<br>
+显式转换是指将一个较大范围的数据类型转换为较小范围的数据类型时，或者将一个对象类型转换为另一个对象类型时，需要使用强制类型转换符号进行显示转换，强制转换会造成数据丢失</p>
+<h2>转换方法</h2>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>序号</th>
+<th>方法 &amp; 描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>ToBoolean 如果可能的话，把类型转换为布尔类型。</td>
+</tr>
+<tr>
+<td>2</td>
+<td>ToByte 把类型转换为字节字符类型。</td>
+</tr>
+<tr>
+<td>3</td>
+<td>ToChar 如果可能的话，把类型转换为单个 Unicode 字符类型。</td>
+</tr>
+<tr>
+<td>4</td>
+<td>ToDateTime 把类型（或表示日期和时间的字符串）转换为 日期-时间 值。</td>
+</tr>
+<tr>
+<td>5</td>
+<td>ToDecimal 把类型或变量的值转换为十进制类型。</td>
+</tr>
+<tr>
+<td>6</td>
+<td>ToDouble 把类型转换为双精度浮点类型。</td>
+</tr>
+<tr>
+<td>7</td>
+<td>ToInt16 把类型转换为 16 位整数类型。</td>
+</tr>
+<tr>
+<td>8</td>
+<td>ToInt32 把类型转换为 32 位整数类型。</td>
+</tr>
+<tr>
+<td>9</td>
+<td>ToInt64 把类型转换为 64 位整数类型。</td>
+</tr>
+<tr>
+<td>10</td>
+<td>ToSbyte 把类型转换为有符号字节字符类型。</td>
+</tr>
+<tr>
+<td>11</td>
+<td>ToSingle 把类型转换为小浮点精度类型。</td>
+</tr>
+<tr>
+<td>12</td>
+<td>ToString 把类型转换为字符串类型。</td>
+</tr>
+<tr>
+<td>13</td>
+<td>ToType 把类型转换为指定类型。</td>
+</tr>
+<tr>
+<td>14</td>
+<td>ToUInt16 把类型转换为 16 位无符号整数类型。</td>
+</tr>
+<tr>
+<td>15</td>
+<td>ToUInt32 把类型转换为 32 位无符号整数类型。</td>
+</tr>
+<tr>
+<td>16</td>
+<td>ToUInt64 把类型转换为 64 位无符号整数类型。</td>
+</tr>
+<tr>
+<td>这些方法都定义在 System.Convert 类中，可以处理 null值，并且转换失败的情况会抛出异常，例如：</td>
+<td></td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">using</span> System<span class="pl-kos">;</span>
+
+<span class="pl-k">namespace</span> <span class="pl-v">TypeConversionApplication</span>
+<span class="pl-kos">{</span>
+    <span class="pl-k">class</span> <span class="pl-smi">StringConversion</span>
+    <span class="pl-kos">{</span>
+        <span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-smi">string</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">args</span><span class="pl-kos">)</span>
+        <span class="pl-kos">{</span>
+            <span class="pl-c">// 定义一个整型变量</span>
+            <span class="pl-smi">int</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">75</span><span class="pl-kos">;</span>
+            
+            <span class="pl-c">// 定义一个浮点型变量</span>
+            <span class="pl-smi">float</span> <span class="pl-s1">f</span> <span class="pl-c1">=</span> <span class="pl-c1">53.005f</span><span class="pl-kos">;</span>
+            
+            <span class="pl-c">// 定义一个双精度浮点型变量</span>
+            <span class="pl-smi">double</span> <span class="pl-s1">d</span> <span class="pl-c1">=</span> <span class="pl-c1">2345.7652</span><span class="pl-kos">;</span>
+            
+            <span class="pl-c">// 定义一个布尔型变量</span>
+            <span class="pl-smi">bool</span> <span class="pl-s1">b</span> <span class="pl-c1">=</span> <span class="pl-c1">true</span><span class="pl-kos">;</span>
+
+            <span class="pl-c">// 将整型变量转换为字符串并输出</span>
+            Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span>i<span class="pl-kos">.</span><span class="pl-en">ToString</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+            
+            <span class="pl-c">// 将浮点型变量转换为字符串并输出</span>
+            Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span>f<span class="pl-kos">.</span><span class="pl-en">ToString</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+            
+            <span class="pl-c">// 将双精度浮点型变量转换为字符串并输出</span>
+            Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span>d<span class="pl-kos">.</span><span class="pl-en">ToString</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+            
+            <span class="pl-c">// 将布尔型变量转换为字符串并输出</span>
+            Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span>b<span class="pl-kos">.</span><span class="pl-en">ToString</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+
+            <span class="pl-c">// 等待用户按键后关闭控制台窗口</span>
+            Console<span class="pl-kos">.</span><span class="pl-en">ReadKey</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-kos">}</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>类转换方法</h2>
+<h3>使用 Convert 类</h3>
+<p>Convert类的静态方法用于基本数据类型的转换</p>
+<h3>使用 Parse 方法</h3>
+<p>Parse 方法用于将字符串转换为对应的数值类型，如果转换失败会抛出异常</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-smi">string</span> <span class="pl-s1">str</span> <span class="pl-c1">=</span> <span class="pl-s"><span class="pl-s">"</span>123.45<span class="pl-s">"</span></span><span class="pl-kos">;</span>
+<span class="pl-smi">double</span> <span class="pl-s1">d</span> <span class="pl-c1">=</span> <span class="pl-smi">double</span><span class="pl-kos">.</span><span class="pl-en">Parse</span><span class="pl-kos">(</span>str<span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div>
+<h3>使用 TryParse 方法</h3>
+<p>TryParse 方法类似于 Parse，但它不会抛出异常，而是返回一个布尔值指示转换是否成功。</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-smi">string</span> <span class="pl-s1">str</span> <span class="pl-c1">=</span> <span class="pl-s"><span class="pl-s">"</span>123.45<span class="pl-s">"</span></span><span class="pl-kos">;</span>
+<span class="pl-smi">double</span> <span class="pl-s1">d</span><span class="pl-kos">;</span>
+<span class="pl-smi">bool</span> <span class="pl-s1">success</span> <span class="pl-c1">=</span> <span class="pl-smi">double</span><span class="pl-kos">.</span><span class="pl-en">TryParse</span><span class="pl-kos">(</span>str<span class="pl-kos">,</span> <span class="pl-k">out</span> d<span class="pl-kos">)</span><span class="pl-kos">;</span>
+
+<span class="pl-k">if</span> <span class="pl-kos">(</span>success<span class="pl-kos">)</span> <span class="pl-kos">{</span>
+    Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>转换成功: <span class="pl-s">"</span></span> <span class="pl-c1">+</span> <span class="pl-s1">d</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span> <span class="pl-k">else</span> <span class="pl-kos">{</span>
+    Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>转换失败<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>自定义类型转换</h2>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">using</span> System<span class="pl-kos">;</span>
+
+<span class="pl-k">public</span> <span class="pl-k">class</span> <span class="pl-smi">Fahrenheit</span>
+<span class="pl-kos">{</span>
+    <span class="pl-k">public</span> <span class="pl-smi">double</span> <span class="pl-s1">Degrees</span> <span class="pl-kos">{</span> <span class="pl-k">get</span><span class="pl-kos">;</span> <span class="pl-k">set</span><span class="pl-kos">;</span> <span class="pl-kos">}</span>
+
+    <span class="pl-k">public</span> <span class="pl-v">Fahrenheit</span><span class="pl-kos">(</span><span class="pl-smi">double</span> <span class="pl-s1">degrees</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        <span class="pl-s1">Degrees</span> <span class="pl-c1">=</span> <span class="pl-s1">degrees</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+
+    <span class="pl-c">// 隐式转换从Fahrenheit到double</span>
+    <span class="pl-k">public</span> <span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-k">implicit</span> <span class="pl-k">operator</span> <span class="pl-smi">double</span><span class="pl-kos">(</span><span class="pl-smi">Fahrenheit</span> <span class="pl-s1">f</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        <span class="pl-k">return</span> f<span class="pl-kos">.</span>Degrees<span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+
+    <span class="pl-c">// 显式转换从double到Fahrenheit</span>
+    <span class="pl-k">public</span> <span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-k">explicit</span> <span class="pl-k">operator</span> Fahrenheit<span class="pl-kos">(</span><span class="pl-smi">double</span> <span class="pl-s1">d</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        <span class="pl-k">return</span> <span class="pl-k">new</span> Fahrenheit<span class="pl-kos">(</span>d<span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span>
+
+<span class="pl-k">public</span> <span class="pl-k">class</span> <span class="pl-smi">Program</span>
+<span class="pl-kos">{</span>
+    <span class="pl-k">public</span> <span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        <span class="pl-smi">Fahrenheit</span> <span class="pl-s1">f</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> Fahrenheit<span class="pl-kos">(</span><span class="pl-c1">98.6</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+        Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Fahrenheit object: <span class="pl-s">"</span></span> <span class="pl-c1">+</span> f<span class="pl-kos">.</span>Degrees <span class="pl-c1">+</span> <span class="pl-s"><span class="pl-s">"</span> degrees<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+
+        <span class="pl-smi">double</span> <span class="pl-s1">temp</span> <span class="pl-c1">=</span> f<span class="pl-kos">;</span> <span class="pl-c">// 隐式转换</span>
+        Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>After implicit conversion to double: <span class="pl-s">"</span></span> <span class="pl-c1">+</span> <span class="pl-s1">temp</span> <span class="pl-c1">+</span> <span class="pl-s"><span class="pl-s">"</span> degrees<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+
+        <span class="pl-smi">Fahrenheit</span> <span class="pl-s1">newF</span> <span class="pl-c1">=</span> <span class="pl-kos">(</span><span class="pl-smi">Fahrenheit</span><span class="pl-kos">)</span><span class="pl-s1">temp</span><span class="pl-kos">;</span> <span class="pl-c">// 显式转换</span>
+        Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>After explicit conversion back to Fahrenheit: <span class="pl-s">"</span></span> <span class="pl-c1">+</span> newF<span class="pl-kos">.</span>Degrees <span class="pl-c1">+</span> <span class="pl-s"><span class="pl-s">"</span> degrees<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://proacane.github.io">Proacane的个人博客</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","proacane/proacane.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+<script src='https://blog.meekdai.com/Gmeek/plugins/GmeekTOC.js'></script><script src='https://blog.meekdai.com/Gmeek/plugins/lightbox.js'></script>
+
+</html>
