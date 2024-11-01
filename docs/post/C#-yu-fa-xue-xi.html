@@ -444,7 +444,14 @@ C# string 字符串的前面可以加 @（称作"逐字字符串"）将转义字
         <span class="pl-smi">Fahrenheit</span> <span class="pl-s1">newF</span> <span class="pl-c1">=</span> <span class="pl-kos">(</span><span class="pl-smi">Fahrenheit</span><span class="pl-kos">)</span><span class="pl-s1">temp</span><span class="pl-kos">;</span> <span class="pl-c">// 显式转换</span>
         Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>After explicit conversion back to Fahrenheit: <span class="pl-s">"</span></span> <span class="pl-c1">+</span> newF<span class="pl-kos">.</span>Degrees <span class="pl-c1">+</span> <span class="pl-s"><span class="pl-s">"</span> degrees<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
     <span class="pl-kos">}</span>
-<span class="pl-kos">}</span></pre></div></div>
+<span class="pl-kos">}</span></pre></div>
+<h1>变量</h1>
+<p>除了基本数据类型，还可以定义enum、class等变量</p>
+<h1>接收输入的值</h1>
+<p>System 命名空间中的 Console 类提供了一个函数 ReadLine()，用于接收来自用户的输入（只接受字符串类型），并把它存储到一个变量中</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-smi">int</span> <span class="pl-s1">num</span><span class="pl-kos">;</span>
+<span class="pl-s1">num</span> <span class="pl-c1">=</span> Convert<span class="pl-kos">.</span><span class="pl-en">ToInt32</span><span class="pl-kos">(</span>Console<span class="pl-kos">.</span><span class="pl-en">ReadLine</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div>
+<h1>常量</h1></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>

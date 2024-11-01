@@ -258,3 +258,12 @@ public class Program
     }
 }
 ```
+# 变量
+除了基本数据类型，还可以定义enum、class等变量
+# 接收输入的值
+System 命名空间中的 Console 类提供了一个函数 ReadLine()，用于接收来自用户的输入（只接受字符串类型），并把它存储到一个变量中
+```C#
+int num;
+num = Convert.ToInt32(Console.ReadLine());
+```
+# 常量
