@@ -267,3 +267,182 @@ int num;
 num = Convert.ToInt32(Console.ReadLine());
 ```
 # 常量
+## 整数常量
+整数常量可以是十进制、八进制或十六进制的常量。
+前缀指定基数：0x 或 0X 表示十六进制，0 表示八进制，没有前缀则表示十进制。
+整数常量也可以有后缀，可以是 U 和 L 的组合，其中，U 和 L 分别表示 unsigned 和 long。后缀可以是大写或者小写，多个后缀以任意顺序进行组合
+```C#
+212         /* 合法 */
+215u        /* 合法 */
+0xFeeL      /* 合法 */
+078         /* 非法：8 不是一个八进制数字 */
+032UU       /* 非法：不能重复后缀 */
+```
+## 浮点常量
+一个浮点常量是由整数部分、小数点、小数部分和指数部分组成，可以用小数形式或指数形式来表示：
+```C#
+3.14159       /* 合法 */
+314159E-5L    /* 合法 */
+510E          /* 非法：不完全指数 */
+210f          /* 非法：没有小数或指数 */
+.e55          /* 非法：缺少整数或小数 */
+```
+## 字符常量
+字符常量包括普通字符、转义序列、通用字符；需要用时再查即可
+## 字符串常量
+字符串常量是括在双引号`""` 里，或者是括在`@""`里
+## 定义常量
+使用 const 关键字定义常量
+```C#
+using System;
+
+public class ConstTest 
+{
+    class SampleClass
+    {
+        public int x;
+        public int y;
+        public const int c1 = 5;
+        public const int c2 = c1 + 5;
+
+        public SampleClass(int p1, int p2) 
+        {
+            x = p1; 
+            y = p2;
+        }
+    }
+
+    static void Main()
+    {
+        SampleClass mC = new SampleClass(11, 22);
+        Console.WriteLine("x = {0}, y = {1}", mC.x, mC.y);
+        Console.WriteLine("c1 = {0}, c2 = {1}", 
+                          SampleClass.c1, SampleClass.c2);
+    }
+}
+```
+# 运算符
+## 算术运算符
++、-、*、/、%、++、--
+## 关系运算符
+==、!=、>、<、>=、<=
+## 逻辑运算符
+&&、 ||、 !
+## 位运算符
+逐位执行操作
+逻辑与：&
+逻辑或：|
+逻辑异或：^，相同为0，不同为1，
+- 例如：A = 0011 1100；B = 0000 1101
+                  A^B = 0011 0001
+按位取反：~
+二进制左移：<<
+二进制右移：>>
+```C#
+            int a = 60;            /* 60 = 0011 1100 */  
+            int b = 13;            /* 13 = 0000 1101 */
+            int c = 0;          
+
+             c = a & b;           /* 12 = 0000 1100 */
+             Console.WriteLine("Line 1 - c 的值是 {0}", c );
+
+             c = a | b;           /* 61 = 0011 1101 */
+             Console.WriteLine("Line 2 - c 的值是 {0}", c);
+
+             c = a ^ b;           /* 49 = 0011 0001 */
+             Console.WriteLine("Line 3 - c 的值是 {0}", c);
+
+             c = ~a;               /*-61 = 1100 0011 */
+             Console.WriteLine("Line 4 - c 的值是 {0}", c);
+
+             c = a << 2;     /* 240 = 1111 0000 */
+             Console.WriteLine("Line 5 - c 的值是 {0}", c);
+
+             c = a >> 2;     /* 15 = 0000 1111 */
+```
+## 其它运算符
+- sizeof：返回数据类型的大小
+- typeof：返回class的类型
+- &：返回变量的地址
+- *：变量的指针
+- ?：条件表达式
+- is：判断对象是否为某种类型
+- as：强制转换，失败也不会抛出异常
+# 循环
+只介绍与其它语言不同的地方
+## foreach
+语法：
+```C#
+foreach (var item in collection)
+{
+    // 循环
+}
+```
+# 封装
+成员函数、成员变量不指定权限，默认是private
+C#的访问修饰符如下：
+- public：所有对象都可以访问；
+- private：对象本身在对象内部可以访问；
+- protected：只有该类对象及其子类对象可以访问
+- internal：同一个程序集的对象可以访问；
+- protected internal：访问限于当前程序集或派生自包含类的类型。
+![image](https://github.com/user-attachments/assets/5d71b77f-2d4f-4784-b9cc-ad04c48c1ba9)
+## Protected
+Proteced 允许子类访问其积累的成员变量和成员函数
+## internal
+internal允许一个类将其成员变量和成员函数暴露给当前程序中的其它函数对象，与public的区别在于如果是程序被其它程序引用，internal类型不可以被直接访问，public可以直接访问
+# 方法
+## 参数传递
+方法的参数传递分为值参数、引用参数、输出参数三种；值参数和C++的值传递是一样的
+### 引用传参
+通过 ref 关键字声明引用参数：
+```C#
+class NumberManipulator
+{
+    public void swap(ref int x, ref int y)
+    {
+        int temp;
+        temp = x;
+        x = y;
+        y = temp;
+    }
+
+    static void Main(string[] args)
+    {
+        NumberManipulator n = new NumberManipulator();
+        int a = 50;
+        int b = 100;
+        Console.WriteLine("在交换之前，a 的值： {0}", a);
+        Console.WriteLine("在交换之前，b 的值： {0}", b);
+        n.swap(ref a, ref b);
+        Console.WriteLine("在交换之后，a 的值： {0}", a);
+        Console.WriteLine("在交换之后，b 的值： {0}", b);
+
+        Console.ReadLine();
+    }
+}
+```
+### 输出参数
+输出参数和返回值的区别是，return语句的返回值只能有一个，输出参数可以返回多个，思路和引用参数差不多，在定义和调用方法的时候，参数都要加上out关键字
+```C#
+ public void GetValue(out int x)
+ {
+     int temp = 54;
+     x = temp; ;
+ }
+
+ static void Main(string[] args)
+ {
+     NumberManipulator n = new NumberManipulator();
+     /* 局部变量定义 */
+     int a = 100;
+
+     Console.WriteLine("在方法调用之前，a 的值： {0}", a);
+
+     /* 调用函数来获取值 */
+     n.GetValue(out a);
+
+     Console.WriteLine("在方法调用之后，a 的值： {0}", a);
+     Console.ReadLine();
+ }
+```
