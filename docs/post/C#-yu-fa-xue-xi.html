@@ -622,7 +622,1041 @@ C#的访问修饰符如下：</p>
 
      Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>在方法调用之后，a 的值： {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> a<span class="pl-kos">)</span><span class="pl-kos">;</span>
      Console<span class="pl-kos">.</span><span class="pl-en">ReadLine</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
- <span class="pl-kos">}</span></pre></div></div>
+ <span class="pl-kos">}</span></pre></div>
+<h1>可空类型</h1>
+<p>C# 中的<code class="notranslate">?</code>关键字用于对int、double、bool等无法直接赋值为null的数据类型进行null赋值；</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-smi"><span class="pl-smi">int</span><span class="pl-c1">?</span></span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">3</span><span class="pl-kos">;</span>
+<span class="pl-c">// 等价于</span>
+<span class="pl-smi">Nullable</span><span class="pl-c1">&lt;</span><span class="pl-smi">int</span><span class="pl-c1">&gt;</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-smi">Nullable</span><span class="pl-c1">&lt;</span><span class="pl-smi">int</span><span class="pl-c1">&gt;</span><span class="pl-kos">(</span><span class="pl-c1">3</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+
+<span class="pl-c">// 默认值0</span>
+<span class="pl-smi">int</span> <span class="pl-s1">i</span> <span class="pl-kos">;</span>
+<span class="pl-c">// 默认值null</span>
+<span class="pl-smi"><span class="pl-smi">int</span><span class="pl-c1">?</span></span> <span class="pl-s1">ii</span><span class="pl-kos">;</span></pre></div>
+<p>其中，Nullable为可空类型，表示在基础类型的范围内，再加上一个null值：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-smi">string</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">args</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-smi"><span class="pl-smi">int</span><span class="pl-c1">?</span></span> <span class="pl-s1">num1</span> <span class="pl-c1">=</span> <span class="pl-c1">null</span><span class="pl-kos">;</span>
+         <span class="pl-smi"><span class="pl-smi">int</span><span class="pl-c1">?</span></span> <span class="pl-s1">num2</span> <span class="pl-c1">=</span> <span class="pl-c1">45</span><span class="pl-kos">;</span>
+         <span class="pl-smi"><span class="pl-smi">double</span><span class="pl-c1">?</span></span> <span class="pl-s1">num3</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-smi"><span class="pl-smi">double</span><span class="pl-c1">?</span></span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+         <span class="pl-smi"><span class="pl-smi">double</span><span class="pl-c1">?</span></span> <span class="pl-s1">num4</span> <span class="pl-c1">=</span> <span class="pl-c1">3.14157</span><span class="pl-kos">;</span>       
+         <span class="pl-smi"><span class="pl-smi">bool</span><span class="pl-c1">?</span></span> <span class="pl-s1">boolval</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-smi"><span class="pl-smi">bool</span><span class="pl-c1">?</span></span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+     
+         Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>显示可空类型的值： {0}, {1}, {2}, {3}<span class="pl-s">"</span></span><span class="pl-kos">,</span>
+                            num1<span class="pl-kos">,</span> num2<span class="pl-kos">,</span> num3<span class="pl-kos">,</span> num4<span class="pl-kos">)</span><span class="pl-kos">;</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>一个可空的布尔值： {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> boolval<span class="pl-kos">)</span><span class="pl-kos">;</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">ReadLine</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span></pre></div>
+<p>??运算符：</p>
+<p>如果可空类型的值为null，那么就会返回第二个操作数的值：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-smi"><span class="pl-smi">int</span><span class="pl-c1">?</span></span> <span class="pl-s1">num1</span> <span class="pl-c1">=</span> <span class="pl-c1">null</span><span class="pl-kos">;</span>
+           
+<span class="pl-smi">double</span> <span class="pl-s1">num3</span><span class="pl-kos">;</span>
+<span class="pl-s1">num3</span> <span class="pl-c1">=</span> <span class="pl-s1">num1</span> <span class="pl-c1">??</span> <span class="pl-c1">5.34</span><span class="pl-kos">;</span></pre></div>
+<h1>数组</h1>
+<p>声明：</p>
+<p><code class="notranslate">dataType[] arrayName;</code></p>
+<p>初始化：</p>
+<p><code class="notranslate">double[] balance = new double[10];</code></p>
+<p>赋值：</p>
+<ol>
+<li>
+<p>通过索引赋值：<code class="notranslate">balance[0] = 1;</code></p>
+</li>
+<li>
+<p>声明的时候赋值：<code class="notranslate">double[] balance = {23.4,12.3,54.1};</code></p>
+</li>
+<li>
+<p>也可以创建并初始化：<code class="notranslate">int [] marks = new int[]  { 99,  98, 92, 97, 95};</code></p>
+</li>
+<li>
+<p>不同数组之间赋值，会指向<strong>相同的内存位置</strong>：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-smi">int</span> <span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">marks</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span>  <span class="pl-kos">{</span> <span class="pl-c1">99</span><span class="pl-kos">,</span>  <span class="pl-c1">98</span><span class="pl-kos">,</span> <span class="pl-c1">92</span><span class="pl-kos">,</span> <span class="pl-c1">97</span><span class="pl-kos">,</span> <span class="pl-c1">95</span><span class="pl-kos">}</span><span class="pl-kos">;</span>
+<span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">score</span> <span class="pl-c1">=</span> marks<span class="pl-kos">;</span></pre></div>
+</li>
+<li>
+<p>使用foreach遍历：<code class="notranslate">foreach(int j in marks)</code></p>
+</li>
+</ol>
+<h2>多维数组</h2>
+<p>C# 中的多维数组在元素访问和初始化上更像是普通的矩阵，不需要连续调用<code class="notranslate">[]</code>运算符</p>
+<p>二维数组：<code class="notranslate">string [,] names;</code>；三维数组：<code class="notranslate">int[ , , ]m;</code></p>
+<p>二维数组初始化：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-smi">int</span> <span class="pl-kos">[</span><span class="pl-kos">,</span><span class="pl-kos">]</span> <span class="pl-s1">a</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-smi">int</span> <span class="pl-kos">[</span><span class="pl-c1">3</span><span class="pl-kos">,</span><span class="pl-c1">4</span><span class="pl-kos">]</span> <span class="pl-kos">{</span>
+ <span class="pl-kos">{</span><span class="pl-c1">0</span><span class="pl-kos">,</span> <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-c1">3</span><span class="pl-kos">}</span> <span class="pl-kos">,</span>   <span class="pl-c">/*  初始化索引号为 0 的行 */</span>
+ <span class="pl-kos">{</span><span class="pl-c1">4</span><span class="pl-kos">,</span> <span class="pl-c1">5</span><span class="pl-kos">,</span> <span class="pl-c1">6</span><span class="pl-kos">,</span> <span class="pl-c1">7</span><span class="pl-kos">}</span> <span class="pl-kos">,</span>   <span class="pl-c">/*  初始化索引号为 1 的行 */</span>
+ <span class="pl-kos">{</span><span class="pl-c1">8</span><span class="pl-kos">,</span> <span class="pl-c1">9</span><span class="pl-kos">,</span> <span class="pl-c1">10</span><span class="pl-kos">,</span> <span class="pl-c1">11</span><span class="pl-kos">}</span>   <span class="pl-c">/*  初始化索引号为 2 的行 */</span>
+<span class="pl-kos">}</span><span class="pl-kos">;</span></pre></div>
+<p>访问：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">,</span><span class="pl-kos">]</span> <span class="pl-s1">a</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-c1">5</span><span class="pl-kos">,</span> <span class="pl-c1">2</span><span class="pl-kos">]</span> <span class="pl-kos">{</span> <span class="pl-kos">{</span> <span class="pl-c1">0</span><span class="pl-kos">,</span> <span class="pl-c1">0</span> <span class="pl-kos">}</span><span class="pl-kos">,</span> <span class="pl-kos">{</span> <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-c1">2</span> <span class="pl-kos">}</span><span class="pl-kos">,</span> <span class="pl-kos">{</span> <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-c1">4</span> <span class="pl-kos">}</span><span class="pl-kos">,</span> <span class="pl-kos">{</span> <span class="pl-c1">3</span><span class="pl-kos">,</span> <span class="pl-c1">6</span> <span class="pl-kos">}</span><span class="pl-kos">,</span> <span class="pl-kos">{</span> <span class="pl-c1">4</span><span class="pl-kos">,</span> <span class="pl-c1">8</span> <span class="pl-kos">}</span> <span class="pl-kos">}</span><span class="pl-kos">;</span>
+<span class="pl-smi">int</span> <span class="pl-s1">i</span><span class="pl-kos">,</span> <span class="pl-s1">j</span><span class="pl-kos">;</span>
+<span class="pl-k">for</span><span class="pl-kos">(</span><span class="pl-s1">i</span><span class="pl-c1">=</span><span class="pl-c1">0</span><span class="pl-kos">;</span><span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">5</span><span class="pl-kos">;</span> <span class="pl-s1">i</span><span class="pl-c1">++</span><span class="pl-kos">)</span>
+<span class="pl-kos">{</span>
+    <span class="pl-k">for</span><span class="pl-kos">(</span><span class="pl-s1">j</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span><span class="pl-kos">;</span> <span class="pl-s1">j</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">2</span><span class="pl-kos">;</span> <span class="pl-s1">j</span><span class="pl-c1">++</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        Console<span class="pl-kos">.</span><span class="pl-en">Write</span><span class="pl-kos">(</span>a<span class="pl-kos">[</span>i<span class="pl-kos">,</span>j<span class="pl-kos">]</span> <span class="pl-c1">+</span> <span class="pl-s"><span class="pl-s">"</span><span class="pl-k">\t</span><span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+    Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>交错数组</h2>
+<p>交错数组是数组的数组，交错数组是一维数组，声明：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-smi">int</span> <span class="pl-kos">[</span><span class="pl-kos">]</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">socres</span><span class="pl-kos">;</span></pre></div>
+<p>创建上面的数组：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">scores</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-c1">5</span><span class="pl-kos">]</span><span class="pl-kos">[</span><span class="pl-kos">]</span><span class="pl-kos">;</span>
+<span class="pl-k">for</span> <span class="pl-kos">(</span><span class="pl-smi">int</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span><span class="pl-kos">;</span> <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> scores<span class="pl-kos">.</span>Length<span class="pl-kos">;</span> <span class="pl-s1">i</span><span class="pl-c1">++</span><span class="pl-kos">)</span> 
+<span class="pl-kos">{</span>
+   scores<span class="pl-kos">[</span>i<span class="pl-kos">]</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-c1">4</span><span class="pl-kos">]</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
+<p>上述代码创建了长度为5的一维数组，每个元素的类型是int类型的数组，<strong>长度不一定一样</strong></p>
+<p>初始化交错数组：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">scores</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-c1">2</span><span class="pl-kos">]</span><span class="pl-kos">[</span><span class="pl-kos">]</span><span class="pl-kos">{</span><span class="pl-k">new</span> <span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span><span class="pl-kos">{</span><span class="pl-c1">92</span><span class="pl-kos">,</span><span class="pl-c1">93</span><span class="pl-kos">,</span><span class="pl-c1">94</span><span class="pl-kos">}</span><span class="pl-kos">,</span><span class="pl-k">new</span> <span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span><span class="pl-kos">{</span><span class="pl-c1">85</span><span class="pl-kos">,</span><span class="pl-c1">66</span><span class="pl-kos">,</span><span class="pl-c1">87</span><span class="pl-kos">,</span><span class="pl-c1">88</span><span class="pl-kos">}</span><span class="pl-kos">}</span><span class="pl-kos">;</span></pre></div>
+<p>下面这个例子简单使用了交错数组：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">a</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-kos">{</span> <span class="pl-k">new</span> <span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-kos">{</span> <span class="pl-c1">0</span><span class="pl-kos">,</span> <span class="pl-c1">0</span> <span class="pl-kos">}</span><span class="pl-kos">,</span> <span class="pl-k">new</span> <span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-kos">{</span> <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-c1">2</span> <span class="pl-kos">}</span><span class="pl-kos">,</span> <span class="pl-k">new</span> <span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-kos">{</span> <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-c1">4</span><span class="pl-kos">,</span> <span class="pl-c1">6</span> <span class="pl-kos">}</span><span class="pl-kos">,</span> <span class="pl-k">new</span> <span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-kos">{</span> <span class="pl-c1">3</span><span class="pl-kos">,</span> <span class="pl-c1">6</span> <span class="pl-kos">}</span><span class="pl-kos">,</span> <span class="pl-k">new</span> <span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-kos">{</span> <span class="pl-c1">4</span><span class="pl-kos">,</span> <span class="pl-c1">8</span> <span class="pl-kos">}</span> <span class="pl-kos">}</span><span class="pl-kos">;</span>
+<span class="pl-k">for</span> <span class="pl-kos">(</span><span class="pl-smi">int</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span><span class="pl-kos">;</span> <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> a<span class="pl-kos">.</span>Length<span class="pl-kos">;</span> <span class="pl-s1">i</span><span class="pl-c1">++</span><span class="pl-kos">)</span>
+<span class="pl-kos">{</span>
+    <span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">temp</span> <span class="pl-c1">=</span> a<span class="pl-kos">[</span>i<span class="pl-kos">]</span><span class="pl-kos">;</span> 
+    <span class="pl-k">for</span><span class="pl-kos">(</span><span class="pl-smi">int</span> <span class="pl-s1">j</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span><span class="pl-kos">;</span><span class="pl-s1">j</span> <span class="pl-c1">&lt;</span> temp<span class="pl-kos">.</span>Length<span class="pl-kos">;</span> <span class="pl-s1">j</span><span class="pl-c1">++</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        Console<span class="pl-kos">.</span><span class="pl-en">Write</span><span class="pl-kos">(</span>temp<span class="pl-kos">[</span>j<span class="pl-kos">]</span> <span class="pl-c1">+</span> <span class="pl-s"><span class="pl-s">"</span><span class="pl-k">\t</span><span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+    Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>多维数组和交错数组的区别</h2>
+<ol>
+<li>多维数组是一个固定的矩阵结构，其行和列都是不变的，每一行都有相同的列数交错数组的每一行都是独立的数组，所以各行可以拥有不同的长度</li>
+<li>多维数组的内存是连续分布的，C#中通常先按照行优先（先分配第一行的所有列、再分配第二行的所有列、以此类推）将数组的元素分配到内存中；交错数组由于每一行是独立的数组，所以在内存中可能是分散分布的；因为可以根据需要来分配内存，使用时优先用交错数组</li>
+<li>多维数组的内存是连续的，所以访问速度较快；交错数组需要先找到行的地址，再寻找列的地址，访问速度相对较慢</li>
+<li>多维数组多用在适合表示规则的矩阵、数据结构大小固定且所有行长度相同；交错数组用在不规则的数据结构、数据大小不确定的情况</li>
+</ol>
+<h2>传递数组给函数</h2>
+<p>通过不带索引的数组名给函数传递一个指向数组的<strong>指针</strong>，在函数中的任何操作都会直接影响到原数组</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-smi">void</span> <span class="pl-en">GetAverage</span><span class="pl-kos">(</span><span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">arr</span><span class="pl-kos">,</span> <span class="pl-k">out</span> <span class="pl-smi">double</span> <span class="pl-s1">res</span><span class="pl-kos">)</span>
+<span class="pl-kos">{</span>
+    <span class="pl-smi">int</span> <span class="pl-s1">sum</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span><span class="pl-kos">;</span>
+    <span class="pl-k">for</span> <span class="pl-kos">(</span><span class="pl-smi">int</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span><span class="pl-kos">;</span> <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> arr<span class="pl-kos">.</span>Length<span class="pl-kos">;</span> <span class="pl-s1">i</span><span class="pl-c1">++</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        <span class="pl-s1">sum</span> <span class="pl-c1">+=</span> arr<span class="pl-kos">[</span>i<span class="pl-kos">]</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+    <span class="pl-s1">res</span> <span class="pl-c1">=</span> <span class="pl-kos">(</span><span class="pl-smi">double</span><span class="pl-kos">)</span>sum <span class="pl-c1">/</span> arr<span class="pl-kos">.</span>Length<span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
+<span class="pl-smi">void</span> <span class="pl-en">RedefineArr</span><span class="pl-kos">(</span><span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">arr</span><span class="pl-kos">)</span>
+<span class="pl-kos">{</span>
+    <span class="pl-k">for</span> <span class="pl-kos">(</span><span class="pl-smi">int</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span><span class="pl-kos">;</span> <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> arr<span class="pl-kos">.</span>Length<span class="pl-kos">;</span> <span class="pl-s1">i</span><span class="pl-c1">++</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        arr<span class="pl-kos">[</span>i<span class="pl-kos">]</span> <span class="pl-c1">+=</span> <span class="pl-c1">1000</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span>
+<span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-smi">string</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">args</span><span class="pl-kos">)</span>
+<span class="pl-kos">{</span>
+    <span class="pl-smi">MyArray</span> <span class="pl-s1">app</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> MyArray<span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span> 
+    <span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">arr</span> <span class="pl-c1">=</span> <span class="pl-kos">{</span> <span class="pl-c1">1000</span><span class="pl-kos">,</span> <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-c1">3</span><span class="pl-kos">,</span> <span class="pl-c1">17</span><span class="pl-kos">,</span> <span class="pl-c1">50</span> <span class="pl-kos">}</span><span class="pl-kos">;</span>
+    <span class="pl-smi">double</span> <span class="pl-s1">avg</span><span class="pl-kos">;</span>
+    app<span class="pl-kos">.</span><span class="pl-en">GetAverage</span><span class="pl-kos">(</span>arr<span class="pl-kos">,</span><span class="pl-k">out</span> avg<span class="pl-kos">)</span><span class="pl-kos">;</span>
+    Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span>avg<span class="pl-kos">)</span><span class="pl-kos">;</span>
+    app<span class="pl-kos">.</span><span class="pl-en">RedefineArr</span><span class="pl-kos">(</span>arr<span class="pl-kos">)</span><span class="pl-kos">;</span>
+ 	Array<span class="pl-kos">.</span><span class="pl-en">ForEach</span><span class="pl-kos">(</span>arr<span class="pl-kos">,</span> <span class="pl-s1">a <span class="pl-c1">=&gt;</span> <span class="pl-kos">{</span> Console<span class="pl-kos">.</span><span class="pl-en">Write</span><span class="pl-kos">(</span><span class="pl-s1">a</span> <span class="pl-c1">+</span> <span class="pl-s"><span class="pl-s">"</span><span class="pl-k">\t</span><span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span> <span class="pl-kos">}</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
+<p>最后的输出中可以看出，数组arr中的每个元素都增加了1000</p>
+<h2>参数数组</h2>
+<p><code class="notranslate">params</code>关键字，可以使调用方法时既可以传入数组实参，也可以传递一组数组元素：</p>
+<p>使用格式：<code class="notranslate">返回类型 方法名称( params 类型名称[] 数组名称 )</code></p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">public</span> <span class="pl-smi">int</span> <span class="pl-en">AddElements</span><span class="pl-kos">(</span><span class="pl-k">params</span> <span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span> arr<span class="pl-kos">)</span>
+<span class="pl-kos">{</span>
+    <span class="pl-smi">int</span> <span class="pl-s1">sum</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span><span class="pl-kos">;</span>
+    <span class="pl-k">foreach</span> <span class="pl-kos">(</span><span class="pl-smi">int</span> i <span class="pl-k">in</span> arr<span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+       <span class="pl-s1">sum</span> <span class="pl-c1">+=</span> <span class="pl-s1">i</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+    <span class="pl-k">return</span> <span class="pl-s1">sum</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
+<span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-smi">string</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">args</span><span class="pl-kos">)</span>
+<span class="pl-kos">{</span>
+	<span class="pl-smi">ParamArray</span> <span class="pl-s1">app</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> ParamArray<span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+	<span class="pl-smi">int</span> <span class="pl-s1">sum</span> <span class="pl-c1">=</span> app<span class="pl-kos">.</span><span class="pl-en">AddElements</span><span class="pl-kos">(</span><span class="pl-c1">512</span><span class="pl-kos">,</span> <span class="pl-c1">720</span><span class="pl-kos">,</span> <span class="pl-c1">250</span><span class="pl-kos">,</span> <span class="pl-c1">567</span><span class="pl-kos">,</span> <span class="pl-c1">889</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+	Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>总和是： {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> sum<span class="pl-kos">)</span><span class="pl-kos">;</span>
+	<span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">arr</span> <span class="pl-c1">=</span> <span class="pl-kos">{</span> <span class="pl-c1">1000</span><span class="pl-kos">,</span> <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-c1">3</span><span class="pl-kos">,</span> <span class="pl-c1">17</span><span class="pl-kos">,</span> <span class="pl-c1">50</span> <span class="pl-kos">}</span><span class="pl-kos">;</span>
+	<span class="pl-s1">sum</span> <span class="pl-c1">=</span> app<span class="pl-kos">.</span><span class="pl-en">AddElements</span><span class="pl-kos">(</span>arr<span class="pl-kos">)</span><span class="pl-kos">;</span>
+	Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>总和是： {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> sum<span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>Array类</h2>
+<p>Array类是所有数组的基类</p>
+<p>特性：</p>
+<ul>
+<li><strong>类型安全</strong>：数组只能存储指定类型的元素，类型在声明时确定。</li>
+<li><strong>固定长度</strong>：数组的长度在创建后不可更改。</li>
+<li><strong>索引访问</strong>：数组中的元素通过索引访问，索引从 0 开始。</li>
+<li><strong>多维支持</strong>：C# 支持一维、多维和交错数组（数组的数组）。</li>
+</ul>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th align="left">属性名</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">Length</td>
+<td>元素个数</td>
+</tr>
+<tr>
+<td align="left">Rank</td>
+<td>获取数组的维数</td>
+</tr>
+<tr>
+<td align="left">IsFixedSize</td>
+<td>判断数组大小是否固定</td>
+</tr>
+<tr>
+<td align="left">IsReadOnly</td>
+<td>判断数组是否为只读</td>
+</tr>
+<tr>
+<td align="left">IsSynchronized</td>
+<td>判断数组是否线程安全</td>
+</tr>
+<tr>
+<td align="left">SyncRoot</td>
+<td>获取用于同步数组访问的对象，用于多线程操作</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p>常用方法略，详见官方API文档<a href="https://learn.microsoft.com/zh-cn/dotnet/api/?view=net-8.0&amp;term=Array" rel="nofollow">.NET API browser | Microsoft Learn</a></p>
+<h1>字符串</h1>
+<p>C#一般不用char型数组表示字符串；更多的是用string来声明</p>
+<p>创建string对象的几个方法：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate">            <span class="pl-c">// 字符拼接</span>
+            <span class="pl-smi">string</span> <span class="pl-s1">fname</span><span class="pl-kos">,</span> <span class="pl-s1">lname</span><span class="pl-kos">;</span>
+            <span class="pl-s1">fname</span> <span class="pl-c1">=</span> <span class="pl-s"><span class="pl-s">"</span>Roa<span class="pl-s">"</span></span><span class="pl-kos">;</span>
+            <span class="pl-s1">lname</span> <span class="pl-c1">=</span> <span class="pl-s"><span class="pl-s">"</span>ss<span class="pl-s">"</span></span><span class="pl-kos">;</span>
+            <span class="pl-smi">string</span> <span class="pl-s1">fullname</span> <span class="pl-c1">=</span> <span class="pl-s1">fname</span> <span class="pl-c1">+</span> <span class="pl-s1">lname</span><span class="pl-kos">;</span>
+            Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Full Name: {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> fullname<span class="pl-kos">)</span><span class="pl-kos">;</span>
+            <span class="pl-c">//通过使用 string 构造函数</span>
+            <span class="pl-smi">char</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">letters</span> <span class="pl-c1">=</span> <span class="pl-kos">{</span> <span class="pl-s">'H'</span><span class="pl-kos">,</span> <span class="pl-s">'e'</span><span class="pl-kos">,</span> <span class="pl-s">'l'</span><span class="pl-kos">,</span> <span class="pl-s">'l'</span><span class="pl-kos">,</span> <span class="pl-s">'o'</span> <span class="pl-kos">}</span><span class="pl-kos">;</span>
+            <span class="pl-smi">string</span> <span class="pl-s1">greetings</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-smi">string</span><span class="pl-kos">(</span>letters<span class="pl-kos">)</span><span class="pl-kos">;</span>
+            Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Greetings: {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> greetings<span class="pl-kos">)</span><span class="pl-kos">;</span>
+            <span class="pl-c">//方法返回字符串</span>
+            <span class="pl-smi">string</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">sarray</span> <span class="pl-c1">=</span> <span class="pl-kos">{</span> <span class="pl-s"><span class="pl-s">"</span>Hello<span class="pl-s">"</span></span><span class="pl-kos">,</span> <span class="pl-s"><span class="pl-s">"</span>From<span class="pl-s">"</span></span><span class="pl-kos">,</span> <span class="pl-s"><span class="pl-s">"</span>Tutorials<span class="pl-s">"</span></span><span class="pl-kos">,</span> <span class="pl-s"><span class="pl-s">"</span>Point<span class="pl-s">"</span></span> <span class="pl-kos">}</span><span class="pl-kos">;</span>
+            <span class="pl-smi">string</span> <span class="pl-s1">message</span> <span class="pl-c1">=</span> String<span class="pl-kos">.</span><span class="pl-en">Join</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span> <span class="pl-s">"</span></span><span class="pl-kos">,</span> sarray<span class="pl-kos">)</span><span class="pl-kos">;</span>
+            Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Message: {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> message<span class="pl-kos">)</span><span class="pl-kos">;</span>
+
+            <span class="pl-c">//用于转化值的格式化方法</span>
+            <span class="pl-smi">DateTime</span> <span class="pl-s1">waiting</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> DateTime<span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+            <span class="pl-s1">waiting</span> <span class="pl-c1">=</span> DateTime<span class="pl-kos">.</span>Now<span class="pl-kos">;</span>
+            <span class="pl-smi">string</span> <span class="pl-s1">chat</span> <span class="pl-c1">=</span> String<span class="pl-kos">.</span><span class="pl-en">Format</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Message sent at {0:t} on {0:D}<span class="pl-s">"</span></span><span class="pl-kos">,</span>
+            waiting<span class="pl-kos">)</span><span class="pl-kos">;</span>
+            Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Message: {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> chat<span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div>
+<p>常用方法查询官方API文档：<a href="https://learn.microsoft.com/zh-cn/dotnet/api/?view=net-8.0&amp;term=Array" rel="nofollow">.NET API browser | Microsoft Learn</a></p>
+<h1>结构体</h1>
+<p>C#中，结构体是值类型数据结构，可以使得单一变量存储多种数据类型的数据</p>
+<p>定义：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">struct</span> <span class="pl-smi">Books</span>
+<span class="pl-kos">{</span>
+   <span class="pl-k">public</span> <span class="pl-smi">string</span> <span class="pl-s1">title</span><span class="pl-kos">;</span>
+   <span class="pl-k">public</span> <span class="pl-smi">string</span> <span class="pl-s1">author</span><span class="pl-kos">;</span>
+   <span class="pl-k">public</span> <span class="pl-smi">string</span> <span class="pl-s1">subject</span><span class="pl-kos">;</span>
+   <span class="pl-k">public</span> <span class="pl-smi">int</span> <span class="pl-s1">book_id</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span><span class="pl-kos">;</span>  </pre></div>
+<p>特点：</p>
+<ul>
+<li>可以有方法、字段、索引、属性、运算符方法和事件，适用于表示轻量级数据的情况，如坐标、范围、日期、时间等</li>
+<li>结构可定义构造函数，但不能定义析构函数；并且，<strong>不要自定义无参构造</strong></li>
+<li>结构体不支持多态</li>
+<li>结构体成员不可以声明为abstract、virtual或protected</li>
+<li>结构体创建可以不用new，但是必须初始化所有字段</li>
+<li>结构体通常分配在栈上，但是如果作为类的成员，且类是引用类型，结构体就在堆上存储</li>
+<li>结构体可以定义为只读，字段就不可变</li>
+</ul>
+<h1>枚举</h1>
+<p>枚举是一组命名整型常量，是值类型</p>
+<p>声明：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">enum</span> <span class="pl-c1">&lt;</span><span class="pl-smi">enum_name</span><span class="pl-c1">&gt;</span>
+<span class="pl-kos">{</span> 
+    <span class="pl-c1">enumeration</span> list 
+<span class="pl-kos">}</span><span class="pl-kos">;</span></pre></div>
+<h1>类</h1>
+<p>定义：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-c1">&lt;</span><span class="pl-smi">access</span> <span class="pl-s1">specifier</span><span class="pl-c1">&gt;</span> <span class="pl-k">class</span>  class_name
+<span class="pl-kos">{</span>
+    <span class="pl-c">// member variables</span>
+    <span class="pl-c1">&lt;</span><span class="pl-smi">access</span> <span class="pl-smi">specifier</span><span class="pl-c1">&gt;</span> <span class="pl-c1">&lt;</span><span class="pl-smi">data</span> type<span class="pl-c1">&gt;</span> <span class="pl-s1">variable1</span><span class="pl-kos">;</span>
+    ..<span class="pl-kos">.</span>
+    <span class="pl-c1">&lt;</span>access specifier<span class="pl-c1">&gt;</span> <span class="pl-c1">&lt;</span>data type<span class="pl-c1">&gt;</span> variableN<span class="pl-kos">;</span>
+    <span class="pl-c">// member methods</span>
+    <span class="pl-c1">&lt;</span>access <span class="pl-en">specifier</span><span class="pl-c1">&gt;</span> <span class="pl-c1">&lt;</span><span class="pl-c1">return</span> type<span class="pl-c1">&gt;</span> method1<span class="pl-kos">(</span><span class="pl-s1">parameter_list</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        <span class="pl-c">// method body</span>
+    <span class="pl-kos">}</span>
+    ..<span class="pl-kos">.</span>
+    <span class="pl-c1">&lt;</span>access specifier<span class="pl-c1">&gt;</span> <span class="pl-c1">&lt;</span><span class="pl-k">return</span> type<span class="pl-c1">&gt;</span> methodN<span class="pl-kos">(</span><span class="pl-s1">parameter_list</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        <span class="pl-c">// method body</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
+<ul>
+<li>类的访问标识符  默认是 internal，成员的默认访问标识符是private</li>
+</ul>
+<h2>构造函数</h2>
+<p>和C++的构造函数一样，可以提供多个</p>
+<h2>析构函数</h2>
+<p>和C++的析构函数一样</p>
+<h2>静态成员</h2>
+<p><code class="notranslate">static</code>关键字定义的成员，表示只会有一个该静态成员的副本，可以直接通过类名调用。静态成员可以在成员函数或类的外部进行初始化，也可以内部初始化</p>
+<p>静态成员函数只能访问静态成员变量</p>
+<h1>继承</h1>
+<p>C#不支持多重继承，但是可以实现多个接口（Interface），继承语法和C++一样</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-c1">&lt;</span>访问修饰符<span class="pl-c1">&gt;</span> <span class="pl-k">class</span> <span class="pl-c1">&lt;</span>基类<span class="pl-c1">&gt;</span>
+<span class="pl-kos">{</span>
+ ..<span class="pl-kos">.</span>
+<span class="pl-kos">}</span>
+<span class="pl-k">class</span> <span class="pl-c1">&lt;</span>派生类<span class="pl-c1">&gt;</span> <span class="pl-c1">:</span> <span class="pl-c1">&lt;</span>基类<span class="pl-c1">&gt;</span>
+<span class="pl-kos">{</span>
+ ..<span class="pl-kos">.</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>基类的初始化</h2>
+<p>派生类继承了基类的成员变量和方法， 所以父类对象在子类对象之前被创建，可以通过初始化列表的方式创建</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">using</span> System<span class="pl-kos">;</span>
+<span class="pl-k">namespace</span> <span class="pl-v">RectangleApplication</span>
+<span class="pl-kos">{</span>
+   <span class="pl-k">class</span> <span class="pl-smi">Rectangle</span>
+   <span class="pl-kos">{</span>
+      <span class="pl-c">// 成员变量</span>
+      <span class="pl-k">protected</span> <span class="pl-smi">double</span> <span class="pl-s1">length</span><span class="pl-kos">;</span>
+      <span class="pl-k">protected</span> <span class="pl-smi">double</span> <span class="pl-s1">width</span><span class="pl-kos">;</span>
+      <span class="pl-k">public</span> <span class="pl-v">Rectangle</span><span class="pl-kos">(</span><span class="pl-smi">double</span> <span class="pl-s1">l</span><span class="pl-kos">,</span> <span class="pl-smi">double</span> <span class="pl-s1">w</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-s1">length</span> <span class="pl-c1">=</span> <span class="pl-s1">l</span><span class="pl-kos">;</span>
+         <span class="pl-s1">width</span> <span class="pl-c1">=</span> <span class="pl-s1">w</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+      <span class="pl-k">public</span> <span class="pl-smi">double</span> <span class="pl-en">GetArea</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-k">return</span> <span class="pl-s1">length</span> <span class="pl-c1">*</span> <span class="pl-s1">width</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+      <span class="pl-k">public</span> <span class="pl-smi">void</span> <span class="pl-en">Display</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>长度： {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> length<span class="pl-kos">)</span><span class="pl-kos">;</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>宽度： {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> width<span class="pl-kos">)</span><span class="pl-kos">;</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>面积： {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> GetArea<span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+   <span class="pl-kos">}</span><span class="pl-c">//end class Rectangle  </span>
+   <span class="pl-k">class</span> <span class="pl-smi">Tabletop</span> <span class="pl-c1">:</span> <span class="pl-smi">Rectangle</span>
+   <span class="pl-kos">{</span>
+      <span class="pl-k">private</span> <span class="pl-smi">double</span> <span class="pl-s1">cost</span><span class="pl-kos">;</span>
+      <span class="pl-k">public</span> <span class="pl-v">Tabletop</span><span class="pl-kos">(</span><span class="pl-smi">double</span> <span class="pl-s1">l</span><span class="pl-kos">,</span> <span class="pl-smi">double</span> <span class="pl-s1">w</span><span class="pl-kos">)</span> <span class="pl-c1">:</span> <span class="pl-k">base</span><span class="pl-kos">(</span>l<span class="pl-kos">,</span> w<span class="pl-kos">)</span>
+      <span class="pl-kos">{</span> <span class="pl-kos">}</span>
+      <span class="pl-k">public</span> <span class="pl-smi">double</span> <span class="pl-en">GetCost</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-smi">double</span> <span class="pl-s1">cost</span><span class="pl-kos">;</span>
+         <span class="pl-s1">cost</span> <span class="pl-c1">=</span> GetArea<span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-c1">*</span> <span class="pl-c1">70</span><span class="pl-kos">;</span>
+         <span class="pl-k">return</span> <span class="pl-s1">cost</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+      <span class="pl-k">public</span> <span class="pl-smi">void</span> <span class="pl-en">Display</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-k">base</span><span class="pl-kos">.</span><span class="pl-en">Display</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>成本： {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> GetCost<span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+   <span class="pl-kos">}</span>
+   <span class="pl-k">class</span> <span class="pl-smi">ExecuteRectangle</span>
+   <span class="pl-kos">{</span>
+      <span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-smi">string</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">args</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-smi">Tabletop</span> <span class="pl-s1">t</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> Tabletop<span class="pl-kos">(</span><span class="pl-c1">4.5</span><span class="pl-kos">,</span> <span class="pl-c1">7.5</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+         t<span class="pl-kos">.</span><span class="pl-en">Display</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">ReadLine</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+   <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>实现接口</h2>
+<p>一个接口可以继承自一个或多个接口</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">interface</span> <span class="pl-smi">IBaseInterface</span>
+<span class="pl-kos">{</span>
+    <span class="pl-smi">void</span> <span class="pl-en">Method1</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
+
+<span class="pl-k">interface</span> <span class="pl-smi">IDerivedInterface</span> <span class="pl-c1">:</span> <span class="pl-smi">IBaseInterface</span>
+<span class="pl-kos">{</span>
+    <span class="pl-smi">void</span> <span class="pl-en">Method2</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
+<p>例子：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">using</span> System<span class="pl-kos">;</span>
+
+<span class="pl-c">// 定义一个基接口</span>
+<span class="pl-k">interface</span> <span class="pl-smi">IBaseInterface</span>
+<span class="pl-kos">{</span>
+    <span class="pl-smi">void</span> <span class="pl-en">Method1</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
+
+<span class="pl-c">// 定义一个派生接口，继承自基接口</span>
+<span class="pl-k">interface</span> <span class="pl-smi">IDerivedInterface</span> <span class="pl-c1">:</span> <span class="pl-smi">IBaseInterface</span>
+<span class="pl-kos">{</span>
+    <span class="pl-smi">void</span> <span class="pl-en">Method2</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
+
+<span class="pl-c">// 实现派生接口的类</span>
+<span class="pl-k">class</span> <span class="pl-smi">MyClass</span> <span class="pl-c1">:</span> <span class="pl-smi">IDerivedInterface</span>
+<span class="pl-kos">{</span>
+    <span class="pl-k">public</span> <span class="pl-smi">void</span> <span class="pl-en">Method1</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Method1 implementation<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+
+    <span class="pl-k">public</span> <span class="pl-smi">void</span> <span class="pl-en">Method2</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Method2 implementation<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span>
+
+<span class="pl-k">class</span> <span class="pl-smi">Program</span>
+<span class="pl-kos">{</span>
+    <span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-smi">string</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">args</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        <span class="pl-c">// 创建 MyClass 类的实例</span>
+        <span class="pl-smi">MyClass</span> <span class="pl-s1">obj</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> MyClass<span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+
+        <span class="pl-c">// 调用继承自基接口的方法</span>
+        obj<span class="pl-kos">.</span><span class="pl-en">Method1</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+
+        <span class="pl-c">// 调用派生接口新增的方法</span>
+        obj<span class="pl-kos">.</span><span class="pl-en">Method2</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>继承多个接口</h2>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">using</span> System<span class="pl-kos">;</span>
+<span class="pl-k">namespace</span> <span class="pl-v">InheritanceApplication</span>
+<span class="pl-kos">{</span>
+   <span class="pl-k">class</span> <span class="pl-smi">Shape</span> 
+   <span class="pl-kos">{</span>
+      <span class="pl-k">public</span> <span class="pl-smi">void</span> <span class="pl-en">setWidth</span><span class="pl-kos">(</span><span class="pl-smi">int</span> <span class="pl-s1">w</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-s1">width</span> <span class="pl-c1">=</span> <span class="pl-s1">w</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+      <span class="pl-k">public</span> <span class="pl-smi">void</span> <span class="pl-en">setHeight</span><span class="pl-kos">(</span><span class="pl-smi">int</span> <span class="pl-s1">h</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-s1">height</span> <span class="pl-c1">=</span> <span class="pl-s1">h</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+      <span class="pl-k">protected</span> <span class="pl-smi">int</span> <span class="pl-s1">width</span><span class="pl-kos">;</span>
+      <span class="pl-k">protected</span> <span class="pl-smi">int</span> <span class="pl-s1">height</span><span class="pl-kos">;</span>
+   <span class="pl-kos">}</span>
+
+   <span class="pl-c">// 基类 PaintCost</span>
+   <span class="pl-k">public</span> <span class="pl-k">interface</span> <span class="pl-smi">PaintCost</span> 
+   <span class="pl-kos">{</span>
+      <span class="pl-smi">int</span> <span class="pl-en">getCost</span><span class="pl-kos">(</span><span class="pl-smi">int</span> <span class="pl-s1">area</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+
+   <span class="pl-kos">}</span>
+   <span class="pl-c">// 派生类</span>
+   <span class="pl-k">class</span> <span class="pl-smi">Rectangle</span> <span class="pl-c1">:</span> <span class="pl-smi">Shape</span><span class="pl-kos">,</span> <span class="pl-smi">PaintCost</span>
+   <span class="pl-kos">{</span>
+      <span class="pl-k">public</span> <span class="pl-smi">int</span> <span class="pl-en">getArea</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-k">return</span> <span class="pl-kos">(</span><span class="pl-s1">width</span> <span class="pl-c1">*</span> <span class="pl-s1">height</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+      <span class="pl-k">public</span> <span class="pl-smi">int</span> <span class="pl-en">getCost</span><span class="pl-kos">(</span><span class="pl-smi">int</span> <span class="pl-s1">area</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-k">return</span> <span class="pl-s1">area</span> <span class="pl-c1">*</span> <span class="pl-c1">70</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+   <span class="pl-kos">}</span>
+   <span class="pl-k">class</span> <span class="pl-smi">RectangleTester</span>
+   <span class="pl-kos">{</span>
+      <span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-smi">string</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">args</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-smi">Rectangle</span> <span class="pl-s1">Rect</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> Rectangle<span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+         <span class="pl-smi">int</span> <span class="pl-s1">area</span><span class="pl-kos">;</span>
+         Rect<span class="pl-kos">.</span><span class="pl-en">setWidth</span><span class="pl-kos">(</span><span class="pl-c1">5</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+         Rect<span class="pl-kos">.</span><span class="pl-en">setHeight</span><span class="pl-kos">(</span><span class="pl-c1">7</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+         <span class="pl-s1">area</span> <span class="pl-c1">=</span> Rect<span class="pl-kos">.</span><span class="pl-en">getArea</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+         <span class="pl-c">// 打印对象的面积</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>总面积： {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span>  Rect<span class="pl-kos">.</span><span class="pl-en">getArea</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>油漆总成本： ${0}<span class="pl-s">"</span></span> <span class="pl-kos">,</span> Rect<span class="pl-kos">.</span><span class="pl-en">getCost</span><span class="pl-kos">(</span>area<span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">ReadKey</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+   <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
+<h1>多态</h1>
+<p>在编译时，函数和对象的连接机制被称为早期绑定，也被称为静态绑定。C# 提供了两种技术来实现静态多态性。分别为：</p>
+<ul>
+<li>函数重载</li>
+<li>运算符重载</li>
+</ul>
+<h2>函数重载</h2>
+<p>同名的函数，参数类型不同、参数个数不同，满足其一就叫函数重载</p>
+<h2>动态多态性</h2>
+<p>C#中可以使用<code class="notranslate">abstract</code>创建抽象类，包含抽象方法；可以被派生类实现，抽象类的特性：</p>
+<ul>
+<li>不可实例化</li>
+<li>抽象方法只能在抽象类内部声明，但抽象类内部也可以定义普通的方法</li>
+<li>类前使用关键字<code class="notranslate">sealed</code>，可以将类声明为密封类，不可被继承；抽象类不可以使用<code class="notranslate">sealed</code></li>
+</ul>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">using</span> System<span class="pl-kos">;</span>
+<span class="pl-k">namespace</span> <span class="pl-v">PolymorphismApplication</span>
+<span class="pl-kos">{</span>
+   <span class="pl-k">abstract</span> <span class="pl-k">class</span> <span class="pl-smi">Shape</span>
+   <span class="pl-kos">{</span>
+       <span class="pl-k">abstract</span> <span class="pl-k">public</span> <span class="pl-smi">int</span> <span class="pl-en">area</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+   <span class="pl-kos">}</span>
+   <span class="pl-k">class</span> <span class="pl-smi">Rectangle</span><span class="pl-c1">:</span>  <span class="pl-smi">Shape</span>
+   <span class="pl-kos">{</span>
+      <span class="pl-k">private</span> <span class="pl-smi">int</span> <span class="pl-s1">length</span><span class="pl-kos">;</span>
+      <span class="pl-k">private</span> <span class="pl-smi">int</span> <span class="pl-s1">width</span><span class="pl-kos">;</span>
+      <span class="pl-k">public</span> <span class="pl-v">Rectangle</span><span class="pl-kos">(</span> <span class="pl-smi">int</span> <span class="pl-s1">a</span><span class="pl-c1">=</span><span class="pl-c1">0</span><span class="pl-kos">,</span> <span class="pl-smi">int</span> <span class="pl-s1">b</span><span class="pl-c1">=</span><span class="pl-c1">0</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-s1">length</span> <span class="pl-c1">=</span> <span class="pl-s1">a</span><span class="pl-kos">;</span>
+         <span class="pl-s1">width</span> <span class="pl-c1">=</span> <span class="pl-s1">b</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+      <span class="pl-k">public</span> <span class="pl-k">override</span> <span class="pl-smi">int</span> <span class="pl-en">area</span> <span class="pl-kos">(</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span> 
+         Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Rectangle 类的面积：<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+         <span class="pl-k">return</span> <span class="pl-kos">(</span><span class="pl-s1">width</span> <span class="pl-c1">*</span> <span class="pl-s1">length</span><span class="pl-kos">)</span><span class="pl-kos">;</span> 
+      <span class="pl-kos">}</span>
+   <span class="pl-kos">}</span>
+
+   <span class="pl-k">class</span> <span class="pl-smi">RectangleTester</span>
+   <span class="pl-kos">{</span>
+      <span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-smi">string</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">args</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-smi">Rectangle</span> <span class="pl-s1">r</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> Rectangle<span class="pl-kos">(</span><span class="pl-c1">10</span><span class="pl-kos">,</span> <span class="pl-c1">7</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+         <span class="pl-smi">double</span> <span class="pl-s1">a</span> <span class="pl-c1">=</span> r<span class="pl-kos">.</span><span class="pl-en">area</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>面积： {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span>a<span class="pl-kos">)</span><span class="pl-kos">;</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">ReadKey</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+   <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
+<p>虚方法：需要在派生类重写的方法，使用<code class="notranslate">virtual</code>声明为虚方法</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">public</span> <span class="pl-k">class</span> <span class="pl-smi">Shape</span>
+<span class="pl-kos">{</span>
+    <span class="pl-k">public</span> <span class="pl-smi">int</span> <span class="pl-s1">X</span> <span class="pl-kos">{</span> <span class="pl-k">get</span><span class="pl-kos">;</span> <span class="pl-k">private</span> <span class="pl-k">set</span><span class="pl-kos">;</span> <span class="pl-kos">}</span>
+    <span class="pl-k">public</span> <span class="pl-smi">int</span> <span class="pl-s1">Y</span> <span class="pl-kos">{</span> <span class="pl-k">get</span><span class="pl-kos">;</span> <span class="pl-k">private</span> <span class="pl-k">set</span><span class="pl-kos">;</span> <span class="pl-kos">}</span>
+    <span class="pl-k">public</span> <span class="pl-smi">int</span> <span class="pl-s1">Height</span> <span class="pl-kos">{</span> <span class="pl-k">get</span><span class="pl-kos">;</span> <span class="pl-k">set</span><span class="pl-kos">;</span> <span class="pl-kos">}</span>
+    <span class="pl-k">public</span> <span class="pl-smi">int</span> <span class="pl-s1">Width</span> <span class="pl-kos">{</span> <span class="pl-k">get</span><span class="pl-kos">;</span> <span class="pl-k">set</span><span class="pl-kos">;</span> <span class="pl-kos">}</span>
+   
+    <span class="pl-c">// 虚方法</span>
+    <span class="pl-k">public</span> <span class="pl-k">virtual</span> <span class="pl-smi">void</span> <span class="pl-en">Draw</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>执行基类的画图任务<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span>
+
+<span class="pl-k">class</span> <span class="pl-smi">Circle</span> <span class="pl-c1">:</span> <span class="pl-smi">Shape</span>
+<span class="pl-kos">{</span>
+    <span class="pl-k">public</span> <span class="pl-k">override</span> <span class="pl-smi">void</span> <span class="pl-en">Draw</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>画一个圆形<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-k">base</span><span class="pl-kos">.</span><span class="pl-en">Draw</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span>
+<span class="pl-k">class</span> <span class="pl-smi">Rectangle</span> <span class="pl-c1">:</span> <span class="pl-smi">Shape</span>
+<span class="pl-kos">{</span>
+    <span class="pl-k">public</span> <span class="pl-k">override</span> <span class="pl-smi">void</span> <span class="pl-en">Draw</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>画一个长方形<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-k">base</span><span class="pl-kos">.</span><span class="pl-en">Draw</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span>
+<span class="pl-k">class</span> <span class="pl-smi">Triangle</span> <span class="pl-c1">:</span> <span class="pl-smi">Shape</span>
+<span class="pl-kos">{</span>
+    <span class="pl-k">public</span> <span class="pl-k">override</span> <span class="pl-smi">void</span> <span class="pl-en">Draw</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>画一个三角形<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-k">base</span><span class="pl-kos">.</span><span class="pl-en">Draw</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span>
+
+<span class="pl-k">class</span> <span class="pl-smi">Program</span>
+<span class="pl-kos">{</span>
+    <span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-smi">string</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">args</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        <span class="pl-c">// 创建一个 List&lt;Shape&gt; 对象，并向该对象添加 Circle、Triangle 和 Rectangle</span>
+        <span class="pl-smi">var</span> <span class="pl-s1">shapes</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-smi">List</span><span class="pl-c1">&lt;</span><span class="pl-smi">Shape</span><span class="pl-c1">&gt;</span>
+        <span class="pl-kos">{</span>
+            <span class="pl-k">new</span> Rectangle<span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">,</span>
+            <span class="pl-k">new</span> Triangle<span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">,</span>
+            <span class="pl-k">new</span> Circle<span class="pl-kos">(</span><span class="pl-kos">)</span>
+        <span class="pl-kos">}</span><span class="pl-kos">;</span>
+
+        <span class="pl-c">// 使用 foreach 循环对该列表的派生类进行循环访问，并对其中的每个 Shape 对象调用 Draw 方法</span>
+        <span class="pl-k">foreach</span> <span class="pl-kos">(</span><span class="pl-smi">var</span> shape <span class="pl-k">in</span> shapes<span class="pl-kos">)</span>
+        <span class="pl-kos">{</span>
+            shape<span class="pl-kos">.</span><span class="pl-en">Draw</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-kos">}</span>
+
+        Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>按下任意键退出。<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+        Console<span class="pl-kos">.</span><span class="pl-en">ReadKey</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>运算符重载</h2>
+<p>下面是一个实现运算符重载的案例：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">class</span> <span class="pl-smi">Box</span>
+   <span class="pl-kos">{</span>
+      <span class="pl-k">private</span> <span class="pl-smi">double</span> <span class="pl-s1">length</span><span class="pl-kos">;</span>      <span class="pl-c">// 长度</span>
+      <span class="pl-k">private</span> <span class="pl-smi">double</span> <span class="pl-s1">breadth</span><span class="pl-kos">;</span>     <span class="pl-c">// 宽度</span>
+      <span class="pl-k">private</span> <span class="pl-smi">double</span> <span class="pl-s1">height</span><span class="pl-kos">;</span>      <span class="pl-c">// 高度</span>
+
+      <span class="pl-k">public</span> <span class="pl-smi">double</span> <span class="pl-en">getVolume</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-k">return</span> <span class="pl-s1">length</span> <span class="pl-c1">*</span> <span class="pl-s1">breadth</span> <span class="pl-c1">*</span> <span class="pl-s1">height</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+      <span class="pl-k">public</span> <span class="pl-smi">void</span> <span class="pl-en">setLength</span><span class="pl-kos">(</span> <span class="pl-smi">double</span> <span class="pl-s1">len</span> <span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-s1">length</span> <span class="pl-c1">=</span> <span class="pl-s1">len</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+
+      <span class="pl-k">public</span> <span class="pl-smi">void</span> <span class="pl-en">setBreadth</span><span class="pl-kos">(</span> <span class="pl-smi">double</span> <span class="pl-s1">bre</span> <span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-s1">breadth</span> <span class="pl-c1">=</span> <span class="pl-s1">bre</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+
+      <span class="pl-k">public</span> <span class="pl-smi">void</span> <span class="pl-en">setHeight</span><span class="pl-kos">(</span> <span class="pl-smi">double</span> <span class="pl-s1">hei</span> <span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-s1">height</span> <span class="pl-c1">=</span> <span class="pl-s1">hei</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+      <span class="pl-c">// 重载 + 运算符来把两个 Box 对象相加</span>
+      <span class="pl-k">public</span> <span class="pl-k"><span class="pl-k">static</span></span> Box <span class="pl-k">operator</span><span class="pl-c1">+</span> <span class="pl-kos">(</span><span class="pl-smi">Box</span> <span class="pl-s1">b</span><span class="pl-kos">,</span> <span class="pl-smi">Box</span> <span class="pl-s1">c</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-smi">Box</span> <span class="pl-s1">box</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> Box<span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+         box<span class="pl-kos">.</span>length <span class="pl-c1">=</span> b<span class="pl-kos">.</span>length <span class="pl-c1">+</span> c<span class="pl-kos">.</span>length<span class="pl-kos">;</span>
+         box<span class="pl-kos">.</span>breadth <span class="pl-c1">=</span> b<span class="pl-kos">.</span>breadth <span class="pl-c1">+</span> c<span class="pl-kos">.</span>breadth<span class="pl-kos">;</span>
+         box<span class="pl-kos">.</span>height <span class="pl-c1">=</span> b<span class="pl-kos">.</span>height <span class="pl-c1">+</span> c<span class="pl-kos">.</span>height<span class="pl-kos">;</span>
+         <span class="pl-k">return</span> <span class="pl-s1">box</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+   <span class="pl-kos">}</span></pre></div>
+<h1>接口</h1>
+<p>接口定义了属性、方法、事件，且只包括成员的声明；实现由每个继承接口的类完成</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">using</span> System<span class="pl-kos">;</span>
+
+<span class="pl-k">interface</span> <span class="pl-smi">IMyInterface</span>
+<span class="pl-kos">{</span>
+        <span class="pl-c">// 接口成员</span>
+    <span class="pl-smi">void</span> <span class="pl-en">MethodToImplement</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
+
+<span class="pl-k">class</span> <span class="pl-smi">InterfaceImplementer</span> <span class="pl-c1">:</span> <span class="pl-smi">IMyInterface</span>
+<span class="pl-kos">{</span>
+    <span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        <span class="pl-smi">InterfaceImplementer</span> <span class="pl-s1">iImp</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> InterfaceImplementer<span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+        iImp<span class="pl-kos">.</span><span class="pl-en">MethodToImplement</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+
+    <span class="pl-k">public</span> <span class="pl-smi">void</span> <span class="pl-en">MethodToImplement</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>MethodToImplement() called.<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
+<h1>预处理指令</h1>
+<p><em>预处理指令指导编译器在实际编译之前对信息进行预处理；</em></p>
+<p><em>通过这些指令，可以控制编译器如何编译文件或编译哪些部分。常见的预处理器指令包括条件编译、宏定义等。</em></p>
+<p><em>所有的预处理器指令都是以 <strong>#</strong> 开始，且在一行上，只有空白字符可以出现在预处理器指令之前。</em></p>
+<p><em>预处理器指令不是语句，所以它们不以分号 <strong>;</strong> 结束。</em></p>
+<p>预处理指令列表：</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>指令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="notranslate">#define</code></td>
+<td>定义一个符号，可以用于条件编译。</td>
+</tr>
+<tr>
+<td><code class="notranslate">#undef</code></td>
+<td>取消定义一个符号。</td>
+</tr>
+<tr>
+<td><code class="notranslate">#if</code></td>
+<td>开始一个条件编译块，如果符号被定义则包含代码块。</td>
+</tr>
+<tr>
+<td><code class="notranslate">#elif</code></td>
+<td>如果前面的 <code class="notranslate">#if</code> 或 <code class="notranslate">#elif</code> 条件不满足，且当前条件满足，则包含代码块。</td>
+</tr>
+<tr>
+<td><code class="notranslate">#else</code></td>
+<td>如果前面的 <code class="notranslate">#if</code> 或 <code class="notranslate">#elif</code> 条件不满足，则包含代码块。</td>
+</tr>
+<tr>
+<td><code class="notranslate">#endif</code></td>
+<td>结束一个条件编译块。</td>
+</tr>
+<tr>
+<td><code class="notranslate">#warning</code></td>
+<td>生成编译警告信息。</td>
+</tr>
+<tr>
+<td><code class="notranslate">#error</code></td>
+<td>生成编译错误信息。</td>
+</tr>
+<tr>
+<td><code class="notranslate">#region</code></td>
+<td>标记一段代码区域，可以在 IDE 中折叠和展开这段代码，便于代码的组织和阅读。</td>
+</tr>
+<tr>
+<td><code class="notranslate">#endregion</code></td>
+<td>结束一个代码区域。</td>
+</tr>
+<tr>
+<td><code class="notranslate">#line</code></td>
+<td>更改编译器输出中的行号和文件名，可以用于调试或生成工具的代码。</td>
+</tr>
+<tr>
+<td><code class="notranslate">#pragma</code></td>
+<td>用于编译器发送特定指令，例如禁用或恢复特定的警告。</td>
+</tr>
+<tr>
+<td><code class="notranslate">#nullable</code></td>
+<td>控制可空性上下文注释，允许启用或禁用对不可空引用类型的编译器检查。</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<div class="highlight highlight-source-cs"><pre class="notranslate">#define DEBUG
+
+#<span class="pl-k">if</span> DEBUG
+    Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Debug mode<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+#elif RELEASE
+    Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Release mode<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+#<span class="pl-k">else</span>
+    Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Other mode<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+#endif
+
+#warning This is a warning message
+#error This is an error message
+
+#region MyRegion
+    <span class="pl-c">// Your code here</span>
+#endregion
+
+#line 100 "MyFile.cs"
+    <span class="pl-c">// The next line will be reported as line 100 in MyFile.cs</span>
+    Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>This is line 100<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+#line <span class="pl-k">default</span>
+    <span class="pl-c">// Line numbering returns to normal</span>
+
+#pragma warning disable <span class="pl-c1">414</span>
+    <span class="pl-k">private</span> <span class="pl-smi">int</span> <span class="pl-s1">unusedVariable</span><span class="pl-kos">;</span>
+#pragma warning restore <span class="pl-c1">414</span>
+
+#nullable enable
+    <span class="pl-smi"><span class="pl-smi">string</span><span class="pl-c1">?</span></span> <span class="pl-s1">nullableString</span> <span class="pl-c1">=</span> <span class="pl-c1">null</span><span class="pl-kos">;</span>
+#nullable disable</pre></div>
+<p>条件指令的使用：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate">#define DEBUG
+#define VC_V10
+<span class="pl-k">using</span> System<span class="pl-kos">;</span>
+<span class="pl-k">public</span> <span class="pl-k">class</span> <span class="pl-smi">TestClass</span>
+<span class="pl-kos">{</span>
+   <span class="pl-k">public</span> <span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+   <span class="pl-kos">{</span>
+
+      #<span class="pl-k">if</span> <span class="pl-kos">(</span><span class="pl-s1">DEBUG</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-c1">!</span><span class="pl-s1">VC_V10</span><span class="pl-kos">)</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>DEBUG is defined<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+      #elif <span class="pl-kos">(</span><span class="pl-c1">!</span><span class="pl-s1">DEBUG</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">VC_V10</span><span class="pl-kos">)</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>VC_V10 is defined<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+      #elif <span class="pl-kos">(</span><span class="pl-s1">DEBUG</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">VC_V10</span><span class="pl-kos">)</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>DEBUG and VC_V10 are defined<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+      #<span class="pl-k">else</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>DEBUG and VC_V10 are not defined<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+      #endif
+      Console<span class="pl-kos">.</span><span class="pl-en">ReadKey</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+   <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
+<p>注意：</p>
+<ul>
+<li>使用<code class="notranslate">#region</code>可以分隔代码块，提高可读性</li>
+<li><code class="notranslate">#if</code>条件编译可以分隔开发环境和生产环境的代码</li>
+<li><code class="notranslate">#warning</code>和<code class="notranslate">#error</code>可以在编译时提示开发人员注意特定问题</li>
+</ul>
+<h1>正则表达式</h1>
+<p>知道有个<code class="notranslate">Regex</code>类就行了，用的时候问AI或者查API文档</p>
+<h1>异常处理</h1>
+<p>异常处理的关键词：<em><strong>try</strong></em>、<em><strong>catch</strong></em>、<em><strong>finally</strong></em> <em>和</em> <em><strong>throw</strong></em></p>
+<ul>
+<li><strong>try</strong>：一个 try 块标识了一个将被激活的特定的异常的代码块。后跟一个或多个 catch 块。</li>
+<li><strong>catch</strong>：程序通过异常处理程序捕获异常。catch 关键字表示异常的捕获。</li>
+<li><strong>finally</strong>：finally 块用于执行给定的语句，不管异常是否被抛出都会执行。例如，如果您打开一个文件，不管是否出现异常文件都要被关闭。</li>
+<li><strong>throw</strong>：当问题出现时，程序抛出一个异常。使用 throw 关键字来完成。</li>
+</ul>
+<p>异常类：C#中的异常类基本上都是派生于<strong>System.Exception</strong>类；</p>
+<p><strong>System.ApplicationException</strong> 类支持由应用程序生成的异常。所以程序员定义的异常都应派生自该类。</p>
+<p><strong>System.SystemException</strong> 类是所有预定义的系统异常的基类。</p>
+<h2>自定义异常类</h2>
+<p>派生自 <strong>ApplicationException</strong>类：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">using</span> System<span class="pl-kos">;</span>
+<span class="pl-k">namespace</span> <span class="pl-v">UserDefinedException</span>
+<span class="pl-kos">{</span>
+   <span class="pl-k">class</span> <span class="pl-smi">TestTemperature</span>
+   <span class="pl-kos">{</span>
+      <span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-smi">string</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">args</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-smi">Temperature</span> <span class="pl-s1">temp</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> Temperature<span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+         <span class="pl-k">try</span>
+         <span class="pl-kos">{</span>
+            temp<span class="pl-kos">.</span><span class="pl-en">showTemp</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+         <span class="pl-kos">}</span>
+         <span class="pl-k">catch</span><span class="pl-kos">(</span><span class="pl-smi">TempIsZeroException</span> <span class="pl-s1">e</span><span class="pl-kos">)</span>
+         <span class="pl-kos">{</span>
+            Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>TempIsZeroException: {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> e<span class="pl-kos">.</span>Message<span class="pl-kos">)</span><span class="pl-kos">;</span>
+         <span class="pl-kos">}</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">ReadKey</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+   <span class="pl-kos">}</span>
+<span class="pl-kos">}</span>
+<span class="pl-k">public</span> <span class="pl-k">class</span> <span class="pl-smi">TempIsZeroException</span><span class="pl-c1">:</span> <span class="pl-smi">ApplicationException</span>
+<span class="pl-kos">{</span>
+   <span class="pl-k">public</span> <span class="pl-v">TempIsZeroException</span><span class="pl-kos">(</span><span class="pl-smi">string</span> <span class="pl-s1">message</span><span class="pl-kos">)</span><span class="pl-c1">:</span> <span class="pl-k">base</span><span class="pl-kos">(</span>message<span class="pl-kos">)</span>
+   <span class="pl-kos">{</span>
+   <span class="pl-kos">}</span>
+<span class="pl-kos">}</span>
+<span class="pl-k">public</span> <span class="pl-k">class</span> <span class="pl-smi">Temperature</span>
+<span class="pl-kos">{</span>
+   <span class="pl-smi">int</span> <span class="pl-s1">temperature</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span><span class="pl-kos">;</span>
+   <span class="pl-k">public</span> <span class="pl-smi">void</span> <span class="pl-en">showTemp</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+   <span class="pl-kos">{</span>
+      <span class="pl-k">if</span><span class="pl-kos">(</span><span class="pl-s1">temperature</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span><span class="pl-kos">)</span>
+      <span class="pl-kos">{</span>
+         <span class="pl-k">throw</span> <span class="pl-kos">(</span><span class="pl-k">new</span> TempIsZeroException<span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Zero Temperature found<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+      <span class="pl-k">else</span>
+      <span class="pl-kos">{</span>
+         Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Temperature: {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> temperature<span class="pl-kos">)</span><span class="pl-kos">;</span>
+      <span class="pl-kos">}</span>
+   <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
+<h1>文件操作</h1>
+<p>C#的文件操作也是通过<em><strong>输入流</strong></em>和<em><strong>输出流</strong></em>来实现。<em><strong>输入流</strong></em>用于从文件读取数据（读操作），<em><strong>输出流</strong></em>用于向文件写入数据（写操作）</p>
+<h2>I/O类</h2>
+<p>下表列出了一些 System.IO 命名空间中常用的非抽象类：</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>I/O 类</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BinaryReader</td>
+<td>从二进制流读取/恢复数据。</td>
+</tr>
+<tr>
+<td>BinaryWriter</td>
+<td>以二进制格式写入原始数据。</td>
+</tr>
+<tr>
+<td>BufferedStream</td>
+<td>字节流的临时存储。</td>
+</tr>
+<tr>
+<td>Directory</td>
+<td>有助于操作目录结构。</td>
+</tr>
+<tr>
+<td>DirectoryInfo</td>
+<td>用于对目录执行操作。</td>
+</tr>
+<tr>
+<td>DriveInfo</td>
+<td>提供驱动器的信息。</td>
+</tr>
+<tr>
+<td>File</td>
+<td>有助于处理文件。</td>
+</tr>
+<tr>
+<td>FileInfo</td>
+<td>用于对文件执行操作。</td>
+</tr>
+<tr>
+<td>FileStream</td>
+<td>用于文件中任何位置的读写。</td>
+</tr>
+<tr>
+<td>MemoryStream</td>
+<td>用于随机访问存储在内存中的数据流。</td>
+</tr>
+<tr>
+<td>Path</td>
+<td>对路径信息执行操作。</td>
+</tr>
+<tr>
+<td>StreamReader</td>
+<td>用于从字节流中读取字符串。</td>
+</tr>
+<tr>
+<td>StreamWriter</td>
+<td>用于向一个流中写入字符串。</td>
+</tr>
+<tr>
+<td>StringReader</td>
+<td>用于读取字符串缓冲区。</td>
+</tr>
+<tr>
+<td>StringWriter</td>
+<td>用于写入字符串缓冲区。</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<h2>FileStream类</h2>
+<p>派生自抽象类Stream，使用语法：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-smi">FileStream</span> <span class="pl-c1">&lt;</span><span class="pl-smi">object_name</span><span class="pl-c1">&gt;</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> FileStream<span class="pl-kos">(</span><span class="pl-smi"></span> <span class="pl-c1">&lt;</span><span class="pl-smi">file_name</span><span class="pl-c1">&gt;</span><span class="pl-kos">,</span>
+<span class="pl-c1">&lt;</span>FileMode Enumerator<span class="pl-c1">&gt;</span><span class="pl-kos">,</span> <span class="pl-c1">&lt;</span>FileAccess Enumerator<span class="pl-c1">&gt;</span><span class="pl-kos">,</span> <span class="pl-c1">&lt;</span>FileShare Enumerator<span class="pl-c1">&gt;</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+
+<span class="pl-smi">FileStream</span> <span class="pl-s1">F</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> FileStream<span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>sample.txt<span class="pl-s">"</span></span><span class="pl-kos">,</span> FileMode<span class="pl-kos">.</span>Open<span class="pl-kos">,</span> FileAccess<span class="pl-kos">.</span>Read<span class="pl-kos">,</span> FileShare<span class="pl-kos">.</span>Read<span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div>
+<p>参数介绍：</p>
+<p><strong>FileMode：</strong></p>
+<ul>
+<li><strong>Append</strong>：打开一个已有的文件，并将光标放置在文件的末尾。如果文件不存在，则创建文件。</li>
+<li><strong>Create</strong>：创建一个新的文件。如果文件已存在，则删除旧文件，然后创建新文件。</li>
+<li><strong>CreateNew</strong>：指定操作系统应创建一个新的文件。如果文件已存在，则抛出异常。</li>
+<li><strong>Open</strong>：打开一个已有的文件。如果文件不存在，则抛出异常。</li>
+<li><strong>OpenOrCreate</strong>：指定操作系统应打开一个已有的文件。如果文件不存在，则用指定的名称创建一个新的文件打开。</li>
+<li><strong>Truncate</strong>：打开一个已有的文件，文件一旦打开，就将被截断为零字节大小。然后我们可以向文件写入全新的数据，但是保留文件的初始创建日期。如果文件不存在，则抛出异常。</li>
+</ul>
+<p><strong>FileAccess：</strong> <strong>Read</strong>、<strong>ReadWrite</strong> 和 <strong>Write</strong>。</p>
+<p><strong>FileShare：</strong></p>
+<ul>
+<li><strong>Inheritable</strong>：允许文件句柄可由子进程继承。Win32 不直接支持此功能。</li>
+<li><strong>None</strong>：谢绝共享当前文件。文件关闭前，打开该文件的任何请求（由此进程或另一进程发出的请求）都将失败。</li>
+<li><strong>Read</strong>：允许随后打开文件读取。如果未指定此标志，则文件关闭前，任何打开该文件以进行读取的请求（由此进程或另一进程发出的请求）都将失败。但是，即使指定了此标志，仍可能需要附加权限才能够访问该文件。</li>
+<li><strong>ReadWrite</strong>：允许随后打开文件读取或写入。如果未指定此标志，则文件关闭前，任何打开该文件以进行读取或写入的请求（由此进程或另一进程发出）都将失败。但是，即使指定了此标志，仍可能需要附加权限才能够访问该文件。</li>
+<li><strong>Write</strong>：允许随后打开文件写入。如果未指定此标志，则文件关闭前，任何打开该文件以进行写入的请求（由此进程或另一进过程发出的请求）都将失败。但是，即使指定了此标志，仍可能需要附加权限才能够访问该文件。</li>
+<li><strong>Delete</strong>：允许随后删除文件。</li>
+</ul>
+<p>使用：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">using</span> System<span class="pl-kos">;</span>
+<span class="pl-k">using</span> System<span class="pl-kos">.</span>IO<span class="pl-kos">;</span>
+
+<span class="pl-k">namespace</span> <span class="pl-v">FileIOApplication</span>
+<span class="pl-kos">{</span>
+    <span class="pl-k">class</span> <span class="pl-smi">Program</span>
+    <span class="pl-kos">{</span>
+        <span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-smi">string</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">args</span><span class="pl-kos">)</span>
+        <span class="pl-kos">{</span>
+            <span class="pl-smi">FileStream</span> <span class="pl-s1">F</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> FileStream<span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>test.dat<span class="pl-s">"</span></span><span class="pl-kos">,</span> 
+            FileMode<span class="pl-kos">.</span>OpenOrCreate<span class="pl-kos">,</span> FileAccess<span class="pl-kos">.</span>ReadWrite<span class="pl-kos">)</span><span class="pl-kos">;</span>
+
+            <span class="pl-k">for</span> <span class="pl-kos">(</span><span class="pl-smi">int</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">1</span><span class="pl-kos">;</span> <span class="pl-s1">i</span> &lt;= <span class="pl-c1">20</span><span class="pl-kos">;</span> <span class="pl-s1">i</span><span class="pl-c1">++</span><span class="pl-kos">)</span>
+            <span class="pl-kos">{</span>
+                F<span class="pl-kos">.</span><span class="pl-en">WriteByte</span><span class="pl-kos">(</span><span class="pl-kos">(</span><span class="pl-smi">byte</span><span class="pl-kos">)</span>i<span class="pl-kos">)</span><span class="pl-kos">;</span>
+            <span class="pl-kos">}</span>
+
+            F<span class="pl-kos">.</span>Position <span class="pl-c1">=</span> <span class="pl-c1">0</span><span class="pl-kos">;</span>
+
+            <span class="pl-k">for</span> <span class="pl-kos">(</span><span class="pl-smi">int</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span><span class="pl-kos">;</span> <span class="pl-s1">i</span> &lt;= <span class="pl-c1">20</span><span class="pl-kos">;</span> <span class="pl-s1">i</span><span class="pl-c1">++</span><span class="pl-kos">)</span>
+            <span class="pl-kos">{</span>
+                Console<span class="pl-kos">.</span><span class="pl-en">Write</span><span class="pl-kos">(</span>F<span class="pl-kos">.</span><span class="pl-en">ReadByte</span><span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-c1">+</span> <span class="pl-s"><span class="pl-s">"</span> <span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+            <span class="pl-kos">}</span>
+            F<span class="pl-kos">.</span><span class="pl-en">Close</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+            Console<span class="pl-kos">.</span><span class="pl-en">ReadKey</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-kos">}</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>文本文件的读写</h2>
+<p>使用StreamReader类读取文件：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-smi">void</span> <span class="pl-en">readTextFile</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+<span class="pl-kos">{</span>
+    <span class="pl-k">try</span>
+    <span class="pl-kos">{</span>
+        <span class="pl-k">using</span> <span class="pl-kos">(</span><span class="pl-smi">StreamReader</span> <span class="pl-s1">sr</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> StreamReader
+             <span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>E:<span class="pl-k">\\</span>Code<span class="pl-k">\\</span>C#Learn<span class="pl-k">\\</span>Basic<span class="pl-k">\\</span>HelloWorld<span class="pl-k">\\</span>HelloWorld<span class="pl-k">\\</span>Text.txt<span class="pl-s">"</span></span><span class="pl-kos">,</span> System<span class="pl-kos">.</span>Text<span class="pl-kos">.</span>Encoding<span class="pl-kos">.</span>UTF8<span class="pl-kos">)</span><span class="pl-kos">)</span>
+        <span class="pl-kos">{</span>
+            <span class="pl-kos">;</span>
+            <span class="pl-smi">string</span> <span class="pl-s1">line</span><span class="pl-kos">;</span>
+            <span class="pl-k">while</span> <span class="pl-kos">(</span><span class="pl-kos">(</span><span class="pl-s1">line</span> <span class="pl-c1">=</span> sr<span class="pl-kos">.</span><span class="pl-en">ReadLine</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">)</span> <span class="pl-c1">!=</span> <span class="pl-c1">null</span><span class="pl-kos">)</span>
+            <span class="pl-kos">{</span>
+                Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span>line<span class="pl-kos">)</span><span class="pl-kos">;</span>
+            <span class="pl-kos">}</span>
+
+        <span class="pl-kos">}</span>
+    <span class="pl-kos">}</span>
+    <span class="pl-k">catch</span> <span class="pl-kos">(</span><span class="pl-smi">Exception</span> <span class="pl-s1">e</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>The file could not be read:<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+        Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span>e<span class="pl-kos">.</span>Message<span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
+<p>使用StreamWriter类写入文件：</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-smi">void</span> <span class="pl-en">writeTextFile</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+<span class="pl-kos">{</span>
+    <span class="pl-smi">string</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">names</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-smi">string</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-kos">{</span> <span class="pl-s"><span class="pl-s">"</span>Zara Ali<span class="pl-s">"</span></span><span class="pl-kos">,</span> <span class="pl-s"><span class="pl-s">"</span>Nuha Ali<span class="pl-s">"</span></span> <span class="pl-kos">}</span><span class="pl-kos">;</span>
+    <span class="pl-k">using</span> <span class="pl-kos">(</span><span class="pl-smi">StreamWriter</span> <span class="pl-s1">sw</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> StreamWriter<span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>names.txt<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        <span class="pl-k">foreach</span> <span class="pl-kos">(</span><span class="pl-smi">string</span> s <span class="pl-k">in</span> names<span class="pl-kos">)</span>
+        <span class="pl-kos">{</span>
+            sw<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span>s<span class="pl-kos">)</span><span class="pl-kos">;</span>
+
+        <span class="pl-kos">}</span>
+    <span class="pl-kos">}</span>
+
+    <span class="pl-c">// 从文件中读取并显示每行</span>
+    <span class="pl-smi">string</span> <span class="pl-s1">line</span> <span class="pl-c1">=</span> <span class="pl-s"><span class="pl-s">"</span><span class="pl-s">"</span></span><span class="pl-kos">;</span>
+    <span class="pl-k">using</span> <span class="pl-kos">(</span><span class="pl-smi">StreamReader</span> <span class="pl-s1">sr</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> StreamReader<span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>names.txt<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">)</span>
+    <span class="pl-kos">{</span>
+        <span class="pl-k">while</span> <span class="pl-kos">(</span><span class="pl-kos">(</span><span class="pl-s1">line</span> <span class="pl-c1">=</span> sr<span class="pl-kos">.</span><span class="pl-en">ReadLine</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">)</span> <span class="pl-c1">!=</span> <span class="pl-c1">null</span><span class="pl-kos">)</span>
+        <span class="pl-kos">{</span>
+            Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span>line<span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-kos">}</span>
+    <span class="pl-kos">}</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>二进制文件的读写</h2>
+<p>使用<strong>BinaryReader</strong>类和<strong>BinaryWriter</strong>类进行二进制文件的读写</p>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-smi">BinaryWriter</span> <span class="pl-s1">bw</span><span class="pl-kos">;</span>
+<span class="pl-smi">BinaryReader</span> <span class="pl-s1">br</span><span class="pl-kos">;</span>
+<span class="pl-smi">int</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">25</span><span class="pl-kos">;</span>
+<span class="pl-smi">double</span> <span class="pl-s1">d</span> <span class="pl-c1">=</span> <span class="pl-c1">3.14157</span><span class="pl-kos">;</span>
+<span class="pl-smi">bool</span> <span class="pl-s1">b</span> <span class="pl-c1">=</span> <span class="pl-c1">true</span><span class="pl-kos">;</span>
+<span class="pl-smi">string</span> <span class="pl-s1">s</span> <span class="pl-c1">=</span> <span class="pl-s"><span class="pl-s">"</span>i am happy<span class="pl-s">"</span></span><span class="pl-kos">;</span>
+<span class="pl-c">// 创建文件</span>
+<span class="pl-k">try</span>
+<span class="pl-kos">{</span>
+    <span class="pl-s1">bw</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> BinaryWriter<span class="pl-kos">(</span><span class="pl-k">new</span> FileStream<span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>bindata<span class="pl-s">"</span></span><span class="pl-kos">,</span> FileMode<span class="pl-kos">.</span>OpenOrCreate<span class="pl-kos">,</span> FileAccess<span class="pl-kos">.</span>Write<span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
+<span class="pl-k">catch</span> <span class="pl-kos">(</span><span class="pl-smi">IOException</span> <span class="pl-s1">e</span><span class="pl-kos">)</span>
+<span class="pl-kos">{</span>
+    Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span>e<span class="pl-kos">.</span>Message <span class="pl-c1">+</span> <span class="pl-s"><span class="pl-s">"</span><span class="pl-k">\n</span> Cannot create file.<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-k">return</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
+<span class="pl-c">// 写入文件</span>
+<span class="pl-k">try</span>
+<span class="pl-kos">{</span>
+    bw<span class="pl-kos">.</span><span class="pl-en">Write</span><span class="pl-kos">(</span>i<span class="pl-kos">)</span><span class="pl-kos">;</span>
+    bw<span class="pl-kos">.</span><span class="pl-en">Write</span><span class="pl-kos">(</span>d<span class="pl-kos">)</span><span class="pl-kos">;</span>
+    bw<span class="pl-kos">.</span><span class="pl-en">Write</span><span class="pl-kos">(</span>b<span class="pl-kos">)</span><span class="pl-kos">;</span>
+    bw<span class="pl-kos">.</span><span class="pl-en">Write</span><span class="pl-kos">(</span>s<span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
+<span class="pl-k">catch</span> <span class="pl-kos">(</span><span class="pl-smi">IOException</span> <span class="pl-s1">e</span><span class="pl-kos">)</span>
+<span class="pl-kos">{</span>
+    Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span>e<span class="pl-kos">.</span>Message <span class="pl-c1">+</span> <span class="pl-s"><span class="pl-s">"</span><span class="pl-k">\n</span> Cannot write to file.<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-k">return</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
+bw<span class="pl-kos">.</span><span class="pl-en">Close</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-c">// 读取文件</span>
+<span class="pl-k">try</span>
+<span class="pl-kos">{</span>
+    <span class="pl-s1">br</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> BinaryReader<span class="pl-kos">(</span><span class="pl-k">new</span> FileStream<span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>bindata<span class="pl-s">"</span></span><span class="pl-kos">,</span> FileMode<span class="pl-kos">.</span>Open<span class="pl-kos">,</span> FileAccess<span class="pl-kos">.</span>Read<span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
+<span class="pl-k">catch</span> <span class="pl-kos">(</span><span class="pl-smi">IOException</span> <span class="pl-s1">e</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+    Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span>e<span class="pl-kos">.</span>Message <span class="pl-c1">+</span> <span class="pl-s"><span class="pl-s">"</span><span class="pl-k">\n</span> Cannot open file.<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-k">return</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
+<span class="pl-k">try</span>
+<span class="pl-kos">{</span>
+    <span class="pl-s1">i</span> <span class="pl-c1">=</span> br<span class="pl-kos">.</span><span class="pl-en">ReadInt32</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Integer data: {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> i<span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-s1">d</span> <span class="pl-c1">=</span> br<span class="pl-kos">.</span><span class="pl-en">ReadDouble</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Double data: {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> d<span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-s1">b</span> <span class="pl-c1">=</span> br<span class="pl-kos">.</span><span class="pl-en">ReadBoolean</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>Boolean data: {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> b<span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-s1">s</span> <span class="pl-c1">=</span> br<span class="pl-kos">.</span><span class="pl-en">ReadString</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>String data: {0}<span class="pl-s">"</span></span><span class="pl-kos">,</span> s<span class="pl-kos">)</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
+<span class="pl-k">catch</span> <span class="pl-kos">(</span><span class="pl-smi">IOException</span> <span class="pl-s1">e</span><span class="pl-kos">)</span>
+<span class="pl-kos">{</span>
+    Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span>e<span class="pl-kos">.</span>Message <span class="pl-c1">+</span> <span class="pl-s"><span class="pl-s">"</span><span class="pl-k">\n</span> Cannot read from file.<span class="pl-s">"</span></span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-k">return</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span>
+br<span class="pl-kos">.</span><span class="pl-en">Close</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
