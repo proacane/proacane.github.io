@@ -1543,3 +1543,1375 @@ catch (IOException e)
 }
 br.Close();
 ```
+# 特性
+
+特性（Attribute）用于添加元数据，如编译器指令和注释、描述、方法、类等其他信息。.Net 框架提供了两种类型的特性：**预定义**特性和**自定义**特性。
+
+## 规定特性
+
+规定特性的语法：
+
+```C#
+[attribute(positional_parameters, name_parameter = value, ...)]
+element
+```
+
+特性（Attribute）的名称和值是在方括号内规定的，放置在它所应用的元素之前。positional_parameters 规定必需的信息，name_parameter 规定可选的信息。
+
+## 预定义特性
+
+.Net 框架提供了三种预定义特性：
+
+- AttributeUsage
+- Conditional
+- Obsolete
+
+### AttrubuteUsage
+
+预定义特性 **AttributeUsage** 描述了如何使用一个自定义特性类。它规定了特性可应用到的项目的类型；语法如下：
+
+```c#
+[AttributeUsage(
+   validon,
+   AllowMultiple=allowmultiple,
+   Inherited=inherited
+)]
+```
+
+其中：
+
+- 参数 validon 规定特性可被放置的语言元素。它是枚举器 *AttributeTargets* 的值的组合。默认值是 *AttributeTargets.All*。
+- 参数 *allowmultiple*（可选的）为该特性的 *AllowMultiple* 属性（property）提供一个布尔值。如果为 true，则该特性是多用的。默认值是 false（单用的）。
+- 参数 *inherited*（可选的）为该特性的 *Inherited* 属性（property）提供一个布尔值。如果为 true，则该特性可被派生类继承。默认值是 false（不被继承）。
+
+### Conditional
+
+**Conditional** 标记了一个条件方法，执行依赖于指定的预处理标识符。它会引起方法调用的条件编译，取决于指定的值，比如 **Debug** 或 **Trace**。例如，当调试代码时显示变量的值，语法如下：
+
+```C#
+[Conditional(
+   conditionalSymbol
+)]
+```
+
+例如：
+
+```c#
+[Conditional("DEBUG")]
+```
+
+### Obsolete
+
+该预定义特性可以将一个目标元素标记为过时，不再使用，语法如下：
+
+```c#
+[Obsolete(
+   message
+)]
+[Obsolete(
+   message,
+   iserror
+)]
+```
+
+其中：
+
+- 参数 *message*，是一个字符串，描述项目为什么过时以及该替代使用什么。
+- 参数 *iserror*，是一个布尔值。如果该值为 true，编译器应把该项目的使用当作一个错误。默认值是 false（编译器生成一个警告）。
+
+例如：
+
+```c#
+using System;
+public class MyClass
+{
+   [Obsolete("Don't use OldMethod, use NewMethod instead", true)]
+   static void OldMethod()
+   { 
+      Console.WriteLine("It is the old method");
+   }
+   static void NewMethod()
+   { 
+      Console.WriteLine("It is the new method"); 
+   }
+   public static void Main()
+   {
+      OldMethod();
+   }
+}
+```
+
+编译上述代码时，编译器会给出错误消息： Don't use OldMethod, use NewMethod instead
+
+## 自定义特性
+
+创建并使用自定义特性包含四个步骤：
+
+- 声明自定义特性
+- 构建自定义特性
+- 在目标程序元素上应用自定义特性
+- 通过反射访问特性
+
+### 声明自定义特性
+
+自定义特性要派生自 **System.Attribute** 类；例如：
+
+```c#
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Constructor |AttributeTargets.Field |AttributeTargets.Method |AttributeTargets.Property,AllowMultiple = true)]
+class DebugInfo : System.Attribute
+{
+
+}
+```
+
+### 构建自定义特性
+
+DebugInfo 存储debug的调试信息：
+
+- bug 的代码编号
+- 辨认该 bug 的开发人员名字
+- 最后一次审查该代码的日期
+- 一个存储了开发人员标记的字符串消息
+
+```c#
+[AttributeUsage(AttributeTargets.Class |
+AttributeTargets.Constructor |
+AttributeTargets.Field |
+AttributeTargets.Method |
+AttributeTargets.Property,
+AllowMultiple = true)]
+
+public class DeBugInfo : System.Attribute
+{
+  private int bugNo;
+  private string developer;
+  private string lastReview;
+  public string message;
+
+  public DeBugInfo(int bg, string dev, string d)
+  {
+      this.bugNo = bg;
+      this.developer = dev;
+      this.lastReview = d;
+  }
+
+  public int BugNo
+  {
+      get
+      {
+          return bugNo;
+      }
+  }
+  public string Developer
+  {
+      get
+      {
+          return developer;
+      }
+  }
+  public string LastReview
+  {
+      get
+      {
+          return lastReview;
+      }
+  }
+  public string Message
+  {
+      get
+      {
+          return message;
+      }
+      set
+      {
+          message = value;
+      }
+  }
+}
+```
+
+### 应用自定义特性
+
+```c#
+[DebugInfo(45, "ME", "29292/12/2", Message = "Rectangle")]
+class Rectangle
+{
+    [DebugInfo(43, "ME", "29292/12/2", Message = "成员变量")]
+    protected double length;
+    protected double width;
+    public Rectangle(double l, double w)
+    {
+        length = l;
+        width = w;
+    }
+    [DebugInfo(55, "Zara Ali", "19/10/2012", Message = "Return type mismatch")]
+    public double GetArea()
+    {
+        return length * width;
+    }
+    [DebugInfo(56, "Zara Ali", "19/10/2012")]
+    public void Display()
+    {
+        Console.WriteLine("Length: {0}", length);
+        Console.WriteLine("Width: {0}", width);
+        Console.WriteLine("Area: {0}", GetArea());
+    }
+}
+```
+
+要查看特性信息，需要使用反射
+
+# 反射
+
+反射是获取运行时类型信息的方式，c#应用程序由：`程序集(Assembly)`、`模块(Module)`、`类型(class)`组成，反射可以让程序员可以在程序运行期获得这几个组成部分的相关信息
+
+用途：
+
+- 它允许在运行时查看特性（attribute）信息。
+- 它允许审查集合中的各种类型，以及实例化这些类型。
+- 它允许延迟绑定的方法和属性（property）。
+- 它允许在运行时创建新类型，然后使用这些类型执行一些任务。
+
+## 查看元数据
+
+使用MemberInfo类查看特性：
+
+```c#
+System.Reflection.MemberInfo info = typeof(Rectangle);
+object[] attributes = info.GetCustomAttributes(true);
+for (int i = 0; i < attributes.Length; i++)
+{
+    System.Console.WriteLine(attributes[i]);
+}
+```
+
+使用反射查看特性：
+
+```c#
+static void Main(string[] args)
+{
+    Rectangle r = new Rectangle(4.5, 7.5);
+    //r.Display();
+    Type type = typeof(Rectangle); 
+    // 遍历类特性
+    foreach(Object attributes in type.GetCustomAttributes(false)){
+            DebugInfo dbi = (DebugInfo)attributes;
+        if (dbi != null)
+        {
+            Console.WriteLine("Bug no: {0}", dbi.BugNo);
+            Console.WriteLine("Developer: {0}", dbi.Developer);
+            Console.WriteLine("Last Reviewed: {0}",
+                                     dbi.LastReview);
+            Console.WriteLine("Remarks: {0}", dbi.Message);
+        }
+    }
+
+    // 遍历方法特性
+    foreach (MethodInfo m in type.GetMethods())
+    {
+        foreach (Attribute a in m.GetCustomAttributes(true))
+        {
+            DebugInfo dbi = a as DebugInfo;
+            if (null != dbi)
+            {
+                Console.WriteLine("Bug no: {0}, for Method: {1}",
+                                              dbi.BugNo, m.Name);
+                Console.WriteLine("Developer: {0}", dbi.Developer);
+                Console.WriteLine("Last Reviewed: {0}",
+                                              dbi.LastReview);
+                Console.WriteLine("Remarks: {0}", dbi.Message);
+            }
+        }
+    }
+
+    // 遍历字段特性
+    foreach (FieldInfo f in type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance))
+    {
+        foreach (Attribute a in f.GetCustomAttributes(true))
+        {
+            DebugInfo dbi = a as DebugInfo;
+            if (dbi != null)
+            {
+                Console.WriteLine("Bug no: {0}, for Field: {1}", dbi.BugNo, f.Name);
+                Console.WriteLine("Developer: {0}", dbi.Developer);
+                Console.WriteLine("Last Reviewed: {0}", dbi.LastReview);
+                Console.WriteLine("Remarks: {0}", dbi.Message);
+            }
+        }
+    }
+}
+```
+
+# 属性
+
+属性可以看作对类中**字段**的包装器，给私有字段提供外界访问的方法，通常由`get`和`set`访问器组成；例如：
+
+```C#
+public class Person
+{
+    private string name;
+
+    public string Name
+    {
+        get { return name; }
+        set { name = value; }
+    }
+}
+```
+
+自动实现：
+
+```c#
+public class Person
+{
+    public string Name { get; set; }
+}
+```
+
+> 希望字段只读就只用`get`访问器，只写就用`set`访问器；get和set访问器中的逻辑可以自定义
+
+# 索引器
+
+索引器允许一个对象可以像数组一样使用下标`[]`的方式来访问。
+
+一维索引器的语法如下：
+
+```C#
+element-type this[int index]
+{
+   // get 访问器
+   get
+   {
+      // 返回 index 指定的值
+   }
+
+   // set 访问器
+   set
+   {
+      // 设置 index 指定的值
+   }
+}
+```
+
+索引器的行为的声明在某种程度上类似于属性（property）。就像属性（property），可使用 **get** 和 **set** 访问器来定义索引器。但是，属性返回或设置一个特定的数据成员，而索引器返回或设置对象实例的一个特定值。换句话说，它把实例数据分为更小的部分，并索引每个部分，获取或设置每个部分。
+
+定义一个属性（property）包括提供属性名称。索引器定义的时候不带有名称，但带有 **this** 关键字，它指向对象实例。例：
+
+```c#
+    class IndexedNames
+    {
+        private string[] namelist = new string[size];
+        static public int size = 10;
+        public IndexedNames()
+        {
+            for (int i = 0; i < size; i++)
+                namelist[i] = "N. A.";
+        }
+
+        public string this[int index]
+        {
+            get
+            {
+                string temp;
+                if (index >= 0 && index < size)
+                {
+                    temp = namelist[index];
+                }
+                else
+                {
+                    temp = "";
+                }
+                return temp;
+            }
+            set
+            {
+                if (index >= 0 && index < size) { namelist[index] = value; }
+            }
+        }
+    }
+```
+
+重载索引器：索引器声明的时候也可带有多个参数，且每个参数可以是不同的类型。没有必要让索引器必须是整型的。C# 允许索引器可以是其他类型，例如，字符串类型
+
+```c#
+public string this[int index]
+{
+    get
+    {
+        string temp;
+        if (index >= 0 && index < size)
+        {
+            temp = namelist[index];
+        }
+        else
+        {
+            temp = "";
+        }
+        return temp;
+    }
+    set
+    {
+        if (index >= 0 && index < size) { namelist[index] = value; }
+    }
+}
+
+public int this[string name]
+{
+    get
+    {
+        int index = 0;
+        while (index < size)
+        {
+            if (namelist[index] == name)
+            {
+                return index;
+            }
+            index++;
+        }
+        return index == size ? 0 : index;
+    }
+}
+```
+
+# 委托
+
+委托(Delegate)类似于指针，是存有对某个方法的引用的一种引用类型变量，特别用于实现事件和回调方法
+
+## 声明委托
+
+```c#
+delegate <return type> <delegate-name> <parameter list>
+```
+
+## 实例化委托
+
+委托对象必须用new关键字创建，参数传递方法名：
+
+```c#
+public delegate void printString(string s);
+...
+printString ps1 = new printString(WriteToScreen);
+printString ps2 = new printString(WriteToFile);
+```
+
+例子：
+
+```c#
+class TestDelegate
+{
+    static int num = 10;
+    public static int AddNum(int p)
+    {
+        num += p;
+        return num; 
+    }
+
+    public static int MultNum(int q)
+    {
+        num *= q;
+        return num;
+    }
+    public static int getNum()
+    {
+        return num;
+    }
+
+    static void Main(string[] args)
+    {
+        // 创建委托实例
+        NumberChanger nc1 = new NumberChanger(AddNum);
+        NumberChanger nc2 = new NumberChanger(MultNum);
+        // 使用委托对象调用方法
+        nc1(25);
+        Console.WriteLine("Value of Num: {0}", getNum());
+        nc2(5);
+        Console.WriteLine("Value of Num: {0}", getNum());
+    }
+}
+```
+
+## 委托的多播
+
+委托对象可以用`+`运算符进行合并，`-`运算符移除；可以利用这个特性创建一个委托被调用时调用方法的列表：
+
+```c#
+        static void Main(string[] args)
+        {
+            // 多播
+            NumberChanger nc;
+            NumberChanger nc1 = new NumberChanger(AddNum);
+            NumberChanger nc2 = new NumberChanger(MultNum);
+            nc = nc1;
+            nc += nc2;
+            nc(5);
+            Console.WriteLine("Value of Num: {0}", getNum());
+        }
+```
+
+## 委托的用途
+
+利用一个委托，调用多个方法：
+
+```c#
+using System;
+using System.IO;
+
+namespace DelegateAppl
+{
+   class PrintString
+   {
+      static FileStream fs;
+      static StreamWriter sw;
+      // 委托声明
+      public delegate void printString(string s);
+
+      // 该方法打印到控制台
+      public static void WriteToScreen(string str)
+      {
+         Console.WriteLine("The String is: {0}", str);
+      }
+      // 该方法打印到文件
+      public static void WriteToFile(string s)
+      {
+         fs = new FileStream("c:\\message.txt", FileMode.Append, FileAccess.Write);
+         sw = new StreamWriter(fs);
+         sw.WriteLine(s);
+         sw.Flush();
+         sw.Close();
+         fs.Close();
+      }
+      // 该方法把委托作为参数，并使用它调用方法
+      public static void sendString(printString ps)
+      {
+         ps("Hello World");
+      }
+      static void Main(string[] args)
+      {
+          // 可以用多播
+         printString ps1 = new printString(WriteToScreen);
+         printString ps2 = new printString(WriteToFile);
+         sendString(ps1);
+         sendString(ps2);
+         Console.ReadKey();
+      }
+   }
+}
+```
+
+# 事件
+
+事件是类与类之间进行通信的一种方式，与委托绑定使用
+
+## 通过事件使用委托
+
+事件在类中声明且生成，且通过使用同一个类或其他类中的委托与事件处理程序关联。
+
+事件使用的是**发布-订阅（publisher-subscriber** 模型；包含事件的类用于发布事件，这种类叫 **发布器（publisher）类**，接收事件的类叫 **订阅器（subscriber）类**
+
+**发布器（publisher）** 是一个包含事件和委托定义的对象。事件和委托之间的联系也定义在这个对象中。发布器（publisher）类的对象调用这个事件，并通知其他的对象。
+
+**订阅器（subscriber）** 是一个接受事件并提供事件处理程序的对象。在发布器（publisher）类中的委托调用订阅器（subscriber）类中的方法（事件处理程序）。
+
+## 声明事件
+
+声明事件首先要声明该事件的委托类型：
+
+```c#
+public delegate void BoilerLogHandler(string status);
+```
+
+然后再声明事件本身：
+
+```c#
+// 基于上面的委托定义事件
+public event BoilerLogHandler BoilerEventLog;
+```
+
+下面是完整的例子：
+
+```c#
+    // 1. 定义一个委托类型
+    internal delegate void NotifyEventHandler(object sender, EventArgs e);
+
+    // publisher
+    class ProcessBusinessLogic
+    {
+        // 2. 声明事件
+        public event NotifyEventHandler ProcessCompleted;
+
+        // 3. 触发事件
+        protected virtual void OnProcessCompleted(EventArgs e)
+        {
+            // ?.Invoke确保只有在有订阅者时才调用事件
+            ProcessCompleted?.Invoke(this, e);
+        }
+
+        // 模拟触发事件的过程
+        public void StartProcess()
+        {
+            Console.WriteLine("Process started");
+            // 执行逻辑代码...
+
+            // 触发事件
+            OnProcessCompleted(EventArgs.Empty);
+        }
+    }
+
+    // subscriber
+    class EventSubscriber
+    {
+        public void Subscribe(ProcessBusinessLogic process)
+        {
+            // 4. 订阅事件
+            process.ProcessCompleted += Process_ProcessCompleted;
+        }
+        // 事件的处理
+        private void Process_ProcessCompleted(object sender, EventArgs e)
+        {
+            Console.WriteLine("Process Completed!");
+        }
+    }
+
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            // 事件发布者
+            ProcessBusinessLogic process = new ProcessBusinessLogic();
+            // 事件接收者
+            EventSubscriber subscriber = new EventSubscriber();
+            // 订阅事件
+            subscriber.Subscribe(process);
+            // 启动
+            process.StartProcess();
+        }
+    }
+```
+
+实际应用：
+
+```c#
+    class EventTest
+    {
+        private int value;
+        public delegate void NumMainpulationHandler();
+
+        public event NumMainpulationHandler ChangeNum;
+
+        protected virtual void OnNumChanged()
+        {
+            if (ChangeNum != null)
+            {
+                // 触发事件
+                ChangeNum();
+            }
+            else
+            {
+                Console.WriteLine("event not fire");
+            }
+        }
+
+        public EventTest()
+        {
+            int n = 5;
+            SetValue(n);
+        }
+        public void SetValue(int n)
+        {
+            if (value != n)
+            {
+                value = n;
+                OnNumChanged();
+            }
+        }
+
+    }
+
+    // subscriber
+    public class subscribEvent
+    {
+        public void printf()
+        {
+            Console.WriteLine("event fire");
+            Console.ReadKey();
+        }
+    }
+
+    class MainClass
+    {
+        static void Main(string[] args)
+        {
+            EventTest e = new EventTest();
+            subscribEvent v = new subscribEvent();
+            e.ChangeNum += new EventTest.NumMainpulationHandler(v.printf);
+            e.SetValue(7);
+            e.SetValue(11);
+        }
+    }
+```
+
+上述代码执行流程：
+
+1. Main函数中创建发布者EventTest的实例，构造函数中调用SetValue并触发OnNubChanged()事件，此时并未注册订阅者，控制台打印"event not fire"
+2. 创建订阅者subscribEvent的实例，并在发布者的事件ChangeNum订阅新委托，委托的方法是其printf()方法
+3. 此时在调用发布者的SetValue方法；并成功触发事件，打印两次"event fire"
+
+------
+
+此实例提供一个简单的用于热水锅炉系统故障排除的应用程序。当维修工程师检查锅炉时，锅炉的温度和压力会随着维修工程师的备注自动记录到日志文件中。
+
+```c#
+namespace BoilerEventApplication
+{
+    class Boiler
+    {
+        public int Temp { get; private set; }
+        public int Pressure { get; private set; }
+
+        public Boiler(int temp, int pressure)
+        {
+            Temp = temp;
+            Pressure = pressure;
+        }
+    }
+
+    // 事件发布器
+    public class DelegateBoilerEvent
+    {
+        public delegate void BoilerLogHandler(string status);
+
+        // 定义事件
+        public event BoilerLogHandler BoilerEventLog;
+        protected void OnBoilerEventLog(string message)
+        {
+            BoilerEventLog?.Invoke(message);
+        }
+
+        public void LogProgress()
+        {
+            string remarks = "O.K.";
+            Boiler boiler = new Boiler(100, 12);
+            int temp = boiler.Temp;
+            int pressure = boiler.Pressure;
+            if (temp > 150 || temp < 80 || pressure < 12 || pressure > 15)
+            {
+                remarks = "Need Maintenance";
+            }
+            OnBoilerEventLog($"Logging Info:\nTemperature: {temp}\nPressure: {pressure}\nMessage: {remarks}");
+        }
+    }
+    // 该类用于写入文件
+    class BoilerInfoLogger : IDisposable
+    {
+        private readonly StreamWriter _streamWriter;
+
+        public BoilerInfoLogger(string filename)
+        {
+            _streamWriter = new StreamWriter(new FileStream(filename, FileMode.Append, FileAccess.Write));
+        }
+
+        public void Logger(string info)
+        {
+            _streamWriter.WriteLine(info);
+        }
+
+        public void Dispose()
+        {
+            _streamWriter?.Close();
+        }
+    }
+
+    // 事件订阅器
+    public class RecordBoilerInfo
+    {
+        static void Logger(string info)
+        {
+            Console.WriteLine(info);
+        }
+
+        static void Main(string[] args)
+        {
+            using (BoilerInfoLogger fileLogger = new BoilerInfoLogger("boiler.txt"))
+            {
+                DelegateBoilerEvent boilerEvent = new DelegateBoilerEvent();
+                boilerEvent.BoilerEventLog += Logger;
+                boilerEvent.BoilerEventLog += fileLogger.Logger;
+                boilerEvent.LogProgress();
+            }
+        }
+    }
+}
+```
+
+# 集合
+
+## 动态数组ArrayList
+
+常用属性、方法查阅官方API文档
+
+```c#
+using System;
+using System.Collections;
+
+namespace CollectionApplication
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            ArrayList al = new ArrayList();
+
+            Console.WriteLine("Adding some numbers:");
+            al.Add(45);
+            al.Add(78);
+            al.Add(33);
+            al.Add(56);
+            al.Add(12);
+            al.Add(23);
+            al.Add(9);
+            
+            Console.WriteLine("Capacity: {0} ", al.Capacity);
+            Console.WriteLine("Count: {0}", al.Count);
+                      
+            Console.Write("Content: ");
+            foreach (int i in al)
+            {
+                Console.Write(i + " ");
+            }
+            Console.WriteLine();
+            Console.Write("Sorted Content: ");
+            al.Sort();
+            foreach (int i in al)
+            {
+                Console.Write(i + " ");
+            }
+            Console.WriteLine();
+            Console.ReadKey();
+        }
+    }
+}
+```
+
+## 哈希表Hashtable
+
+类比map
+
+```c#
+using System;
+using System.Collections;
+
+namespace CollectionsApplication
+{
+   class Program
+   {
+      static void Main(string[] args)
+      {
+         Hashtable ht = new Hashtable();
+
+
+         ht.Add("001", "Zara Ali");
+         ht.Add("002", "Abida Rehman");
+         ht.Add("003", "Joe Holzner");
+         ht.Add("004", "Mausam Benazir Nur");
+         ht.Add("005", "M. Amlan");
+         ht.Add("006", "M. Arif");
+         ht.Add("007", "Ritesh Saikia");
+
+         if (ht.ContainsValue("Nuha Ali"))
+         {
+            Console.WriteLine("This student name is already in the list");
+         }
+         else
+         {
+            ht.Add("008", "Nuha Ali");
+         }
+         // 获取键的集合 
+         ICollection key = ht.Keys;
+
+         foreach (string k in key)
+         {
+            Console.WriteLine(k + ": " + ht[k]);
+         }
+         Console.ReadKey();
+      }
+   }
+}
+```
+
+## 排序列表SortedList
+
+数组和哈希表的结合，按键值排序
+
+```c#
+using System;
+using System.Collections;
+
+namespace CollectionsApplication
+{
+   class Program
+   {
+      static void Main(string[] args)
+      {
+         SortedList sl = new SortedList();
+
+         sl.Add("001", "Zara Ali");
+         sl.Add("002", "Abida Rehman");
+         sl.Add("003", "Joe Holzner");
+         sl.Add("004", "Mausam Benazir Nur");
+         sl.Add("005", "M. Amlan");
+         sl.Add("006", "M. Arif");
+         sl.Add("007", "Ritesh Saikia");
+
+         if (sl.ContainsValue("Nuha Ali"))
+         {
+            Console.WriteLine("This student name is already in the list");
+         }
+         else
+         {
+            sl.Add("008", "Nuha Ali");
+         }
+
+         // 获取键的集合 
+         ICollection key = sl.Keys;
+
+         foreach (string k in key)
+         {
+            Console.WriteLine(k + ": " + sl[k]);
+         }
+      }
+   }
+}
+```
+
+## 栈Stack
+
+```c#
+using System;
+using System.Collections;
+
+namespace CollectionsApplication
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Stack st = new Stack();
+
+            st.Push('A');
+            st.Push('M');
+            st.Push('G');
+            st.Push('W');
+            
+            Console.WriteLine("Current stack: ");
+            foreach (char c in st)
+            {
+                Console.Write(c + " ");
+            }
+            Console.WriteLine();
+            
+            st.Push('V');
+            st.Push('H');
+            Console.WriteLine("The next poppable value in stack: {0}", 
+            st.Peek());
+            Console.WriteLine("Current stack: ");           
+            foreach (char c in st)
+            {
+               Console.Write(c + " ");
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("Removing values ");
+            st.Pop();
+            st.Pop();
+            st.Pop();
+            
+            Console.WriteLine("Current stack: ");
+            foreach (char c in st)
+            {
+               Console.Write(c + " "); 
+            }
+        }
+    }
+}
+```
+
+## 队列Queue
+
+```c#
+using System;
+using System.Collections;
+
+namespace CollectionsApplication
+{
+   class Program
+   {
+      static void Main(string[] args)
+      {
+         Queue q = new Queue();
+
+         q.Enqueue('A');
+         q.Enqueue('M');
+         q.Enqueue('G');
+         q.Enqueue('W');
+         
+         Console.WriteLine("Current queue: ");
+         foreach (char c in q)
+            Console.Write(c + " ");
+         Console.WriteLine();
+         q.Enqueue('V');
+         q.Enqueue('H');
+         Console.WriteLine("Current queue: ");         
+         foreach (char c in q)
+            Console.Write(c + " ");
+         Console.WriteLine();
+         Console.WriteLine("Removing some values ");
+         char ch = (char)q.Dequeue();
+         Console.WriteLine("The removed value: {0}", ch);
+         ch = (char)q.Dequeue();
+         Console.WriteLine("The removed value: {0}", ch);
+         Console.ReadKey();
+      }
+   }
+}
+```
+
+## 点阵列BItArray
+
+*BitArray 类管理一个紧凑型的位值数组，它使用布尔值来表示，其中 true 表示位是开启的（1），false 表示位是关闭的（0）*
+
+其实就是存储数字的二进制值，以false、true的形式体现
+
+```C#
+using System;
+using System.Collections;
+
+namespace CollectionsApplication
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            // 创建两个大小为 8 的点阵列
+            BitArray ba1 = new BitArray(8);
+            BitArray ba2 = new BitArray(8);
+            byte[] a = { 60 };
+            byte[] b = { 13 };
+            
+            // 把值 60 和 13 存储到点阵列中
+            ba1 = new BitArray(a);
+            ba2 = new BitArray(b);
+
+            // ba1 的内容
+            Console.WriteLine("Bit array ba1: 60");
+            for (int i = 0; i < ba1.Count; i++)
+            {
+                Console.Write("{0, -6} ", ba1[i]);
+            }
+            Console.WriteLine();
+            
+            // ba2 的内容
+            Console.WriteLine("Bit array ba2: 13");
+            for (int i = 0; i < ba2.Count; i++)
+            {
+                Console.Write("{0, -6} ", ba2[i]);
+            }
+            Console.WriteLine();
+           
+            
+            BitArray ba3 = new BitArray(8);
+            ba3 = ba1.And(ba2);
+
+            // ba3 的内容
+            Console.WriteLine("Bit array ba3 after AND operation: 12");
+            for (int i = 0; i < ba3.Count; i++)
+            {
+                Console.Write("{0, -6} ", ba3[i]);
+            }
+            Console.WriteLine();
+
+            ba3 = ba1.Or(ba2);
+            // ba3 的内容
+            Console.WriteLine("Bit array ba3 after OR operation: 61");
+            for (int i = 0; i < ba3.Count; i++)
+            {
+                Console.Write("{0, -6} ", ba3[i]);
+            }
+            Console.WriteLine();
+            
+            Console.ReadKey();
+        }
+    }
+}
+```
+
+## 链表List
+
+```c#
+static void Main(string[] args)
+{
+        var a = new List<int>();
+        a.Add(2);
+        a.Add(6);
+        a.Add(2);
+        a.Add(10);
+        Console.WriteLine($"第一个数为{a[0]}");
+        a.Remove(2);//删去第一个匹配此条件的项
+        a.Sort();
+        foreach (var a2 in a)
+        {
+            Console.WriteLine(a2);
+        }
+        bool a3 = a.Contains(2);
+        Console.WriteLine(a3);
+        Console.ReadKey();
+    
+}
+```
+
+## 字典Dictonary
+
+与哈希表有些区别，后续再谈
+
+```c#
+static void Main(string[] args)
+      {
+          var a=new Dictionary<int,int>();
+          a.Add(12,14);
+          a.Add(0,1);
+          Console.WriteLine("删去前的Count"+a.Count);
+          a.Remove(0);
+          Console.WriteLine(a[12]);
+          Console.WriteLine(a.Count);
+         Console.WriteLine(a.ContainsKey(12));
+         Console.ReadKey();
+      }
+```
+
+# 泛型
+
+特性：
+
+- 可以创建自定义泛型接口、泛型类、泛型方法、泛型事件和泛型委托
+- 可以设置泛型类使其访问特定数据
+- 泛型数据类型的信息可以用反射获取
+
+## 泛型方法
+
+```c#
+ static void Swap<T>(ref T lhs, ref T rhs)
+ {
+     T temp;
+     temp = lhs;
+     lhs = rhs;
+     rhs = temp;
+ }
+```
+
+## 泛型委托
+
+```c#
+delegate T NumberChanger<T>(T n);
+```
+
+```c#
+using System;
+using System.Collections.Generic;
+
+delegate T NumberChanger<T>(T n);
+namespace GenericDelegateAppl
+{
+    class TestDelegate
+    {
+        static int num = 10;
+        public static int AddNum(int p)
+        {
+            num += p;
+            return num;
+        }
+
+        public static int MultNum(int q)
+        {
+            num *= q;
+            return num;
+        }
+        public static int getNum()
+        {
+            return num;
+        }
+
+        static void Main(string[] args)
+        {
+            // 创建委托实例
+            NumberChanger<int> nc1 = new NumberChanger<int>(AddNum);
+            NumberChanger<int> nc2 = new NumberChanger<int>(MultNum);
+            // 使用委托对象调用方法
+            nc1(25);
+            Console.WriteLine("Value of Num: {0}", getNum());
+            nc2(5);
+            Console.WriteLine("Value of Num: {0}", getNum());
+            Console.ReadKey();
+        }
+    }
+}
+```
+
+# 匿名方法
+
+## Lambda表达式
+
+语法：
+
+```c#
+(parameters) => expression
+// 或
+(parameters) => { statement; }
+
+// 示例：使用 Lambda 表达式定义一个委托
+Func<int, int, int> add = (a, b) => a + b;
+Console.WriteLine(add(2, 3)); // 输出 5
+
+// 示例：使用 Lambda 表达式过滤数组中的元素
+int[] numbers = { 1, 2, 3, 4, 5 };
+var evenNumbers = numbers.Where(n => n % 2 == 0);
+foreach (var num in evenNumbers)
+{
+    Console.WriteLine(num); // 输出 2 4
+}
+```
+
+## 匿名方法
+
+通过使用delegate关键字创建委托实例来声明：
+
+```C#
+delegate(parameters) { statement; }
+```
+
+例如：
+
+```c#
+delegate void NumberChanger(int n);
+...
+NumberChanger nc = delegate(int x)
+{
+    Console.WriteLine("Anonymous Method: {0}", x);
+};
+```
+
+# 不安全代码
+
+当一个代码块使用`unsafe`修饰符标记时，就允许使用指针变量
+
+```c#
+static  void Main(string[] args)
+{
+  unsafe
+  {
+  	int var = 20;
+	int* p = &var;
+	Console.WriteLine("Data is: {0} " , var);
+  	// 打印指针变量指向的数据
+	Console.WriteLine("Data is: {0} " , p->ToString());
+     //  获取
+	Console.WriteLine("Address is: {0} " , (int)p);
+  }
+	Console.ReadKey();
+}
+```
+
+## 使用指针访问数组元素
+
+C#中，数组名和指向数组的指针是不同的变量类型，所以需要用 `fixed`关键字，使得像C++一样操作指针来访问数组元素
+
+```c#
+using System;
+namespace UnsafeCodeApplication
+{
+   class TestPointer
+   {
+      public unsafe static void Main()
+      {
+         int[]  list = {10, 100, 200};
+         fixed(int *ptr = list)
+
+         /* 显示指针中数组地址 */
+         for ( int i = 0; i < 3; i++)
+         {
+            Console.WriteLine("Address of list[{0}]={1}",i,(int)(ptr + i));
+            Console.WriteLine("Value of list[{0}]={1}", i, *(ptr + i));
+         }
+         Console.ReadKey();
+      }
+   }
+}
+```
+
+# 多线程
+
+## 生命周期
+
+- **未启动状态**：当线程实例被创建但 Start 方法未被调用时的状况。
+
+- **就绪状态**：当线程准备好运行并等待 CPU 周期时的状况。
+
+- 不可运行状态
+
+  ：下面的几种情况下线程是不可运行的：
+
+  
+
+  - 已经调用 Sleep 方法
+  - 已经调用 Wait 方法
+  - 通过 I/O 操作阻塞
+
+- **死亡状态**：当线程已完成执行或已中止时的状况。
+
+## 主线程
+
+第一个执行的线程就是主线程，可以通过  Thread 类的 **CurrentThread** 属性访问线程
+
+```c#
+namespace MultithreadingApplication
+{
+    class MainThreadProgram
+    {
+        static void Main(string[] args)
+        {
+            Thread th = Thread.CurrentThread;
+            th.Name = "MainThread";
+            Console.WriteLine("This is {0}", th.Name);
+            Console.ReadKey();
+        }
+    }
+}
+```
+
+常用的属性、方法先不介绍，使用时再熟悉
+
+## 创建线程
+
+拓展的 Thread 类调用 **Start()** 方法来开始子线程的执行
+
+```c#
+class ThreadCreationProgram
+{
+    public static void CallToChildThread()
+    {
+        Console.WriteLine("Child thread starts");
+    }
+
+    static void Main(string[] args) { 
+        ThreadStart childref = new ThreadStart(CallToChildThread);
+        Console.WriteLine("In Main: Creating the Child thread");
+        Thread childThread = new Thread(childref);
+        childThread.Start();
+    }
+}
+```
+
+> Thread的构造函数还可以传递Lambda表达式
+
+## 管理线程
+
+Join、Sleep，都是一样的；这里就略
+
