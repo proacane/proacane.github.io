@@ -7,8 +7,7 @@ Unity官方API文档：[Unity - Scripting API: MonoBehaviour](https://docs.unity
 
 Edit-Preferences中的External Tools 中设置编辑器，先用VS，以后再试着用用Rider
 
-![image-20241112150246833](C:\Users\Aruceid\AppData\Roaming\Typora\typora-user-images\image-20241112150246833.png)
-
+![image](https://github.com/user-attachments/assets/74dee040-eac4-48da-a04d-c037d17baac6)
 # 变量
 
 在unity中，创建脚本scrpit实际上就是自定义新的component类型，可以附加到游戏对象GameObject上；C#脚本中的变量也可以看作这个Component类型中的属性；设置为Public就会暴露在 inspector 中
@@ -20,9 +19,7 @@ Edit-Preferences中的External Tools 中设置编辑器，先用VS，以后再�
 3. 为 Player 对象新增脚本组件，放入 Assets/Scripts 下，命名为 MainPlayer；在其中打印日志
 4. 将上一步生成的脚本作为Component应用到 Player 中；运行测试即可发现在控制台中打印的日志
 
-![image-20241112152540164](C:\Users\Aruceid\AppData\Roaming\Typora\typora-user-images\image-20241112152540164.png)
-
-![image-20241112152548624](C:\Users\Aruceid\AppData\Roaming\Typora\typora-user-images\image-20241112152548624.png)
+![image](https://github.com/user-attachments/assets/01662b53-afec-440a-a85a-5c4543a5f8fd)
 
 在 Assets/Creator Kit - Beginner Code/Scripts/Tutorial/SpawnerSample.cs 脚本文件中，添加新的变量 radius，用来设置存放距离，该脚本用来生成指定对象
 
