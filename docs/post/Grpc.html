@@ -147,10 +147,10 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p>vcpkg install grpc</p>
 <h1>配置</h1>
 <p>cmake 中：</p>
-<div class="highlight highlight-source-cmake"><pre class="notranslate"><span class="pl-c1">find_package</span>(Protobuf <span class="pl-k">CONFIG</span> <span class="pl-k">REQUIRED</span>)
-<span class="pl-c1">find_package</span>(gRPC <span class="pl-k">CONFIG</span> <span class="pl-k">REQUIRED</span>)
-<span class="pl-c1">include_directories</span>(<span class="pl-smi">${CMAKE_CURRENT_BINARY_DIR}</span>)
-arget_link_libraries(<span class="pl-smi">${projectName}</span> <span class="pl-k">PRIVATE</span> gRPC::grpc++ protobuf::libprotobuf)</pre></div>
+<div class="highlight highlight-source-cmake"><pre class="notranslate"><span class="pl-k">find_package</span>(Protobuf CONFIG REQUIRED)
+<span class="pl-k">find_package</span>(gRPC CONFIG REQUIRED)
+<span class="pl-k">include_directories</span>(<span class="pl-k">${CMAKE_CURRENT_BINARY_DIR}</span>)
+arget_link_libraries(<span class="pl-k">${projectName}</span> <span class="pl-e">PRIVATE</span> gRPC::grpc++ protobuf::libprotobuf)</pre></div>
 <h1>编译</h1>
 <p>编写好 proto文件，在 powershell 中使用如下命令，插件选择自己的路径：</p>
 <div class="highlight highlight-source-batchfile"><pre class="notranslate">protoc --proto_path=. --cpp_out=. demo.proto
