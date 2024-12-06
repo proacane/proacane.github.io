@@ -474,8 +474,8 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </ol>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/01662b53-afec-440a-a85a-5c4543a5f8fd"><img src="https://github.com/user-attachments/assets/01662b53-afec-440a-a85a-5c4543a5f8fd" alt="image" style="max-width: 100%;"></a></p>
 <p>在 Assets/Creator Kit - Beginner Code/Scripts/Tutorial/SpawnerSample.cs 脚本文件中，添加新的变量 radius，用来设置存放距离，该脚本用来生成指定对象</p>
-<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">using</span> UnityEngine<span class="pl-kos">;</span>
-<span class="pl-k">using</span> CreatorKitCode<span class="pl-kos">;</span>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">using</span> <span class="pl-s1">UnityEngine</span><span class="pl-kos">;</span>
+<span class="pl-k">using</span> <span class="pl-s1">CreatorKitCode</span><span class="pl-kos">;</span>
 
 <span class="pl-k">public</span> <span class="pl-k">class</span> <span class="pl-smi">SpawnerSample</span> <span class="pl-c1">:</span> <span class="pl-smi">MonoBehaviour</span>
 <span class="pl-kos">{</span>
@@ -487,23 +487,23 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     <span class="pl-kos">{</span>
         <span class="pl-smi">int</span> <span class="pl-s1">angle</span> <span class="pl-c1">=</span> <span class="pl-c1">15</span><span class="pl-kos">;</span>
         <span class="pl-c">// 生成物体的位置，初始值为当前物体的位置</span>
-        <span class="pl-smi">Vector3</span> <span class="pl-s1">spawnPosition</span> <span class="pl-c1">=</span> transform<span class="pl-kos">.</span>position<span class="pl-kos">;</span>
+        <span class="pl-smi">Vector3</span> <span class="pl-s1">spawnPosition</span> <span class="pl-c1">=</span> <span class="pl-s1">transform</span><span class="pl-kos">.</span><span class="pl-s1">position</span><span class="pl-kos">;</span>
         <span class="pl-c">// Quaternion.Euler方法是进行旋转，这里代表单位向量(1,0,0)绕y轴转15°</span>
-        <span class="pl-smi">Vector3</span> <span class="pl-s1">direction</span> <span class="pl-c1">=</span> Quaternion<span class="pl-kos">.</span><span class="pl-en">Euler</span><span class="pl-kos">(</span><span class="pl-c1">0</span><span class="pl-kos">,</span> angle<span class="pl-kos">,</span> <span class="pl-c1">0</span><span class="pl-kos">)</span> <span class="pl-c1">*</span> Vector3<span class="pl-kos">.</span>right<span class="pl-kos">;</span>
+        <span class="pl-smi">Vector3</span> <span class="pl-s1">direction</span> <span class="pl-c1">=</span> <span class="pl-s1">Quaternion</span><span class="pl-kos">.</span><span class="pl-en">Euler</span><span class="pl-kos">(</span><span class="pl-c1">0</span><span class="pl-kos">,</span> <span class="pl-s1">angle</span><span class="pl-kos">,</span> <span class="pl-c1">0</span><span class="pl-kos">)</span> <span class="pl-c1">*</span> <span class="pl-s1">Vector3</span><span class="pl-kos">.</span><span class="pl-s1">right</span><span class="pl-kos">;</span>
         
-        <span class="pl-s1">spawnPosition</span> <span class="pl-c1">=</span> transform<span class="pl-kos">.</span>position <span class="pl-c1">+</span> <span class="pl-s1">direction</span> <span class="pl-c1">*</span> <span class="pl-s1">radius</span><span class="pl-kos">;</span>
+        <span class="pl-s1">spawnPosition</span> <span class="pl-c1">=</span> <span class="pl-s1">transform</span><span class="pl-kos">.</span><span class="pl-s1">position</span> <span class="pl-c1">+</span> <span class="pl-s1">direction</span> <span class="pl-c1">*</span> <span class="pl-s1">radius</span><span class="pl-kos">;</span>
         <span class="pl-c">// 生成物体</span>
-        Instantiate<span class="pl-kos">(</span>ObjectToSpawn<span class="pl-kos">,</span> spawnPosition<span class="pl-kos">,</span> Quaternion<span class="pl-kos">.</span>identity<span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-s1">Instantiate</span><span class="pl-kos">(</span><span class="pl-s1">ObjectToSpawn</span><span class="pl-kos">,</span> <span class="pl-s1">spawnPosition</span><span class="pl-kos">,</span> <span class="pl-s1">Quaternion</span><span class="pl-kos">.</span><span class="pl-s1">identity</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
 
         <span class="pl-s1">angle</span> <span class="pl-c1">=</span> <span class="pl-c1">55</span><span class="pl-kos">;</span>
-        <span class="pl-s1">direction</span> <span class="pl-c1">=</span> Quaternion<span class="pl-kos">.</span><span class="pl-en">Euler</span><span class="pl-kos">(</span><span class="pl-c1">0</span><span class="pl-kos">,</span> angle<span class="pl-kos">,</span> <span class="pl-c1">0</span><span class="pl-kos">)</span> <span class="pl-c1">*</span> Vector3<span class="pl-kos">.</span>right<span class="pl-kos">;</span>
-        <span class="pl-s1">spawnPosition</span> <span class="pl-c1">=</span> transform<span class="pl-kos">.</span>position <span class="pl-c1">+</span> <span class="pl-s1">direction</span> <span class="pl-c1">*</span> <span class="pl-s1">radius</span><span class="pl-kos">;</span>
-        Instantiate<span class="pl-kos">(</span>ObjectToSpawn<span class="pl-kos">,</span> spawnPosition<span class="pl-kos">,</span> Quaternion<span class="pl-kos">.</span>identity<span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-s1">direction</span> <span class="pl-c1">=</span> <span class="pl-s1">Quaternion</span><span class="pl-kos">.</span><span class="pl-en">Euler</span><span class="pl-kos">(</span><span class="pl-c1">0</span><span class="pl-kos">,</span> <span class="pl-s1">angle</span><span class="pl-kos">,</span> <span class="pl-c1">0</span><span class="pl-kos">)</span> <span class="pl-c1">*</span> <span class="pl-s1">Vector3</span><span class="pl-kos">.</span><span class="pl-s1">right</span><span class="pl-kos">;</span>
+        <span class="pl-s1">spawnPosition</span> <span class="pl-c1">=</span> <span class="pl-s1">transform</span><span class="pl-kos">.</span><span class="pl-s1">position</span> <span class="pl-c1">+</span> <span class="pl-s1">direction</span> <span class="pl-c1">*</span> <span class="pl-s1">radius</span><span class="pl-kos">;</span>
+        <span class="pl-s1">Instantiate</span><span class="pl-kos">(</span><span class="pl-s1">ObjectToSpawn</span><span class="pl-kos">,</span> <span class="pl-s1">spawnPosition</span><span class="pl-kos">,</span> <span class="pl-s1">Quaternion</span><span class="pl-kos">.</span><span class="pl-s1">identity</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
 
         <span class="pl-s1">angle</span> <span class="pl-c1">=</span> <span class="pl-c1">95</span><span class="pl-kos">;</span>
-        <span class="pl-s1">direction</span> <span class="pl-c1">=</span> Quaternion<span class="pl-kos">.</span><span class="pl-en">Euler</span><span class="pl-kos">(</span><span class="pl-c1">0</span><span class="pl-kos">,</span> angle<span class="pl-kos">,</span> <span class="pl-c1">0</span><span class="pl-kos">)</span> <span class="pl-c1">*</span> Vector3<span class="pl-kos">.</span>right<span class="pl-kos">;</span>
-        <span class="pl-s1">spawnPosition</span> <span class="pl-c1">=</span> transform<span class="pl-kos">.</span>position <span class="pl-c1">+</span> <span class="pl-s1">direction</span> <span class="pl-c1">*</span> <span class="pl-s1">radius</span><span class="pl-kos">;</span>
-        Instantiate<span class="pl-kos">(</span>ObjectToSpawn<span class="pl-kos">,</span> spawnPosition<span class="pl-kos">,</span> Quaternion<span class="pl-kos">.</span>identity<span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-s1">direction</span> <span class="pl-c1">=</span> <span class="pl-s1">Quaternion</span><span class="pl-kos">.</span><span class="pl-en">Euler</span><span class="pl-kos">(</span><span class="pl-c1">0</span><span class="pl-kos">,</span> <span class="pl-s1">angle</span><span class="pl-kos">,</span> <span class="pl-c1">0</span><span class="pl-kos">)</span> <span class="pl-c1">*</span> <span class="pl-s1">Vector3</span><span class="pl-kos">.</span><span class="pl-s1">right</span><span class="pl-kos">;</span>
+        <span class="pl-s1">spawnPosition</span> <span class="pl-c1">=</span> <span class="pl-s1">transform</span><span class="pl-kos">.</span><span class="pl-s1">position</span> <span class="pl-c1">+</span> <span class="pl-s1">direction</span> <span class="pl-c1">*</span> <span class="pl-s1">radius</span><span class="pl-kos">;</span>
+        <span class="pl-s1">Instantiate</span><span class="pl-kos">(</span><span class="pl-s1">ObjectToSpawn</span><span class="pl-kos">,</span> <span class="pl-s1">spawnPosition</span><span class="pl-kos">,</span> <span class="pl-s1">Quaternion</span><span class="pl-kos">.</span><span class="pl-s1">identity</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
     <span class="pl-kos">}</span>
 <span class="pl-kos">}</span></pre></div>
 <h1>方法</h1>
@@ -517,15 +517,15 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     <span class="pl-kos">{</span>
         <span class="pl-smi">int</span> <span class="pl-s1">angle</span> <span class="pl-c1">=</span> <span class="pl-c1">15</span><span class="pl-kos">;</span>
         <span class="pl-k">for</span> <span class="pl-kos">(</span><span class="pl-kos">;</span> <span class="pl-s1">angle</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">360</span><span class="pl-kos">;</span> <span class="pl-s1">angle</span> <span class="pl-c1">+=</span><span class="pl-c1">30</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
-            GenNewObject<span class="pl-kos">(</span><span class="pl-k">ref</span> angle<span class="pl-kos">)</span><span class="pl-kos">;</span>
+            <span class="pl-s1">GenNewObject</span><span class="pl-kos">(</span><span class="pl-k">ref</span> <span class="pl-s1">angle</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
         <span class="pl-kos">}</span>
     <span class="pl-kos">}</span>
 
     <span class="pl-k">private</span> <span class="pl-smi">void</span> <span class="pl-en">GenNewObject</span><span class="pl-kos">(</span><span class="pl-k">ref</span> <span class="pl-smi">int</span> <span class="pl-s1">angle</span><span class="pl-kos">)</span>
     <span class="pl-kos">{</span>
-        <span class="pl-smi">Vector3</span> <span class="pl-s1">direction</span> <span class="pl-c1">=</span> Quaternion<span class="pl-kos">.</span><span class="pl-en">Euler</span><span class="pl-kos">(</span><span class="pl-c1">0</span><span class="pl-kos">,</span> angle<span class="pl-kos">,</span> <span class="pl-c1">0</span><span class="pl-kos">)</span> <span class="pl-c1">*</span> Vector3<span class="pl-kos">.</span>right<span class="pl-kos">;</span>
-        <span class="pl-smi">Vector3</span> <span class="pl-s1">spawnPosition</span> <span class="pl-c1">=</span> transform<span class="pl-kos">.</span>position <span class="pl-c1">+</span> <span class="pl-s1">direction</span> <span class="pl-c1">*</span> <span class="pl-s1">radius</span><span class="pl-kos">;</span>
-        Instantiate<span class="pl-kos">(</span>ObjectToSpawn<span class="pl-kos">,</span> spawnPosition<span class="pl-kos">,</span> Quaternion<span class="pl-kos">.</span>identity<span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-smi">Vector3</span> <span class="pl-s1">direction</span> <span class="pl-c1">=</span> <span class="pl-s1">Quaternion</span><span class="pl-kos">.</span><span class="pl-en">Euler</span><span class="pl-kos">(</span><span class="pl-c1">0</span><span class="pl-kos">,</span> <span class="pl-s1">angle</span><span class="pl-kos">,</span> <span class="pl-c1">0</span><span class="pl-kos">)</span> <span class="pl-c1">*</span> <span class="pl-s1">Vector3</span><span class="pl-kos">.</span><span class="pl-s1">right</span><span class="pl-kos">;</span>
+        <span class="pl-smi">Vector3</span> <span class="pl-s1">spawnPosition</span> <span class="pl-c1">=</span> <span class="pl-s1">transform</span><span class="pl-kos">.</span><span class="pl-s1">position</span> <span class="pl-c1">+</span> <span class="pl-s1">direction</span> <span class="pl-c1">*</span> <span class="pl-s1">radius</span><span class="pl-kos">;</span>
+        <span class="pl-s1">Instantiate</span><span class="pl-kos">(</span><span class="pl-s1">ObjectToSpawn</span><span class="pl-kos">,</span> <span class="pl-s1">spawnPosition</span><span class="pl-kos">,</span> <span class="pl-s1">Quaternion</span><span class="pl-kos">.</span><span class="pl-s1">identity</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
     <span class="pl-kos">}</span>
 <span class="pl-kos">}</span></pre></div>
 <h1>类</h1>
@@ -539,7 +539,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     <span class="pl-c">// Start is called before the first frame update</span>
     <span class="pl-smi">void</span> <span class="pl-en">Start</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
     <span class="pl-kos">{</span>
-        Debug<span class="pl-kos">.</span><span class="pl-en">Log</span><span class="pl-kos">(</span><span class="pl-s"><span class="pl-s">"</span>My name is <span class="pl-s">"</span></span> <span class="pl-c1">+</span> <span class="pl-s1">myName</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-s1">Debug</span><span class="pl-kos">.</span><span class="pl-en">Log</span><span class="pl-kos">(</span><span class="pl-s">"My name is "</span> <span class="pl-c1">+</span> <span class="pl-s1">myName</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
     <span class="pl-kos">}</span>
 
     <span class="pl-c">// Update is called once per frame</span>
@@ -549,7 +549,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     <span class="pl-kos">}</span>
 <span class="pl-kos">}</span>
 
-<span class="pl-kos">[</span><span class="pl-c1">System<span class="pl-kos">.</span>Serializable</span><span class="pl-kos">]</span>
+<span class="pl-kos">[</span><span class="pl-s1">System</span><span class="pl-kos">.</span><span class="pl-s1">Serializable</span><span class="pl-kos">]</span>
 <span class="pl-k">public</span> <span class="pl-k">class</span> <span class="pl-smi">Cat</span>
 <span class="pl-kos">{</span>
     <span class="pl-k">public</span> <span class="pl-smi">string</span> <span class="pl-s1">name</span><span class="pl-kos">;</span>
@@ -573,7 +573,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </ul>
 <p>在unity中，public 成员可以在 Inspector 中直接操作；其它需要加<code class="notranslate">[UnityEngine.SerializeField]</code>；子类中可以使用<code class="notranslate">base</code>关键字代表基类</p>
 <div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-c">//父类 Monster.cs</span>
-<span class="pl-k">using</span> System<span class="pl-kos">;</span>
+<span class="pl-k">using</span> <span class="pl-s1">System</span><span class="pl-kos">;</span>
 <span class="pl-kos">[</span><span class="pl-c1">Serializable</span><span class="pl-kos">]</span>
 <span class="pl-k">public</span> <span class="pl-k">class</span> <span class="pl-smi">Monster</span>
 <span class="pl-kos">{</span>
@@ -589,24 +589,24 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     <span class="pl-k">public</span> <span class="pl-v">Monster</span><span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-kos">{</span> <span class="pl-kos">}</span>
     <span class="pl-k">public</span> <span class="pl-v">Monster</span><span class="pl-kos">(</span><span class="pl-smi">string</span> <span class="pl-s1">name</span><span class="pl-kos">,</span> <span class="pl-smi">int</span> <span class="pl-s1">age</span><span class="pl-kos">,</span> <span class="pl-smi">string</span> <span class="pl-s1">color</span><span class="pl-kos">,</span> <span class="pl-smi">int</span> <span class="pl-s1">hp</span><span class="pl-kos">)</span>
     <span class="pl-kos">{</span>
-        <span class="pl-k">this</span><span class="pl-kos">.</span>name <span class="pl-c1">=</span> <span class="pl-s1">name</span><span class="pl-kos">;</span>
-        <span class="pl-k">this</span><span class="pl-kos">.</span>age <span class="pl-c1">=</span> <span class="pl-s1">age</span><span class="pl-kos">;</span>
-        <span class="pl-k">this</span><span class="pl-kos">.</span>color <span class="pl-c1">=</span> <span class="pl-s1">color</span><span class="pl-kos">;</span>
-        <span class="pl-k">this</span><span class="pl-kos">.</span>hp <span class="pl-c1">=</span> <span class="pl-s1">hp</span><span class="pl-kos">;</span>
+        <span class="pl-k">this</span><span class="pl-kos">.</span><span class="pl-s1">name</span> <span class="pl-c1">=</span> <span class="pl-s1">name</span><span class="pl-kos">;</span>
+        <span class="pl-k">this</span><span class="pl-kos">.</span><span class="pl-s1">age</span> <span class="pl-c1">=</span> <span class="pl-s1">age</span><span class="pl-kos">;</span>
+        <span class="pl-k">this</span><span class="pl-kos">.</span><span class="pl-s1">color</span> <span class="pl-c1">=</span> <span class="pl-s1">color</span><span class="pl-kos">;</span>
+        <span class="pl-k">this</span><span class="pl-kos">.</span><span class="pl-s1">hp</span> <span class="pl-c1">=</span> <span class="pl-s1">hp</span><span class="pl-kos">;</span>
     <span class="pl-kos">}</span>
 <span class="pl-kos">}</span>
 
 <span class="pl-c">// 派生类 Phoenix.cs</span>
-using System<span class="pl-kos">;</span>
+<span class="pl-k">using</span> <span class="pl-s1">System</span><span class="pl-kos">;</span>
 <span class="pl-kos">[</span><span class="pl-c1">Serializable</span><span class="pl-kos">]</span>
 <span class="pl-k">public</span> <span class="pl-k">class</span> <span class="pl-smi">Phoenix</span><span class="pl-c1">:</span><span class="pl-smi">Monster</span>
 <span class="pl-kos">{</span>
     <span class="pl-k">private</span> <span class="pl-smi">bool</span> <span class="pl-s1">isReborn</span><span class="pl-c1">=</span><span class="pl-c1">false</span><span class="pl-kos">;</span>
 
     <span class="pl-c">// 全参构造函数</span>
-    <span class="pl-k">public</span> <span class="pl-v">Phoenix</span><span class="pl-kos">(</span><span class="pl-smi">string</span> <span class="pl-s1">name</span><span class="pl-kos">,</span> <span class="pl-smi">int</span> <span class="pl-s1">age</span><span class="pl-kos">,</span> <span class="pl-smi">string</span> <span class="pl-s1">color</span><span class="pl-kos">,</span> <span class="pl-smi">int</span> <span class="pl-s1">hp</span><span class="pl-kos">,</span><span class="pl-smi">bool</span> <span class="pl-s1">isReborn</span><span class="pl-kos">)</span> <span class="pl-c1">:</span> <span class="pl-k">base</span><span class="pl-kos">(</span>name<span class="pl-kos">,</span> age<span class="pl-kos">,</span> color<span class="pl-kos">,</span> hp<span class="pl-kos">)</span>
+    <span class="pl-k">public</span> <span class="pl-v">Phoenix</span><span class="pl-kos">(</span><span class="pl-smi">string</span> <span class="pl-s1">name</span><span class="pl-kos">,</span> <span class="pl-smi">int</span> <span class="pl-s1">age</span><span class="pl-kos">,</span> <span class="pl-smi">string</span> <span class="pl-s1">color</span><span class="pl-kos">,</span> <span class="pl-smi">int</span> <span class="pl-s1">hp</span><span class="pl-kos">,</span><span class="pl-smi">bool</span> <span class="pl-s1">isReborn</span><span class="pl-kos">)</span> <span class="pl-c1">:</span> <span class="pl-k">base</span><span class="pl-kos">(</span><span class="pl-s1">name</span><span class="pl-kos">,</span> <span class="pl-s1">age</span><span class="pl-kos">,</span> <span class="pl-s1">color</span><span class="pl-kos">,</span> <span class="pl-s1">hp</span><span class="pl-kos">)</span>
     <span class="pl-kos">{</span>
-        <span class="pl-k">this</span><span class="pl-kos">.</span>isReborn <span class="pl-c1">=</span> <span class="pl-s1">isReborn</span><span class="pl-kos">;</span>
+        <span class="pl-k">this</span><span class="pl-kos">.</span><span class="pl-s1">isReborn</span> <span class="pl-c1">=</span> <span class="pl-s1">isReborn</span><span class="pl-kos">;</span>
     <span class="pl-kos">}</span>
     <span class="pl-c">//无参空构造方法</span>
     <span class="pl-k">public</span> <span class="pl-v">Phoenix</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
@@ -614,8 +614,8 @@ using System<span class="pl-kos">;</span>
     <span class="pl-kos">}</span>
 
     <span class="pl-smi">void</span> <span class="pl-en">Reborn</span><span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
-        <span class="pl-k">this</span><span class="pl-kos">.</span>hp <span class="pl-c1">=</span> <span class="pl-c1">1000</span><span class="pl-kos">;</span>
-        <span class="pl-k">this</span><span class="pl-kos">.</span>isReborn <span class="pl-c1">=</span> <span class="pl-c1">true</span><span class="pl-kos">;</span>
+        <span class="pl-k">this</span><span class="pl-kos">.</span><span class="pl-s1">hp</span> <span class="pl-c1">=</span> <span class="pl-c1">1000</span><span class="pl-kos">;</span>
+        <span class="pl-k">this</span><span class="pl-kos">.</span><span class="pl-s1">isReborn</span> <span class="pl-c1">=</span> <span class="pl-c1">true</span><span class="pl-kos">;</span>
     <span class="pl-kos">}</span>
 <span class="pl-kos">}</span></pre></div></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
