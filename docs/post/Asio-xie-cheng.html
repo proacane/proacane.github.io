@@ -128,7 +128,7 @@ awaitable&lt;<span class="pl-k">void</span>&gt; <span class="pl-en">echo</span>(
             <span class="pl-k">co_await</span> <span class="pl-smi">async_write</span>(socket, <span class="pl-c1">boost::asio::buffer</span>(data, n), use_awaitable);
         }
     }
-    <span class="pl-k">catch</span> (<span class="pl-k">const</span> std::<span class="pl-c1">exception</span> &amp;e) {
+    <span class="pl-k">catch</span> (<span class="pl-k">const</span> std::exception &amp;e) {
         std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Error: <span class="pl-pds">"</span></span> &lt;&lt; e.<span class="pl-c1">what</span>() &lt;&lt; std::endl;
     }
 }
@@ -150,7 +150,7 @@ awaitable&lt;<span class="pl-k">void</span>&gt; <span class="pl-en">listener</sp
     <span class="pl-k">try</span> {
         boost::asio::io_context <span class="pl-smi">io_context</span>(<span class="pl-c1">1</span>);
         <span class="pl-c"><span class="pl-c">//</span> 这两个信号绑定到 io_context 中</span>
-        boost::asio::signal_set <span class="pl-smi">signals</span>(io_context, SIGINT, SIGTERM);
+        boost::asio::signal_set <span class="pl-smi">signals</span>(io_context, <span class="pl-c1">SIGINT</span>, <span class="pl-c1">SIGTERM</span>);
         signals.<span class="pl-c1">async_wait</span>([&amp;](<span class="pl-k">auto</span>, <span class="pl-k">auto</span>) {
             <span class="pl-c"><span class="pl-c">//</span> 捕获到就停止</span>
             io_context.<span class="pl-c1">stop</span>();
@@ -160,7 +160,7 @@ awaitable&lt;<span class="pl-k">void</span>&gt; <span class="pl-en">listener</sp
         <span class="pl-c"><span class="pl-c">//</span> 进入事件循环，处理异步操作</span>
         io_context.<span class="pl-c1">run</span>();
     }
-    <span class="pl-k">catch</span> (<span class="pl-k">const</span> std::<span class="pl-c1">exception</span> &amp;e) {
+    <span class="pl-k">catch</span> (<span class="pl-k">const</span> std::exception &amp;e) {
         std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Error: <span class="pl-pds">"</span></span> &lt;&lt; e.<span class="pl-c1">what</span>() &lt;&lt; std::endl;
     }
     <span class="pl-k">return</span> <span class="pl-c1">0</span>;
@@ -171,7 +171,7 @@ awaitable&lt;<span class="pl-k">void</span>&gt; <span class="pl-en">listener</sp
 <div class="comments" id="comments"></div>
 
 </div>
-    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://proacane.github.io">Proacane的个人博客</a></div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://proacane.github.io">Proacane个人博客</a></div>
 <div id="footer2">
     <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
 </div>
@@ -184,7 +184,7 @@ if(""!=""){
     var startSite=new Date("");
     var diff=now.getTime()-startSite.getTime();
     var diffDay=Math.floor(diff/(1000*60*60*24));
-    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+    document.getElementById("runday").innerHTML="网站运行 "+diffDay+" 天"+" • ";
 }
 </script></div>
 </body>
@@ -229,6 +229,7 @@ document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
 function openComments(){
     cm=document.getElementById("comments");
     cmButton=document.getElementById("cmButton");
+    cmButton.disabled=true;
     cmButton.innerHTML="loading";
     span=document.createElement("span");
     span.setAttribute("class","AnimatedEllipsis");

@@ -1370,15 +1370,15 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <span class="pl-k">using</span> <span class="pl-k">namespace</span> <span class="pl-en">std</span><span class="pl-k">;</span>
 <span class="pl-k">using</span> <span class="pl-k">namespace</span> <span class="pl-en">boost</span>::asio::ip<span class="pl-k">;</span>
 
-<span class="pl-k">const</span> <span class="pl-k">int</span> MAX_LEN = <span class="pl-c1">1024</span>;
+<span class="pl-k">const</span> <span class="pl-k">int</span> <span class="pl-c1">MAX_LEN</span> = <span class="pl-c1">1024</span>;
 <span class="pl-k">typedef</span> shared_ptr&lt;tcp::socket&gt; socket_ptr;
 std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
 
 <span class="pl-k">void</span> <span class="pl-en">session</span>(socket_ptr sock) {
     <span class="pl-k">try</span> {
         <span class="pl-k">for</span> (;;) {
-            <span class="pl-k">char</span> data[MAX_LEN];
-            boost::<span class="pl-c1">system</span>::error_code error;
+            <span class="pl-k">char</span> data[<span class="pl-c1">MAX_LEN</span>];
+            boost::system::error_code error;
             <span class="pl-c"><span class="pl-c">//</span> 读取客户端发送的内容</span>
             <span class="pl-c1">size_t</span> length = sock-&gt;<span class="pl-c1">read_some</span>(<span class="pl-c1">boost::asio::buffer</span>(data), error);
 
@@ -1398,7 +1398,7 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
             <span class="pl-c"><span class="pl-c">//</span> 再写回客户端</span>
             <span class="pl-c1">boost::asio::write</span>(*sock, <span class="pl-c1">boost::asio::buffer</span>(received_message));
         }
-    } <span class="pl-k">catch</span> (<span class="pl-c1">exception</span> &amp;e) {
+    } <span class="pl-k">catch</span> (exception &amp;e) {
         std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Exception in thread: <span class="pl-pds">"</span></span> &lt;&lt; e.<span class="pl-c1">what</span>() &lt;&lt; std::endl;
     }
 }
@@ -1426,7 +1426,7 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
         <span class="pl-k">for</span> (<span class="pl-k">auto</span> &amp;t: thread_set) {
             t-&gt;<span class="pl-c1">join</span>();
         }
-    } <span class="pl-k">catch</span> (<span class="pl-c1">exception</span> &amp;e) {
+    } <span class="pl-k">catch</span> (exception &amp;e) {
         std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Exception in main thread: <span class="pl-pds">"</span></span> &lt;&lt; e.<span class="pl-c1">what</span>() &lt;&lt; std::endl;
     }
 
@@ -1600,7 +1600,7 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
     tcp::socket _socket;
     <span class="pl-c"><span class="pl-c">//</span> 保存数据</span>
 
-    <span class="pl-k">char</span> _data[MAX_LENGTH];
+    <span class="pl-k">char</span> _data[<span class="pl-c1">MAX_LENGTH</span>];
     <span class="pl-c"><span class="pl-c">//</span> 隶属于哪个 server</span>
     CServer *_server;
     <span class="pl-c"><span class="pl-c">//</span> uuid</span>
@@ -1625,14 +1625,14 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
     <span class="pl-k">friend</span> <span class="pl-k">class</span> <span class="pl-en">CSession</span>;
 
 <span class="pl-k">public:</span>
-    <span class="pl-en">MsgNode</span>(<span class="pl-k">const</span> <span class="pl-k">char</span> *msg, <span class="pl-k">short</span> max_len) : _total_len(max_len + HEAD_LENGTH), _cur_len(<span class="pl-c1">0</span>) {
+    <span class="pl-en">MsgNode</span>(<span class="pl-k">const</span> <span class="pl-k">char</span> *msg, <span class="pl-k">short</span> max_len) : _total_len(max_len + <span class="pl-c1">HEAD_LENGTH</span>), _cur_len(<span class="pl-c1">0</span>) {
         _data = <span class="pl-k">new</span> <span class="pl-k">char</span>[_total_len + <span class="pl-c1">1</span>];
         <span class="pl-c"><span class="pl-c">//</span> 包头字节序转换</span>
         <span class="pl-k">int</span> max_len_host = <span class="pl-c1">boost::asio::detail::socket_ops::host_to_network_short</span>(max_len);
         <span class="pl-c"><span class="pl-c">//</span> 记录长度</span>
-        <span class="pl-c1">memcpy</span>(_data, &amp;max_len_host, HEAD_LENGTH);
+        <span class="pl-c1">memcpy</span>(_data, &amp;max_len_host, <span class="pl-c1">HEAD_LENGTH</span>);
         <span class="pl-c"><span class="pl-c">//</span> 拷贝数据</span>
-        <span class="pl-c1">memcpy</span>(_data + HEAD_LENGTH, msg, max_len);
+        <span class="pl-c1">memcpy</span>(_data + <span class="pl-c1">HEAD_LENGTH</span>, msg, max_len);
         _data[_total_len] = <span class="pl-s"><span class="pl-pds">'</span><span class="pl-cce">\0</span><span class="pl-pds">'</span></span>;
     }
 
@@ -1668,11 +1668,11 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
 
 <span class="pl-en">CSession::CSession</span>(boost::asio::io_context &amp;ioc, CServer *server) : _socket(ioc), _server(server),
                                                                     _b_head_parse(<span class="pl-c1">false</span>) {
-    <span class="pl-c1">std::memset</span>(_data, <span class="pl-s"><span class="pl-pds">'</span><span class="pl-cce">\0</span><span class="pl-pds">'</span></span>, MAX_LENGTH);
+    <span class="pl-c1">std::memset</span>(_data, <span class="pl-s"><span class="pl-pds">'</span><span class="pl-cce">\0</span><span class="pl-pds">'</span></span>, <span class="pl-c1">MAX_LENGTH</span>);
     <span class="pl-c"><span class="pl-c">//</span> 生成 uuid</span>
     boost::uuids::uuid a_uuid = <span class="pl-c1">boost::uuids::random_generator</span>()();
     _uuid = <span class="pl-c1">boost::uuids::to_string</span>(a_uuid);
-    _recv_head_node = std::make_shared&lt;MsgNode&gt;(HEAD_LENGTH);
+    _recv_head_node = std::make_shared&lt;MsgNode&gt;(<span class="pl-c1">HEAD_LENGTH</span>);
 }
 
 <span class="pl-k">void</span> <span class="pl-en">CSession::start</span>() {
@@ -1681,7 +1681,7 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
 <span class="pl-c"><span class="pl-c">//</span>    _socket.async_read_some(boost::asio::buffer(_data, MAX_LENGTH),</span>
 <span class="pl-c"><span class="pl-c">//</span>                            std::bind(&amp;CSession::handle_read, this, std::placeholders::_1, std::placeholders::_2,</span>
 <span class="pl-c"><span class="pl-c">//</span>                                      shared_from_this()));</span>
-    <span class="pl-c1">boost::asio::async_read</span>(_socket, <span class="pl-c1">boost::asio::buffer</span>(_recv_head_node-&gt;<span class="pl-smi">_data</span>, HEAD_LENGTH),
+    <span class="pl-c1">boost::asio::async_read</span>(_socket, <span class="pl-c1">boost::asio::buffer</span>(_recv_head_node-&gt;<span class="pl-smi">_data</span>, <span class="pl-c1">HEAD_LENGTH</span>),
                             <span class="pl-c1">std::bind</span>(&amp;CSession::handle_read_head, <span class="pl-c1">this</span>, std::placeholders::_1, std::placeholders::_2,
                                       <span class="pl-c1">shared_from_this</span>()));
 }
@@ -1706,20 +1706,20 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
             <span class="pl-k">if</span> (!_b_head_parse) {
                 <span class="pl-c"><span class="pl-c">//</span> 头部结构还没处理完</span>
                 <span class="pl-c"><span class="pl-c">//</span> 收到的数据比头部结构小</span>
-                <span class="pl-k">if</span> (bytes_transferred &lt; HEAD_LENGTH) {
+                <span class="pl-k">if</span> (bytes_transferred &lt; <span class="pl-c1">HEAD_LENGTH</span>) {
                     <span class="pl-c"><span class="pl-c">//</span> 先接收这部分数据</span>
                     <span class="pl-c1">memcpy</span>(_recv_head_node-&gt;<span class="pl-smi">_data</span> + _recv_head_node-&gt;<span class="pl-smi">_cur_len</span>, _data + copy_len, bytes_transferred);
                     _recv_head_node-&gt;<span class="pl-smi">_cur_len</span> += bytes_transferred;
                     <span class="pl-c"><span class="pl-c">//</span> 清空 _data 缓冲区</span>
-                    <span class="pl-c1">memset</span>(_data, <span class="pl-c1">0</span>, MAX_LENGTH);
+                    <span class="pl-c1">memset</span>(_data, <span class="pl-c1">0</span>, <span class="pl-c1">MAX_LENGTH</span>);
                     <span class="pl-c"><span class="pl-c">//</span> 继续监听</span>
-                    _socket.<span class="pl-c1">async_read_some</span>(<span class="pl-c1">boost::asio::buffer</span>(_data, MAX_LENGTH),
+                    _socket.<span class="pl-c1">async_read_some</span>(<span class="pl-c1">boost::asio::buffer</span>(_data, <span class="pl-c1">MAX_LENGTH</span>),
                                             <span class="pl-c1">std::bind</span>(&amp;CSession::handle_read, <span class="pl-c1">this</span>, std::placeholders::_1,
                                                       std::placeholders::_2, self_shared));
                     <span class="pl-k">return</span>;
                 }
                 <span class="pl-c"><span class="pl-c">//</span> 收到的数据比头部结构大</span>
-                <span class="pl-k">int</span> head_remain = HEAD_LENGTH - _recv_head_node-&gt;<span class="pl-smi">_cur_len</span>;
+                <span class="pl-k">int</span> head_remain = <span class="pl-c1">HEAD_LENGTH</span> - _recv_head_node-&gt;<span class="pl-smi">_cur_len</span>;
                 <span class="pl-c"><span class="pl-c">//</span> 剩余的数据拷贝进去</span>
                 <span class="pl-c1">memcpy</span>(_recv_head_node-&gt;<span class="pl-smi">_data</span> + _recv_head_node-&gt;<span class="pl-smi">_cur_len</span>, _data + copy_len, head_remain);
                 _recv_head_node-&gt;<span class="pl-smi">_cur_len</span> += head_remain;
@@ -1727,12 +1727,12 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
                 bytes_transferred -= head_remain;
                 <span class="pl-c"><span class="pl-c">//</span> 获取头部存储的数据</span>
                 <span class="pl-k">short</span> data_len = <span class="pl-c1">0</span>;
-                <span class="pl-c1">memcpy</span>(&amp;data_len, _recv_head_node-&gt;<span class="pl-smi">_data</span>, HEAD_LENGTH);
+                <span class="pl-c1">memcpy</span>(&amp;data_len, _recv_head_node-&gt;<span class="pl-smi">_data</span>, <span class="pl-c1">HEAD_LENGTH</span>);
                 <span class="pl-c"><span class="pl-c">//</span> 网络字节序转换为本地字节序</span>
                 data_len = <span class="pl-c1">boost::asio::detail::socket_ops::network_to_host_short</span>(data_len);
 
                 std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Receive data length is <span class="pl-pds">"</span></span> &lt;&lt; data_len &lt;&lt; std::endl;
-                <span class="pl-k">if</span> (data_len &gt; MAX_LENGTH) {
+                <span class="pl-k">if</span> (data_len &gt; <span class="pl-c1">MAX_LENGTH</span>) {
                     std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>invalid data length is <span class="pl-pds">"</span></span> &lt;&lt; data_len &lt;&lt; std::endl;
                     <span class="pl-k">return</span>;
                 }
@@ -1743,9 +1743,9 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
                     <span class="pl-c1">memcpy</span>(_recv_msg_node-&gt;<span class="pl-smi">_data</span> + _recv_msg_node-&gt;<span class="pl-smi">_cur_len</span>, _data + copy_len, bytes_transferred);
                     _recv_msg_node-&gt;<span class="pl-smi">_cur_len</span> += bytes_transferred;
                     <span class="pl-c"><span class="pl-c">//</span> 重置 _data</span>
-                    <span class="pl-c1">memset</span>(_data, <span class="pl-c1">0</span>, MAX_LENGTH);
+                    <span class="pl-c1">memset</span>(_data, <span class="pl-c1">0</span>, <span class="pl-c1">MAX_LENGTH</span>);
                     <span class="pl-c"><span class="pl-c">//</span> 继续监听</span>
-                    _socket.<span class="pl-c1">async_read_some</span>(<span class="pl-c1">boost::asio::buffer</span>(_data, MAX_LENGTH),
+                    _socket.<span class="pl-c1">async_read_some</span>(<span class="pl-c1">boost::asio::buffer</span>(_data, <span class="pl-c1">MAX_LENGTH</span>),
                                             <span class="pl-c1">std::bind</span>(&amp;CSession::handle_read, <span class="pl-c1">this</span>, std::placeholders::_1,
                                                       std::placeholders::_2, self_shared));
                     <span class="pl-c"><span class="pl-c">//</span> 头部处理完毕</span>
@@ -1783,8 +1783,8 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
                 <span class="pl-c"><span class="pl-c">//</span> 如果小于等于0，其实只能等于</span>
                 <span class="pl-k">if</span> (bytes_transferred &lt;= <span class="pl-c1">0</span>) {
                     <span class="pl-c"><span class="pl-c">//</span> 需要继续监听</span>
-                    <span class="pl-c1">memset</span>(_data, <span class="pl-c1">0</span>, MAX_LENGTH);
-                    _socket.<span class="pl-c1">async_read_some</span>(<span class="pl-c1">boost::asio::buffer</span>(_data, MAX_LENGTH),
+                    <span class="pl-c1">memset</span>(_data, <span class="pl-c1">0</span>, <span class="pl-c1">MAX_LENGTH</span>);
+                    _socket.<span class="pl-c1">async_read_some</span>(<span class="pl-c1">boost::asio::buffer</span>(_data, <span class="pl-c1">MAX_LENGTH</span>),
                                             <span class="pl-c1">std::bind</span>(&amp;CSession::handle_read, <span class="pl-c1">this</span>, std::placeholders::_1,
                                                       std::placeholders::_2, self_shared));
                     <span class="pl-k">return</span>;
@@ -1799,8 +1799,8 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
                 <span class="pl-c"><span class="pl-c">//</span> 拷贝部分，继续监听</span>
                 <span class="pl-c1">memcpy</span>(_recv_msg_node-&gt;<span class="pl-smi">_data</span> + _recv_msg_node-&gt;<span class="pl-smi">_cur_len</span>, _data + copy_len, bytes_transferred);
                 _recv_msg_node-&gt;<span class="pl-smi">_cur_len</span> += bytes_transferred;
-                <span class="pl-c1">memset</span>(_data, <span class="pl-c1">0</span>, MAX_LENGTH);
-                _socket.<span class="pl-c1">async_read_some</span>(<span class="pl-c1">boost::asio::buffer</span>(_data, MAX_LENGTH),
+                <span class="pl-c1">memset</span>(_data, <span class="pl-c1">0</span>, <span class="pl-c1">MAX_LENGTH</span>);
+                _socket.<span class="pl-c1">async_read_some</span>(<span class="pl-c1">boost::asio::buffer</span>(_data, <span class="pl-c1">MAX_LENGTH</span>),
                                         <span class="pl-c1">std::bind</span>(&amp;CSession::handle_read, <span class="pl-c1">this</span>, std::placeholders::_1,
                                                   std::placeholders::_2, self_shared));
                 <span class="pl-k">return</span>;
@@ -1838,8 +1838,8 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
 
             <span class="pl-c"><span class="pl-c">//</span> 不剩下数据了</span>
             <span class="pl-k">if</span> (bytes_transferred &lt;= <span class="pl-c1">0</span>) {
-                <span class="pl-c1">memset</span>(_data, <span class="pl-c1">0</span>, MAX_LENGTH);
-                _socket.<span class="pl-c1">async_read_some</span>(<span class="pl-c1">boost::asio::buffer</span>(_data, MAX_LENGTH),
+                <span class="pl-c1">memset</span>(_data, <span class="pl-c1">0</span>, <span class="pl-c1">MAX_LENGTH</span>);
+                _socket.<span class="pl-c1">async_read_some</span>(<span class="pl-c1">boost::asio::buffer</span>(_data, <span class="pl-c1">MAX_LENGTH</span>),
                                         <span class="pl-c1">std::bind</span>(&amp;CSession::handle_read, <span class="pl-c1">this</span>, std::placeholders::_1,
                                                   std::placeholders::_2, self_shared));
                 <span class="pl-k">return</span>;
@@ -1847,7 +1847,7 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
             <span class="pl-c"><span class="pl-c">//</span> 继续循环即可</span>
             <span class="pl-k">continue</span>;
         }
-    } <span class="pl-k">catch</span> (std::<span class="pl-c1">exception</span> &amp;e) {
+    } <span class="pl-k">catch</span> (std::exception &amp;e) {
         std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Error occurred: <span class="pl-pds">"</span></span> &lt;&lt; e.<span class="pl-c1">what</span>() &lt;&lt; std::endl;
     }
 }
@@ -1874,7 +1874,7 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
             <span class="pl-c1">boost::asio::async_write</span>(_socket, <span class="pl-c1">boost::asio::buffer</span>(msgNode-&gt;<span class="pl-smi">_data</span>, msgNode-&gt;<span class="pl-smi">_total_len</span>),
                                      <span class="pl-c1">std::bind</span>(&amp;CSession::handle_write, <span class="pl-c1">this</span>, std::placeholders::_1, self_shared));
         }
-    } <span class="pl-k">catch</span> (std::<span class="pl-c1">exception</span> &amp;e) {
+    } <span class="pl-k">catch</span> (std::exception &amp;e) {
         std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Error occurred: <span class="pl-pds">"</span></span> &lt;&lt; e.<span class="pl-c1">what</span>() &lt;&lt; std::endl;
     }
 }
@@ -1885,8 +1885,8 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
     <span class="pl-c"><span class="pl-c">//</span> 上锁</span>
     std::lock_guard&lt;std::mutex&gt; <span class="pl-c1">lock</span>(_send_lock);
     <span class="pl-k">int</span> send_que_size = _send_que.<span class="pl-c1">size</span>();
-    <span class="pl-k">if</span> (send_que_size &gt; MAX_SENDQUE) {
-        std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>session: <span class="pl-pds">"</span></span> &lt;&lt; _uuid &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span> send que fulled, size is <span class="pl-pds">"</span></span> &lt;&lt; MAX_SENDQUE &lt;&lt; std::endl;
+    <span class="pl-k">if</span> (send_que_size &gt; <span class="pl-c1">MAX_SENDQUE</span>) {
+        std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>session: <span class="pl-pds">"</span></span> &lt;&lt; _uuid &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span> send que fulled, size is <span class="pl-pds">"</span></span> &lt;&lt; <span class="pl-c1">MAX_SENDQUE</span> &lt;&lt; std::endl;
         <span class="pl-k">return</span>;
     }
 
@@ -1920,8 +1920,8 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
     std::lock_guard&lt;std::mutex&gt; <span class="pl-c1">lock</span>(_send_lock);
 
     <span class="pl-k">int</span> send_que_size = _send_que.<span class="pl-c1">size</span>();
-    <span class="pl-k">if</span> (send_que_size &gt; MAX_SENDQUE) {
-        std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>session: <span class="pl-pds">"</span></span> &lt;&lt; _uuid &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span> send que fulled, size is <span class="pl-pds">"</span></span> &lt;&lt; MAX_SENDQUE &lt;&lt; std::endl;
+    <span class="pl-k">if</span> (send_que_size &gt; <span class="pl-c1">MAX_SENDQUE</span>) {
+        std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>session: <span class="pl-pds">"</span></span> &lt;&lt; _uuid &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span> send que fulled, size is <span class="pl-pds">"</span></span> &lt;&lt; <span class="pl-c1">MAX_SENDQUE</span> &lt;&lt; std::endl;
         <span class="pl-k">return</span>;
     }
     _send_que.<span class="pl-c1">push</span>(std::make_shared&lt;MsgNode&gt;(msg.<span class="pl-c1">c_str</span>(), msg.<span class="pl-c1">size</span>()));
@@ -1941,7 +1941,7 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
         _server-&gt;<span class="pl-c1">clear_session</span>(_uuid);
         <span class="pl-k">return</span>;
     }
-    <span class="pl-k">if</span> (bytes_transferred &lt; HEAD_LENGTH) {
+    <span class="pl-k">if</span> (bytes_transferred &lt; <span class="pl-c1">HEAD_LENGTH</span>) {
         std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Error occurred in read head: <span class="pl-pds">"</span></span> &lt;&lt; errorCode.<span class="pl-c1">message</span>() &lt;&lt; std::endl;
         <span class="pl-c"><span class="pl-c">//</span> 移除连接</span>
         _server-&gt;<span class="pl-c1">clear_session</span>(_uuid);
@@ -1949,10 +1949,10 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
     }
     <span class="pl-c"><span class="pl-c">//</span> 解析包头数据</span>
     <span class="pl-k">short</span> data_len = <span class="pl-c1">0</span>;
-    <span class="pl-c1">memcpy</span>(&amp;data_len, _recv_head_node-&gt;<span class="pl-smi">_data</span>, HEAD_LENGTH);
+    <span class="pl-c1">memcpy</span>(&amp;data_len, _recv_head_node-&gt;<span class="pl-smi">_data</span>, <span class="pl-c1">HEAD_LENGTH</span>);
     <span class="pl-c"><span class="pl-c">//</span> 字节序处理</span>
     data_len = <span class="pl-c1">boost::asio::detail::socket_ops::network_to_host_short</span>(data_len);
-    <span class="pl-k">if</span> (data_len &gt; MAX_LENGTH) {
+    <span class="pl-k">if</span> (data_len &gt; <span class="pl-c1">MAX_LENGTH</span>) {
         std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Invalid data length :<span class="pl-pds">"</span></span> &lt;&lt; data_len &lt;&lt; std::endl;
         _server-&gt;<span class="pl-c1">clear_session</span>(_uuid);
         <span class="pl-k">return</span>;
@@ -1983,7 +1983,7 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
     <span class="pl-c1">send</span>(_recv_msg_node-&gt;<span class="pl-smi">_data</span>, _recv_msg_node-&gt;<span class="pl-smi">_total_len</span>);
     <span class="pl-c"><span class="pl-c">//</span> 再次接收头部数据</span>
     _recv_head_node-&gt;<span class="pl-c1">clear</span>();
-    <span class="pl-c1">boost::asio::async_read</span>(_socket, <span class="pl-c1">boost::asio::buffer</span>(_recv_head_node-&gt;<span class="pl-smi">_data</span>, HEAD_LENGTH),
+    <span class="pl-c1">boost::asio::async_read</span>(_socket, <span class="pl-c1">boost::asio::buffer</span>(_recv_head_node-&gt;<span class="pl-smi">_data</span>, <span class="pl-c1">HEAD_LENGTH</span>),
                             <span class="pl-c1">std::bind</span>(&amp;CSession::handle_read_head, <span class="pl-c1">this</span>, std::placeholders::_1, std::placeholders::_2,
                                       <span class="pl-c1">shared_from_this</span>()));
 }</pre></div></div>
@@ -1993,7 +1993,7 @@ std::set&lt;std::shared_ptr&lt;std::thread&gt;&gt; thread_set;
 <div class="comments" id="comments"></div>
 
 </div>
-    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://proacane.github.io">Proacane的个人博客</a></div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://proacane.github.io">Proacane个人博客</a></div>
 <div id="footer2">
     <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
 </div>
@@ -2006,7 +2006,7 @@ if(""!=""){
     var startSite=new Date("");
     var diff=now.getTime()-startSite.getTime();
     var diffDay=Math.floor(diff/(1000*60*60*24));
-    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+    document.getElementById("runday").innerHTML="网站运行 "+diffDay+" 天"+" • ";
 }
 </script></div>
 </body>
@@ -2051,6 +2051,7 @@ document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
 function openComments(){
     cm=document.getElementById("comments");
     cmButton=document.getElementById("cmButton");
+    cmButton.disabled=true;
     cmButton.innerHTML="loading";
     span=document.createElement("span");
     span.setAttribute("class","AnimatedEllipsis");

@@ -373,7 +373,7 @@ t1=std::move(t3);                        <span class="pl-c"><span class="pl-c">/
         }
     }
 
-    [[nodiscard]] <span class="pl-k">bool</span> <span class="pl-en">joinAble</span>() <span class="pl-k">const</span> <span class="pl-k">noexcept</span> {
+    <span class="pl-k">[[nodiscard]]</span> <span class="pl-k">bool</span> <span class="pl-en">joinAble</span>() <span class="pl-k">const</span> <span class="pl-k">noexcept</span> {
         <span class="pl-k">return</span> _t.<span class="pl-c1">joinable</span>();
     }
 
@@ -389,7 +389,7 @@ t1=std::move(t3);                        <span class="pl-c"><span class="pl-c">/
         _t.<span class="pl-c1">swap</span>(other.<span class="pl-smi">_t</span>);
     }
 
-    [[nodiscard]] std::thread::id <span class="pl-en">getId</span>() <span class="pl-k">const</span> <span class="pl-k">noexcept</span> {
+    <span class="pl-k">[[nodiscard]]</span> std::thread::id <span class="pl-en">getId</span>() <span class="pl-k">const</span> <span class="pl-k">noexcept</span> {
         <span class="pl-k">return</span> _t.<span class="pl-c1">get_id</span>();
     }
 
@@ -397,14 +397,14 @@ t1=std::move(t3);                        <span class="pl-c"><span class="pl-c">/
         <span class="pl-k">return</span> _t;
     }
 
-    [[nodiscard]] <span class="pl-k">const</span> std::thread &amp;<span class="pl-en">asThread</span>() <span class="pl-k">const</span> <span class="pl-k">noexcept</span> {
+    <span class="pl-k">[[nodiscard]]</span> <span class="pl-k">const</span> std::thread &amp;<span class="pl-en">asThread</span>() <span class="pl-k">const</span> <span class="pl-k">noexcept</span> {
         <span class="pl-k">return</span> _t;
     }
 };</pre></div>
 <p>使用joining_thread：</p>
 <div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">void</span> <span class="pl-en">useJoiningThread</span>() {
     <span class="pl-c"><span class="pl-c">//</span> 调用模板构造函数</span>
-    joining_thread <span class="pl-c1">j1</span>([](<span class="pl-k">int</span> maxindex) {
+    joining_thread <span class="pl-smi">j1</span>([](<span class="pl-k">int</span> maxindex) {
         <span class="pl-k">for</span> (<span class="pl-k">int</span> i = <span class="pl-c1">0</span>; i &lt; maxindex; i++) {
             <span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">"</span> cur index is <span class="pl-pds">"</span></span> + <span class="pl-c1">std::to_string</span>(i));
             <span class="pl-c1">std::this_thread::sleep_for</span>(<span class="pl-c1">std::chrono::seconds</span>(<span class="pl-c1">1</span>));
@@ -426,7 +426,7 @@ t1=std::move(t3);                        <span class="pl-c"><span class="pl-c">/
     }, <span class="pl-c1">10</span>));
 
     <span class="pl-c"><span class="pl-c">//</span> 将j3赋给j1</span>
-    <span class="pl-c1">j1</span> = <span class="pl-c1">std::move</span>(j3);
+    j1 = <span class="pl-c1">std::move</span>(j3);
 }</pre></div>
 <h3>容器批量创建线程</h3>
 <p>容器要存储线程时，需要使用<code class="notranslate">emplace_back</code>方法，其参数可以直接传递构造函数需要的参数</p>
@@ -804,7 +804,7 @@ hierarchical_mutex <span class="pl-en">other_mutex</span>(<span class="pl-c1">60
             _this_thread_hierarchy_value = _hierarchy_value;
         }
     };
-<span class="pl-k">thread_local</span> <span class="pl-k">unsigned</span> <span class="pl-k">long</span> <span class="pl-en">hierarchical_mutex::_this_thread_hierarchy_value</span>(ULONG_MAX);</pre></div>
+<span class="pl-k">thread_local</span> <span class="pl-k">unsigned</span> <span class="pl-k">long</span> <span class="pl-en">hierarchical_mutex::_this_thread_hierarchy_value</span>(<span class="pl-c1">ULONG_MAX</span>);</pre></div>
 <p><code class="notranslate">thread_local</code>关键字表示每个变量都有自己独立的副本</p>
 <h2>unique_lock</h2>
 <p>unique_lock和lock_guard基本用法相同，构造时默认加锁，析构时默认解锁，但unique_lock可以手动解锁；比<code class="notranslate">std::lock_guard</code>占用更多空间，速度也要慢一些，需要注意的是，一旦由unique_lock进行管理，就不能调用mutex进行加锁解锁</p>
@@ -858,7 +858,7 @@ hierarchical_mutex <span class="pl-en">other_mutex</span>(<span class="pl-c1">60
 <div class="comments" id="comments"></div>
 
 </div>
-    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://proacane.github.io">Proacane的个人博客</a></div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://proacane.github.io">Proacane个人博客</a></div>
 <div id="footer2">
     <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
 </div>
@@ -871,7 +871,7 @@ if(""!=""){
     var startSite=new Date("");
     var diff=now.getTime()-startSite.getTime();
     var diffDay=Math.floor(diff/(1000*60*60*24));
-    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+    document.getElementById("runday").innerHTML="网站运行 "+diffDay+" 天"+" • ";
 }
 </script></div>
 </body>
@@ -916,6 +916,7 @@ document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
 function openComments(){
     cm=document.getElementById("comments");
     cmButton=document.getElementById("cmButton");
+    cmButton.disabled=true;
     cmButton.innerHTML="loading";
     span=document.createElement("span");
     span.setAttribute("class","AnimatedEllipsis");

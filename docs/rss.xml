@@ -1,191 +1,191 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Proacane的个人博客</title><link>https://proacane.github.io</link><description>学无止境</description><copyright>Proacane的个人博客</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true</url><title>avatar</title><link>https://proacane.github.io</link></image><lastBuildDate>Thu, 14 Nov 2024 02:08:05 +0000</lastBuildDate><managingEditor>Proacane的个人博客</managingEditor><ttl>60</ttl><webMaster>Proacane的个人博客</webMaster><item><title>Unity中应用C#</title><link>https://proacane.github.io/post/Unity-zhong-ying-yong-C%23.html</link><description># 介绍&#13;
-项目内容选自Unity官方Creator Kit - Beginner Code：https://assetstore.unity.com/packages/templates/tutorials/creator-kit-beginner-code-urp-151986&#13;
-&#13;
-Unity官方API文档：[Unity - Scripting API: MonoBehaviour](https://docs.unity3d.com/2022.3/Documentation/ScriptReference/MonoBehaviour.html)&#13;
-&#13;
-# 使用VS2022作为代码编辑器&#13;
-&#13;
-Edit-Preferences中的External Tools 中设置编辑器，先用VS，以后再试着用用Rider&#13;
-&#13;
-![image](https://github.com/user-attachments/assets/74dee040-eac4-48da-a04d-c037d17baac6)&#13;
-# 变量&#13;
-&#13;
-在unity中，创建脚本scrpit实际上就是自定义新的component类型，可以附加到游戏对象GameObject上；C#脚本中的变量也可以看作这个Component类型中的属性；设置为Public就会暴露在 inspector 中&#13;
-&#13;
-创建并使用变量：&#13;
-&#13;
-1. 新建一个 scene，命名为 MyScene，放入 Assets/Scenes 下&#13;
-2. 在新的 scene 中，新建一个 empty gameobject(空游戏对象)命名为 Player&#13;
-3. 为 Player 对象新增脚本组件，放入 Assets/Scripts 下，命名为 MainPlayer；在其中打印日志&#13;
-4. 将上一步生成的脚本作为Component应用到 Player 中；运行测试即可发现在控制台中打印的日志&#13;
-&#13;
-![image](https://github.com/user-attachments/assets/01662b53-afec-440a-a85a-5c4543a5f8fd)&#13;
-&#13;
-在 Assets/Creator Kit - Beginner Code/Scripts/Tutorial/SpawnerSample.cs 脚本文件中，添加新的变量 radius，用来设置存放距离，该脚本用来生成指定对象&#13;
-&#13;
-```c#&#13;
-using UnityEngine;&#13;
-using CreatorKitCode;&#13;
-&#13;
-public class SpawnerSample : MonoBehaviour&#13;
-{&#13;
-    public GameObject ObjectToSpawn;&#13;
-&#13;
-    // 距离&#13;
-    public short radius;&#13;
-    void Start()&#13;
-    {&#13;
-        int angle = 15;&#13;
-        // 生成物体的位置，初始值为当前物体的位置&#13;
-        Vector3 spawnPosition = transform.position;&#13;
-        // Quaternion.Euler方法是进行旋转，这里代表单位向量(1,0,0)绕y轴转15°&#13;
-        Vector3 direction = Quaternion.Euler(0, angle, 0) * Vector3.right;&#13;
-        &#13;
-        spawnPosition = transform.position + direction * radius;&#13;
-        // 生成物体&#13;
-        Instantiate(ObjectToSpawn, spawnPosition, Quaternion.identity);&#13;
-&#13;
-        angle = 55;&#13;
-        direction = Quaternion.Euler(0, angle, 0) * Vector3.right;&#13;
-        spawnPosition = transform.position + direction * radius;&#13;
-        Instantiate(ObjectToSpawn, spawnPosition, Quaternion.identity);&#13;
-&#13;
-        angle = 95;&#13;
-        direction = Quaternion.Euler(0, angle, 0) * Vector3.right;&#13;
-        spawnPosition = transform.position + direction * radius;&#13;
-        Instantiate(ObjectToSpawn, spawnPosition, Quaternion.identity);&#13;
-    }&#13;
-}&#13;
-```&#13;
-&#13;
-# 方法&#13;
-&#13;
-```c#&#13;
-public class SpawnerSample : MonoBehaviour&#13;
-{&#13;
-    public GameObject ObjectToSpawn;&#13;
-&#13;
-    // 距离&#13;
-    public short radius;&#13;
-    void Start()&#13;
-    {&#13;
-        int angle = 15;&#13;
-        for (; angle &lt; 360; angle +=30) {&#13;
-            GenNewObject(ref angle);&#13;
-        }&#13;
-    }&#13;
-&#13;
-    private void GenNewObject(ref int angle)&#13;
-    {&#13;
-        Vector3 direction = Quaternion.Euler(0, angle, 0) * Vector3.right;&#13;
-        Vector3 spawnPosition = transform.position + direction * radius;&#13;
-        Instantiate(ObjectToSpawn, spawnPosition, Quaternion.identity);&#13;
-    }&#13;
-}&#13;
-```&#13;
-&#13;
-# 类&#13;
-&#13;
-C#中，继承自 MonoBehaviour 的组件类，都会被自动实例化&#13;
-&#13;
-C#中自定义的类作为成员，需要在类上添加`[System.Serializable]`；类的属性要自动暴露在Unity的Inspector中，必须要Public权限；其它权限的属性需要添加`[UnityEngine.SerializeField]`&#13;
-&#13;
-```c#&#13;
-public class MainPlayer : MonoBehaviour&#13;
-{&#13;
-    public string myName;&#13;
-    // cat的属性会出现在Inspector中&#13;
-    public Cat cat;&#13;
-    // Start is called before the first frame update&#13;
-    void Start()&#13;
-    {&#13;
-        Debug.Log('My name is ' + myName);&#13;
-    }&#13;
-&#13;
-    // Update is called once per frame&#13;
-    void Update() &#13;
-    {&#13;
-        &#13;
-    }&#13;
-}&#13;
-&#13;
-[System.Serializable]&#13;
-public class Cat&#13;
-{&#13;
-    public string name;&#13;
-    public string age; &#13;
-}&#13;
-```&#13;
-&#13;
-# 封装与继承&#13;
-&#13;
-权限修饰符：&#13;
-&#13;
-- public：可在任何位置访问&#13;
-- internal：只能在同一项目中访问&#13;
-- protected：只有该类对象及其子类对象可以访问&#13;
-- protected internal：同一项目中该类及其子类可以访问&#13;
-- private：只有自己的类中可以访问&#13;
-&#13;
-默认权限：&#13;
-&#13;
-- 类、接口、结构体、枚举的默认权限是 internal；&#13;
-- 类中成员默认为 private&#13;
-- 接口成员默认 public&#13;
-- 命名空间、枚举类型成员默认 public&#13;
-&#13;
-在unity中，public 成员可以在 Inspector 中直接操作；其它需要加`[UnityEngine.SerializeField]`；子类中可以使用`base`关键字代表基类&#13;
-&#13;
-```c#&#13;
-//父类 Monster.cs&#13;
-using System;&#13;
-[Serializable]&#13;
-public class Monster&#13;
-{&#13;
-    // 名字&#13;
-    public string name;&#13;
-    // 年龄&#13;
-    public int age;&#13;
-    // 毛色&#13;
-    public string color;&#13;
-    // 生命&#13;
-    public int hp;&#13;
-&#13;
-    public Monster() { }&#13;
-    public Monster(string name, int age, string color, int hp)&#13;
-    {&#13;
-        this.name = name;&#13;
-        this.age = age;&#13;
-        this.color = color;&#13;
-        this.hp = hp;&#13;
-    }&#13;
-}&#13;
-&#13;
-// 派生类 Phoenix.cs&#13;
-using System;&#13;
-[Serializable]&#13;
-public class Phoenix:Monster&#13;
-{&#13;
-    private bool isReborn=false;&#13;
-&#13;
-    // 全参构造函数&#13;
-    public Phoenix(string name, int age, string color, int hp,bool isReborn) : base(name, age, color, hp)&#13;
-    {&#13;
-        this.isReborn = isReborn;&#13;
-    }&#13;
-    //无参空构造方法&#13;
-    public Phoenix()&#13;
-    {&#13;
-    }&#13;
-&#13;
-    void Reborn() {&#13;
-        this.hp = 1000;&#13;
-        this.isReborn = true;&#13;
-    }&#13;
-}&#13;
-```&#13;
-&#13;
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Proacane个人博客</title><link>https://proacane.github.io</link><description>学无止境</description><copyright>Proacane个人博客</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true</url><title>avatar</title><link>https://proacane.github.io</link></image><lastBuildDate>Tue, 29 Sep 2026 00:44:55 +0000</lastBuildDate><managingEditor>Proacane个人博客</managingEditor><ttl>60</ttl><webMaster>Proacane个人博客</webMaster><item><title>博客测试</title><link>https://proacane.github.io/post/bo-ke-ce-shi.html</link><description>###111。</description><guid isPermaLink="true">https://proacane.github.io/post/bo-ke-ce-shi.html</guid><pubDate>Tue, 29 Sep 2026 00:20:01 +0000</pubDate></item><item><title>Unity中应用C#</title><link>https://proacane.github.io/post/Unity-zhong-ying-yong-C%23.html</link><description># 介绍
+项目内容选自Unity官方Creator Kit - Beginner Code：https://assetstore.unity.com/packages/templates/tutorials/creator-kit-beginner-code-urp-151986
+
+Unity官方API文档：[Unity - Scripting API: MonoBehaviour](https://docs.unity3d.com/2022.3/Documentation/ScriptReference/MonoBehaviour.html)
+
+# 使用VS2022作为代码编辑器
+
+Edit-Preferences中的External Tools 中设置编辑器Duplicate of #
+
+![image](https://github.com/user-attachments/assets/74dee040-eac4-48da-a04d-c037d17baac6)
+# 变量
+
+在unity中，创建脚本scrpit实际上就是自定义新的component类型，可以附加到游戏对象GameObject上；C#脚本中的变量也可以看作这个Component类型中的属性；设置为Public就会暴露在 inspector 中
+
+创建并使用变量：
+
+1. 新建一个 scene，命名为 MyScene，放入 Assets/Scenes 下
+2. 在新的 scene 中，新建一个 empty gameobject(空游戏对象)命名为 Player
+3. 为 Player 对象新增脚本组件，放入 Assets/Scripts 下，命名为 MainPlayer；在其中打印日志
+4. 将上一步生成的脚本作为Component应用到 Player 中；运行测试即可发现在控制台中打印的日志
+
+![image](https://github.com/user-attachments/assets/01662b53-afec-440a-a85a-5c4543a5f8fd)
+
+在 Assets/Creator Kit - Beginner Code/Scripts/Tutorial/SpawnerSample.cs 脚本文件中，添加新的变量 radius，用来设置存放距离，该脚本用来生成指定对象
+
+```c#
+using UnityEngine;
+using CreatorKitCode;
+
+public class SpawnerSample : MonoBehaviour
+{
+    public GameObject ObjectToSpawn;
+
+    // 距离
+    public short radius;
+    void Start()
+    {
+        int angle = 15;
+        // 生成物体的位置，初始值为当前物体的位置
+        Vector3 spawnPosition = transform.position;
+        // Quaternion.Euler方法是进行旋转，这里代表单位向量(1,0,0)绕y轴转15°
+        Vector3 direction = Quaternion.Euler(0, angle, 0) * Vector3.right;
+        
+        spawnPosition = transform.position + direction * radius;
+        // 生成物体
+        Instantiate(ObjectToSpawn, spawnPosition, Quaternion.identity);
+
+        angle = 55;
+        direction = Quaternion.Euler(0, angle, 0) * Vector3.right;
+        spawnPosition = transform.position + direction * radius;
+        Instantiate(ObjectToSpawn, spawnPosition, Quaternion.identity);
+
+        angle = 95;
+        direction = Quaternion.Euler(0, angle, 0) * Vector3.right;
+        spawnPosition = transform.position + direction * radius;
+        Instantiate(ObjectToSpawn, spawnPosition, Quaternion.identity);
+    }
+}
+```
+
+# 方法
+
+```c#
+public class SpawnerSample : MonoBehaviour
+{
+    public GameObject ObjectToSpawn;
+
+    // 距离
+    public short radius;
+    void Start()
+    {
+        int angle = 15;
+        for (; angle &lt; 360; angle +=30) {
+            GenNewObject(ref angle);
+        }
+    }
+
+    private void GenNewObject(ref int angle)
+    {
+        Vector3 direction = Quaternion.Euler(0, angle, 0) * Vector3.right;
+        Vector3 spawnPosition = transform.position + direction * radius;
+        Instantiate(ObjectToSpawn, spawnPosition, Quaternion.identity);
+    }
+}
+```
+
+# 类
+
+C#中，继承自 MonoBehaviour 的组件类，都会被自动实例化
+
+C#中自定义的类作为成员，需要在类上添加`[System.Serializable]`；类的属性要自动暴露在Unity的Inspector中，必须要Public权限；其它权限的属性需要添加`[UnityEngine.SerializeField]`
+
+```c#
+public class MainPlayer : MonoBehaviour
+{
+    public string myName;
+    // cat的属性会出现在Inspector中
+    public Cat cat;
+    // Start is called before the first frame update
+    void Start()
+    {
+        Debug.Log('My name is ' + myName);
+    }
+
+    // Update is called once per frame
+    void Update() 
+    {
+        
+    }
+}
+
+[System.Serializable]
+public class Cat
+{
+    public string name;
+    public string age; 
+}
+```
+
+# 封装与继承
+
+权限修饰符：
+
+- public：可在任何位置访问
+- internal：只能在同一项目中访问
+- protected：只有该类对象及其子类对象可以访问
+- protected internal：同一项目中该类及其子类可以访问
+- private：只有自己的类中可以访问
+
+默认权限：
+
+- 类、接口、结构体、枚举的默认权限是 internal；
+- 类中成员默认为 private
+- 接口成员默认 public
+- 命名空间、枚举类型成员默认 public
+
+在unity中，public 成员可以在 Inspector 中直接操作；其它需要加`[UnityEngine.SerializeField]`；子类中可以使用`base`关键字代表基类
+
+```c#
+//父类 Monster.cs
+using System;
+[Serializable]
+public class Monster
+{
+    // 名字
+    public string name;
+    // 年龄
+    public int age;
+    // 毛色
+    public string color;
+    // 生命
+    public int hp;
+
+    public Monster() { }
+    public Monster(string name, int age, string color, int hp)
+    {
+        this.name = name;
+        this.age = age;
+        this.color = color;
+        this.hp = hp;
+    }
+}
+
+// 派生类 Phoenix.cs
+using System;
+[Serializable]
+public class Phoenix:Monster
+{
+    private bool isReborn=false;
+
+    // 全参构造函数
+    public Phoenix(string name, int age, string color, int hp,bool isReborn) : base(name, age, color, hp)
+    {
+        this.isReborn = isReborn;
+    }
+    //无参空构造方法
+    public Phoenix()
+    {
+    }
+
+    void Reborn() {
+        this.hp = 1000;
+        this.isReborn = true;
+    }
+}
+```
+
 。</description><guid isPermaLink="true">https://proacane.github.io/post/Unity-zhong-ying-yong-C%23.html</guid><pubDate>Thu, 14 Nov 2024 02:06:01 +0000</pubDate></item><item><title>C#语法学习</title><link>https://proacane.github.io/post/C%23-yu-fa-xue-xi.html</link><description># 简介&#13;
 记录一下C#基本语法的学习&#13;
 # HelloWorld&#13;
@@ -219,849 +219,7 @@ C#也是一种面向对象的编程语言。</description><guid isPermaLink="tru
 并发的两种方式：真正的并行与任务切换&#13;
 ![image](https://github.com/user-attachments/assets/11994029-b407-4a19-9374-de8ad04bc5de)&#13;
 ## 多进程并发&#13;
-将应用程序分为多个独立的进程同时运行；不同的进程可以通过信号、套接字等渠道进行通信，但是这种进程间的通信复杂，且速度慢。</description><guid isPermaLink="true">https://proacane.github.io/post/C%2B%2B-bing-fa-bian-cheng.html</guid><pubDate>Thu, 10 Oct 2024 05:55:51 +0000</pubDate></item><item><title>DS_3：字符串</title><link>https://proacane.github.io/post/DS_3%EF%BC%9A-zi-fu-chuan.html</link><description># 字符串&#13;
-由零个或多个字符组成的有限序列&#13;
-1. 子串：串中任意个连续的字符组成的子序列&#13;
-2. 主串：包含子串的串&#13;
-3. 字符在主串中的位置：字符在串中的序号&#13;
-4. 子串在主串中的位置：子串的第一个字符在主串中的位置&#13;
-基本操作：&#13;
-1. 赋值：assign(str*t,str*s)：t赋值为s&#13;
-2. 复制：copy(str*t,str*s)：s复制给t&#13;
-3. 判空&#13;
-4. 长度&#13;
-5. 清空&#13;
-6. 释放内存&#13;
-7. 拼接&#13;
-8. 子串：substr(str*s,int pos,int len)&#13;
-9. 定位：若主串S中存在与串T值相同的子串，则返回它在主串S中第一次出现的位置；否则函数值为0&#13;
-10. 比较大小&#13;
-实现依然是分为顺序存储和链式存储&#13;
-## 顺序存储实现&#13;
-顺序存储内部的 char 数组，可以使用静态数组，也可以使用动态分配，这里使用静态数组&#13;
-顺序存储有几种不同的实现方案:&#13;
-1. char数组从索引0开始存放字符，使用单独的变量存储字符串长度&#13;
-2. char数组索引0存储长度，后面存放字符&#13;
-3. 没有长度变量，以\0作为字符串结尾&#13;
-4. char数组索引0不使用，使用单独的变量存储字符串长度&#13;
-我采用的是：最后一位是'\0'，同时使用len变量&#13;
-```C&#13;
-#define MAX_LEN 10&#13;
-&#13;
-typedef struct {&#13;
-    char data[MAX_LEN];&#13;
-    int length;&#13;
-} string;&#13;
-&#13;
-void constructor(string *s) {&#13;
-    s-&gt;length = 0;&#13;
-    s-&gt;data[0] = '\0';&#13;
-}&#13;
-&#13;
-bool isEmpty(string *s) {&#13;
-    return s-&gt;length == 0;&#13;
-}&#13;
-&#13;
-// 赋值&#13;
-void assign(string *s, const char *t, int len) {&#13;
-    if (t[0] == '\0') {&#13;
-        return;&#13;
-    }&#13;
-    if (len &gt;= MAX_LEN ) {&#13;
-        len = MAX_LEN - 1;&#13;
-        printf('t is too long, use %d chars\n', len);&#13;
-    }&#13;
-    for (int i = 0; i &lt; len; i++) {&#13;
-        s-&gt;data[i] = t[i];&#13;
-    }&#13;
-    s-&gt;length = len;&#13;
-    s-&gt;data[len] = '\0';&#13;
-}&#13;
-&#13;
-void copy(string *s, string *t) {&#13;
-    memcpy(s-&gt;data, t-&gt;data, t-&gt;length);&#13;
-    s-&gt;length = t-&gt;length;&#13;
-    s-&gt;data[s-&gt;length] = '\0';&#13;
-}&#13;
-&#13;
-void clear(string *s) {&#13;
-    memset(s-&gt;data, '\0', s-&gt;length);&#13;
-    s-&gt;length = 0;&#13;
-}&#13;
-&#13;
-void destructor(string *s) {&#13;
-&#13;
-}&#13;
-&#13;
-bool concat(string *dest, string *s, string *t) {&#13;
-    if (s-&gt;length + t-&gt;length &gt; MAX_LEN) {&#13;
-        return false;&#13;
-    }&#13;
-    for (int i = 0; i &lt; s-&gt;length; i++) {&#13;
-        dest-&gt;data[i] = s-&gt;data[i];&#13;
-    }&#13;
-    for(int j = 0;j&lt; t-&gt;length;j++){&#13;
-        dest-&gt;data[j + s-&gt;length] = t-&gt;data[j];&#13;
-    }&#13;
-    dest-&gt;length = s-&gt;length + t-&gt;length;&#13;
-    dest-&gt;data[dest-&gt;length] = '\0';&#13;
-    return true;&#13;
-}&#13;
-&#13;
-bool substr(string *dest, string *s, int pos, int len) {&#13;
-    if (pos + len &gt; s-&gt;length) {&#13;
-        return false;&#13;
-    }&#13;
-&#13;
-    for (int i = pos; i &lt; pos + len; i++) {&#13;
-        dest-&gt;data[i - pos] = s-&gt;data[i];&#13;
-    }&#13;
-    dest-&gt;length = len;&#13;
-    dest-&gt;data[len] = '\0';&#13;
-    return true;&#13;
-}&#13;
-&#13;
-// s1&gt;s2 返回值大于0&#13;
-int compare(string*s1,string*s2){&#13;
-    for(int i = 0; i&lt; s1-&gt;length &amp;&amp; i &lt; s2-&gt;length;i++){&#13;
-        if(s1-&gt;data[i] != s2-&gt;data[i]){&#13;
-            return s1-&gt;data[i] - s2-&gt;data[i];&#13;
-        }&#13;
-    }&#13;
-    // 长度长的串大&#13;
-    return s1-&gt;length -s2-&gt;length;&#13;
-}&#13;
-// 返回t子串在 s 中第一次出现的位置&#13;
-int index(string*s,string* t){&#13;
-    int i = 0;&#13;
-    int n = s-&gt;length;&#13;
-    int m = t-&gt;length;&#13;
-    if(m &gt; n){&#13;
-        return -1;&#13;
-    }&#13;
-    // 截取子串&#13;
-    string sub;&#13;
-    constructor(&amp;sub);&#13;
-    while(i &lt;= n-m){&#13;
-        substr(&amp;sub,s,i,m);&#13;
-        // 相等直接返回&#13;
-        if(compare(&amp;sub,t) == 0){&#13;
-            return i;&#13;
-        }&#13;
-        i++;&#13;
-    }&#13;
-    return -1;&#13;
-}&#13;
-```&#13;
-## 链式存储实现&#13;
-链式存储的每个节点可以放1个或多个字符，这里存放4个字符&#13;
-```C&#13;
-#define MAX_CHARS 4&#13;
-typedef struct Node {&#13;
-    // 每个节点存放4个字符&#13;
-    char data[MAX_CHARS];&#13;
-    struct Node *next;&#13;
-} Node;&#13;
-typedef Node *string;&#13;
-&#13;
-void constructor(string *s) {&#13;
-    *s = (Node *) malloc(sizeof(Node));&#13;
-    if (*s == NULL) {&#13;
-        printf('Failed to allocate memory\n');&#13;
-        return;&#13;
-    }&#13;
-    (*s)-&gt;next = NULL;&#13;
-    for (int i = 0; i &lt; MAX_CHARS; ++i) {&#13;
-        (*s)-&gt;data[i] = '\0';&#13;
-    }&#13;
-}&#13;
-&#13;
-void destructor(string *s) {&#13;
-    Node *current = *s;&#13;
-    while (current != NULL) {&#13;
-        Node *temp = current;&#13;
-        current = current-&gt;next;&#13;
-        free(temp);&#13;
-    }&#13;
-    *s = NULL;&#13;
-}&#13;
-&#13;
-int size(string *s) {&#13;
-    Node *current = *s;&#13;
-    int totalLen = 0;&#13;
-    while (current != NULL) {&#13;
-        for (int i = 0; i &lt; MAX_CHARS; i++) {&#13;
-            if (current-&gt;data[i] == '\0') {&#13;
-                return totalLen;&#13;
-            }&#13;
-            totalLen++;&#13;
-        }&#13;
-        current = current-&gt;next;&#13;
-    }&#13;
-    return totalLen;&#13;
-}&#13;
-&#13;
-bool isEmpty(string *s) {&#13;
-    return (*s == NULL || (*s)-&gt;data[0] == '\0');&#13;
-}&#13;
-&#13;
-void assign(string *s, const char *t, int len) {&#13;
-    if (t[0] == '\0') {&#13;
-        return;&#13;
-    }&#13;
-    destructor(s);&#13;
-    constructor(s);&#13;
-    Node *current = *s;&#13;
-    for (int i = 0; i &lt; len; i++) {&#13;
-        if (i != 0 &amp;&amp; i % MAX_CHARS == 0) {&#13;
-            // 创建新节点&#13;
-            Node *newNode = (Node *) malloc(sizeof(Node));&#13;
-            if (newNode == NULL) {&#13;
-                printf('Failed to allocate memory\n');&#13;
-                return;&#13;
-            }&#13;
-            newNode-&gt;next = NULL;&#13;
-            for (int k = 0; k &lt; MAX_CHARS; ++k) {&#13;
-                newNode-&gt;data[k] = '\0';&#13;
-            }&#13;
-            current-&gt;next = newNode;&#13;
-            current = newNode;&#13;
-        }&#13;
-        current-&gt;data[i % MAX_CHARS] = t[i];&#13;
-    }&#13;
-}&#13;
-&#13;
-void printStr(string *s) {&#13;
-    Node *current = *s;&#13;
-    while (current != NULL) {&#13;
-        for (int i = 0; i &lt; MAX_CHARS; i++) {&#13;
-            if (current-&gt;data[i] != '\0') {&#13;
-                printf('%c', current-&gt;data[i]);&#13;
-            }&#13;
-        }&#13;
-        current = current-&gt;next;&#13;
-    }&#13;
-    printf('\n');&#13;
-}&#13;
-&#13;
-bool concat(string *dest, string *s, string *t) {&#13;
-    destructor(dest);&#13;
-    constructor(dest);&#13;
-    Node *current = *s;&#13;
-    Node *destCurrent = *dest;&#13;
-    int i = 0;&#13;
-    // s 拼到 dest&#13;
-    while (current != NULL) {&#13;
-        for (int j = 0; j &lt; MAX_CHARS; j++) {&#13;
-            if (current-&gt;data[j] == '\0') {&#13;
-                break;&#13;
-            }&#13;
-            destCurrent-&gt;data[i++] = current-&gt;data[j];&#13;
-            if (i == MAX_CHARS) {&#13;
-                // 创建新节点&#13;
-                Node *newNode = (Node *) malloc(sizeof(Node));&#13;
-                if (newNode == NULL) {&#13;
-                    printf('Failed to allocate memory\n');&#13;
-                    return false;&#13;
-                }&#13;
-                newNode-&gt;next = NULL;&#13;
-                for (int k = 0; k &lt; MAX_CHARS; ++k) {&#13;
-                    newNode-&gt;data[k] = '\0';&#13;
-                }&#13;
-                destCurrent-&gt;next = newNode;&#13;
-                destCurrent = newNode;&#13;
-                i = 0;&#13;
-            }&#13;
-        }&#13;
-        current = current-&gt;next;&#13;
-    }&#13;
-&#13;
-    // 拼接完了 s，从 dest当前节点的第 i位拼接 t&#13;
-    current = *t;&#13;
-    while (current != NULL) {&#13;
-        for (int j = 0; j &lt; MAX_CHARS; j++) {&#13;
-            if (current-&gt;data[j] == '\0') {&#13;
-                break;&#13;
-            }&#13;
-            destCurrent-&gt;data[i++] = current-&gt;data[j];&#13;
-            // dest的节点满了，创建新节点&#13;
-            if (i == MAX_CHARS) {&#13;
-                Node *newNode = (Node *) malloc(sizeof(Node));&#13;
-                if (newNode == NULL) {&#13;
-                    printf('Failed to allocate memory\n');&#13;
-                    return false;&#13;
-                }&#13;
-                newNode-&gt;next = NULL;&#13;
-                for (int k = 0; k &lt; MAX_CHARS; ++k) {&#13;
-                    newNode-&gt;data[k] = '\0';&#13;
-                }&#13;
-                destCurrent-&gt;next = newNode;&#13;
-                destCurrent = newNode;&#13;
-                i = 0;&#13;
-            }&#13;
-        }&#13;
-        current = current-&gt;next;&#13;
-    }&#13;
-    return true;&#13;
-}&#13;
-&#13;
-bool substr(string *dest, string *s, int pos, int len) {&#13;
-    destructor(dest);&#13;
-    constructor(dest);&#13;
-    int strLen = size(s);&#13;
-    if (pos + len &gt; strLen) {&#13;
-        return false;&#13;
-    }&#13;
-    // 从第几个节点开始截取&#13;
-    int i = pos / MAX_CHARS;&#13;
-    // 从节点的第几位开始截取&#13;
-    int j = pos % MAX_CHARS;&#13;
-    Node *current = *s;&#13;
-    // 移动到第 i 个节点&#13;
-    while (i &gt; 0 &amp;&amp; current != NULL) {&#13;
-        current = current-&gt;next;&#13;
-        i--;&#13;
-    }&#13;
-&#13;
-    if (current == NULL) {&#13;
-        return false; // 如果没有足够的节点&#13;
-    }&#13;
-&#13;
-    Node *destCurrent = *dest;&#13;
-    int destIndex = 0;&#13;
-&#13;
-    // 开始向 dest 中添加字符&#13;
-    for (int k = 0; k &lt; len; k++) {&#13;
-        // 截取完了一个节点&#13;
-        if (j == MAX_CHARS) {&#13;
-            current = current-&gt;next;&#13;
-            j = 0;&#13;
-        }&#13;
-        // dest的节点放满了&#13;
-        if (destIndex == MAX_CHARS) {&#13;
-            // 创建新节点&#13;
-            Node *newNode = (Node *) malloc(sizeof(Node));&#13;
-            if (newNode == NULL) {&#13;
-                printf('Failed to allocate memory\n');&#13;
-                return false;&#13;
-            }&#13;
-            newNode-&gt;next = NULL;&#13;
-            for (int l = 0; l &lt; MAX_CHARS; ++l) {&#13;
-                newNode-&gt;data[l] = '\0';&#13;
-            }&#13;
-            destCurrent-&gt;next = newNode;&#13;
-            destCurrent = newNode;&#13;
-            destIndex = 0;&#13;
-        }&#13;
-        destCurrent-&gt;data[destIndex++] = current-&gt;data[j++];&#13;
-    }&#13;
-    return true;&#13;
-}&#13;
-&#13;
-// s1&gt;s2 返回值大于0&#13;
-int compare(string *s1, string *s2) {&#13;
-    Node *current1 = *s1;&#13;
-    Node *current2 = *s2;&#13;
-    while (current1 != NULL &amp;&amp; current2 != NULL) {&#13;
-        for (int i = 0; i &lt; MAX_CHARS; i++) {&#13;
-            if (current1-&gt;data[i] == '\0' || current2-&gt;data[i] == '\0') {&#13;
-                return current1-&gt;data[i] - current2-&gt;data[i];&#13;
-            }&#13;
-&#13;
-            if (current1-&gt;data[i] != current2-&gt;data[i]) {&#13;
-                return current1-&gt;data[i] - current2-&gt;data[i];&#13;
-            }&#13;
-        }&#13;
-        current1 = current1-&gt;next;&#13;
-        current2 = current2-&gt;next;&#13;
-    }&#13;
-    return size(s1) - size(s2);&#13;
-}&#13;
-&#13;
-int indexOfString(string *s, string *t) {&#13;
-    int sSize = size(s);&#13;
-    int tSize = size(t);&#13;
-    if (tSize &gt; sSize) {&#13;
-        return -1;&#13;
-    }&#13;
-&#13;
-    string sub = NULL;&#13;
-    int i = 0;&#13;
-    while (i &lt;= sSize - tSize) {&#13;
-        if (!substr(&amp;sub, s, i, tSize)) {&#13;
-            destructor(&amp;sub);&#13;
-            return -1;&#13;
-        };&#13;
-        if (compare(&amp;sub, t) == 0) {&#13;
-            destructor(&amp;sub);&#13;
-            return i;&#13;
-        }&#13;
-        i++;&#13;
-    }&#13;
-    destructor(&amp;sub);&#13;
-    return -1;&#13;
-}&#13;
-```&#13;
-初始化的时候可能初始化为NULL比较好，这里就不作更改了。</description><guid isPermaLink="true">https://proacane.github.io/post/DS_3%EF%BC%9A-zi-fu-chuan.html</guid><pubDate>Sat, 28 Sep 2024 07:27:52 +0000</pubDate></item><item><title>OS_1：进程管理</title><link>https://proacane.github.io/post/OS_1%EF%BC%9A-jin-cheng-guan-li.html</link><description># 进程的概念、组成、特征&#13;
-## 概念&#13;
-进程可以理解为程序的一次执行，同一个程序可以创建多个进程&#13;
-## 组成&#13;
-当进程被创建时，操作系统会为该进程分配一个唯一的PID（Process ID，进程ID），操作系统还会记录给进程分配的资源情况、运行状况等，这些信息都被保存在一个数据结构PCB中，也叫进程控制块&#13;
-![image](https://github.com/user-attachments/assets/568e1105-9df3-4f30-af4a-54a0885708b6)&#13;
-而进程的组成，则如下图：&#13;
-![image](https://github.com/user-attachments/assets/195c850a-cbcb-4398-9a1c-77ae05880fef)&#13;
-其中，PCB由操作系统使用，程序段和数据段由进程使用&#13;
-## 特征&#13;
-1. 动态性：进程是程序的一次执行过程，是动态地产生、变化和消亡的&#13;
-2. 并发性：内存中有多个进程实体，各进程可并发执行&#13;
-3. 独立性：进程是能独立运行、独立获得资源、独立接收调度的基本单位&#13;
-4. 异步性：各进程按各自的速度推进，操作系统提供**进程同步机制**来解决异步问题&#13;
-5. 结构性：每个进程都会配置一个PCB，结构上由三段组成（如上图）&#13;
-# 进程的组织&#13;
-因为操作系统中会存在很多进程，所以需要使用适当的方式将多个进程的PCB进行组织管理&#13;
-## 链接方式&#13;
-按照进程状态将PCB分为多个队列，操作系统持有指向各个队列的指针&#13;
-![image](https://github.com/user-attachments/assets/583f94a8-0fb0-4df4-8960-78e4651ba05b)&#13;
-## 索引方式&#13;
-根据进程状态的不同，建立几张索引表，操作系统持有指向各个索引表的指针&#13;
-![image](https://github.com/user-attachments/assets/615a052b-8780-418c-9dcf-2e7ba81e1e6d)&#13;
-# 进程的状态与转换&#13;
-进程的状态有：&#13;
-1. 运行状态&#13;
-2. 就绪状态&#13;
-3. 阻塞状态&#13;
-4. 创建状态&#13;
-5. 终止状态&#13;
-其中，运行、就绪、阻塞是三种最基本的状态&#13;
-状态之间的转换:&#13;
-1. 就绪态-&gt;运行态&#13;
-2. 运行态-&gt;就绪态&#13;
-3. 运行态-&gt;阻塞态&#13;
-4. 阻塞态-&gt;就绪态&#13;
-## 创建态、就绪态&#13;
-进程正在被创建时，它的状态是“创建态”，在这个阶段操作系统会为进程分配资源、初始化PCB；当进程创建完成后，便进入“就绪态”，处于就绪态的进程已经具备运行条件，等待cpu的执行&#13;
-## 运行态&#13;
-cpu正在运行的进程&#13;
-## 阻塞态&#13;
-在进程运行的过程中，可能会请求等待某个事件的发生（如等待某种系统资源的分配，或者等待其他进程的响应）。</description><guid isPermaLink="true">https://proacane.github.io/post/OS_1%EF%BC%9A-jin-cheng-guan-li.html</guid><pubDate>Fri, 27 Sep 2024 07:37:03 +0000</pubDate></item><item><title>DS_2：队列</title><link>https://proacane.github.io/post/DS_2%EF%BC%9A-dui-lie.html</link><description># 队列&#13;
-只允许一端进入，另一端删除的线性表&#13;
-基本操作：&#13;
-1. 初始化&#13;
-2. 释放内存&#13;
-3. 入队&#13;
-4. 出队&#13;
-5. 获取队头元素&#13;
-6. 判空&#13;
-## 顺序存储实现队列&#13;
-内部使用连续内存的数组，采用循环队列的格式&#13;
-```C&#13;
-#define MAX_SIZE 10&#13;
-#define Type int&#13;
-typedef struct {&#13;
-    Type data[MAX_SIZE];&#13;
-    // 队头指针&#13;
-    int front;&#13;
-    // 队尾指针&#13;
-    int rear;&#13;
-    // 添加 size，来维护队列的长度，用于判断队列是否已满&#13;
-    int size;&#13;
-} Queue;&#13;
-&#13;
-void constructor(Queue *q) {&#13;
-    q-&gt;front = 0;&#13;
-    q-&gt;rear = 0;&#13;
-}&#13;
-&#13;
-bool isEmpty(Queue *q) {&#13;
-    return q-&gt;front == q-&gt;rear;&#13;
-}&#13;
-&#13;
-bool isFull(Queue *q) {&#13;
-    return (q-&gt;rear + 1) % MAX_SIZE == q-&gt;front;&#13;
-}&#13;
-&#13;
-void push(Queue *q, Type e) {&#13;
-    // 如果队列已满则不能添加&#13;
-    if (isFull(q)) {&#13;
-        printf('Queue is full');&#13;
-        return;&#13;
-    }&#13;
-    q-&gt;data[q-&gt;rear] = e;&#13;
-    q-&gt;rear = (q-&gt;rear + 1) % MAX_SIZE;&#13;
-}&#13;
-&#13;
-Type pop(Queue*q){&#13;
-    if(isEmpty(q)){&#13;
-        return -1;&#13;
-    }&#13;
-    Type t = q-&gt;data[q-&gt;front];&#13;
-    q-&gt;front = (q-&gt;front+1)%MAX_SIZE;&#13;
-    return t;&#13;
-}&#13;
-```&#13;
-&#13;
-&gt; 在判断队列是否已满，或是否空的时候，可以采用不同的方式，一种就是上面代码所用的方式，也可以添加 size 成员，记录当前队列的有效元素数量，通过 size == MAX_SIZE 和 size == 0 来判断队列状态；&#13;
-&gt; 另一种有效的方式是添加 tag 标记，0和1分别表示上次成功的操作为出队和入队，当 front == rear &amp;&amp; tag == 0，就代表队列空了， front == rear &amp;&amp; tag == 1就代表队列已满&#13;
-## 链式队列&#13;
-链式存储依然分为有头结点和无头结点两种方式，链式存储没有判空、判满的必要&#13;
-无头结点：&#13;
-```C&#13;
-#include &lt;stdio.h&gt;&#13;
-#include &lt;malloc.h&gt;&#13;
-#include &lt;stdbool.h&gt;&#13;
-&#13;
-#define Type int&#13;
-&#13;
-typedef struct Node {&#13;
-    struct Node *next;&#13;
-    Type data;&#13;
-} Node;&#13;
-typedef struct {&#13;
-    Node *front;&#13;
-    Node *rear;&#13;
-} Queue;&#13;
-&#13;
-void constructor(Queue *q) {&#13;
-    (*q).front = NULL;&#13;
-    (*q).rear = NULL;&#13;
-}&#13;
-&#13;
-bool isEmpty(Queue *q) {&#13;
-    return q-&gt;front == NULL;&#13;
-}&#13;
-&#13;
-void destructor(Queue *q) {&#13;
-    Node *p = (*q).front;&#13;
-    while (p != NULL) {&#13;
-        Node *temp = p;&#13;
-        p = p-&gt;next;&#13;
-        free(temp);&#13;
-    }&#13;
-    (*q).front = NULL;&#13;
-    (*q).rear = NULL;  // 确保队列的 rear 也设置为 NULL&#13;
-}&#13;
-&#13;
-void push(Queue *q, Type e) {&#13;
-    if (q == NULL) {&#13;
-        printf('Queue is not initialized\n');&#13;
-        return;&#13;
-    }&#13;
-    // 插入到队尾&#13;
-    Node *newNode = (Node *) malloc(sizeof(Node));&#13;
-    if (newNode == NULL) {&#13;
-        printf('Can't allocate memory');&#13;
-        return;&#13;
-    }&#13;
-    newNode-&gt;next = NULL;&#13;
-    newNode-&gt;data = e;&#13;
-    // 如果没有结点&#13;
-    if (q-&gt;front == NULL) {&#13;
-        q-&gt;front = newNode;&#13;
-        q-&gt;rear = newNode;&#13;
-        printf('Inserted %d as the first element\n', e);&#13;
-    } else {&#13;
-        q-&gt;rear-&gt;next = newNode;&#13;
-        q-&gt;rear = newNode;&#13;
-        printf('Inserted %d at the rear of the queue\n', e);&#13;
-    }&#13;
-}&#13;
-&#13;
-Type pop(Queue *q) {&#13;
-    if (isEmpty(q)) {&#13;
-        printf('Queue is empty, can't pop\n');&#13;
-        return -1;&#13;
-    }&#13;
-    Node *popNode = q-&gt;front;&#13;
-    q-&gt;front = q-&gt;front-&gt;next;&#13;
-    Type v = popNode-&gt;data;&#13;
-    if (q-&gt;front == NULL) {&#13;
-        q-&gt;rear = NULL;&#13;
-        printf('Queue is now empty after popping %d\n', v);&#13;
-    } else {&#13;
-        printf('Popped %d from the queue\n', v);&#13;
-    }&#13;
-    free(popNode);&#13;
-    return v;&#13;
-}&#13;
-```&#13;
-带头结点:&#13;
-```C&#13;
-#define Type int&#13;
-&#13;
-typedef struct Node {&#13;
-    struct Node *next;&#13;
-    Type data;&#13;
-} Node;&#13;
-&#13;
-typedef struct {&#13;
-    Node *front;&#13;
-    Node *rear;&#13;
-} Queue;&#13;
-&#13;
-void constructor(Queue *q) {&#13;
-    // 创建头结点&#13;
-    q-&gt;front = q-&gt;rear = (Node *) malloc(sizeof(Node));&#13;
-    q-&gt;front-&gt;next = NULL;&#13;
-}&#13;
-&#13;
-void destructor(Queue *q) {&#13;
-    Node *p = q-&gt;front;&#13;
-    while (p != NULL) {&#13;
-        Node *temp = p;&#13;
-        p = p-&gt;next;&#13;
-        free(temp);&#13;
-    }&#13;
-    (*q).front = NULL;&#13;
-    (*q).rear = NULL;  // 确保队列的 rear 也设置为 NULL&#13;
-}&#13;
-&#13;
-bool isEmpty(Queue *q) {&#13;
-    return q-&gt;front == q-&gt;rear;&#13;
-}&#13;
-&#13;
-void push(Queue *q, Type e) {&#13;
-//    printf('Pushing element: %d\n', e);  // 日志记录&#13;
-    Node *newNode = (Node *) malloc(sizeof(Node));&#13;
-    if (newNode == NULL) {&#13;
-        printf('Can't allocate memory');&#13;
-        return;&#13;
-    }&#13;
-    newNode-&gt;next = NULL;&#13;
-    newNode-&gt;data = e;&#13;
-    q-&gt;rear-&gt;next = newNode;&#13;
-    q-&gt;rear = newNode;&#13;
-    printf('Element pushed: %d\n', e);  // 日志记录&#13;
-}&#13;
-&#13;
-Type pop(Queue*q){&#13;
-    if(isEmpty(q)){&#13;
-        printf('Queue is empty, cannot pop.\n');  // 日志记录&#13;
-        return -1;&#13;
-    }&#13;
-    Node* popNode = q-&gt;front-&gt;next;&#13;
-    Type v = popNode-&gt;data;&#13;
-//    printf('Popping element: %d\n', v);  // 日志记录&#13;
-    q-&gt;front-&gt;next = popNode-&gt;next;&#13;
-    // 如果只有一个结点&#13;
-    if(q-&gt;rear == popNode){&#13;
-        q-&gt;rear = q-&gt;front;&#13;
-    }&#13;
-    free(popNode);&#13;
-    printf('Element popped: %d\n', v);  // 日志记录&#13;
-    return v;&#13;
-}&#13;
-```。</description><guid isPermaLink="true">https://proacane.github.io/post/DS_2%EF%BC%9A-dui-lie.html</guid><pubDate>Fri, 27 Sep 2024 06:47:33 +0000</pubDate></item><item><title>操作系统概述</title><link>https://proacane.github.io/post/cao-zuo-xi-tong-gai-shu.html</link><description># 操作系统的概念&#13;
-操作系统（Operating System， OS）是指控制和**管理**整个计算机系统的**硬件和软件**资源，并合理地组织调度计算机的工作和资源的分配；以**提供给用户和其他软件方便的接口和环境**；它是计算机系统中**最基本的系统软件**&#13;
-# 特征&#13;
-操作系统的4个特征：&#13;
-1. 并发&#13;
-2. 共享&#13;
-3. 虚拟&#13;
-4. 异步&#13;
-其中，并发、共享是操作系统最基本的特征，并且二者相互依存&#13;
-## 并发&#13;
-并发是指两个或多个事件在同一时间间隔内发生，在宏观看来是同时发生的，但是微观上是交替运行的；&#13;
-操作系统的并发指的是可以同时存在多个运行的程序&#13;
-并行：指多个事件在同一时刻同时发生&#13;
-单核 cpu 同一时刻只能运行一个进程，只能并发&#13;
-多核 cpu 同一时刻可以运行多个进程，既存在并发、也存在并行&#13;
-## 共享&#13;
-共享：指系统中的资源可以被多个并发执行的进程使用&#13;
-互斥共享：系统中的某些资源，虽然可以提供给多个进程使用，但一个时间段内只允许一个进程访问该资源，例如摄像头等资源&#13;
-同时共享：系统中的某些资源，允许一个时间段内由多个进程“同时”对它们进行访问，例如磁盘的读写&#13;
-从共享的定义就可以看出来，若操作系统没有并发性，共享就没有意义；没有共享性，并发也没有意义&#13;
-## 虚拟&#13;
-虚拟是指把一个物理上的实体变为若干个逻辑上的对应物。</description><guid isPermaLink="true">https://proacane.github.io/post/cao-zuo-xi-tong-gai-shu.html</guid><pubDate>Thu, 26 Sep 2024 07:22:55 +0000</pubDate></item><item><title>DS_2：栈</title><link>https://proacane.github.io/post/DS_2%EF%BC%9A-zhan.html</link><description># 栈&#13;
-定义：只允许在一端进行操作（插入、删除）的线性表&#13;
-基本操作：&#13;
-1. 初始化栈&#13;
-2. 释放内存&#13;
-3. 进栈&#13;
-4. 出栈&#13;
-5. 获取栈顶元素&#13;
-6. 判空&#13;
-## 顺序栈&#13;
-实现:静态数组中存放栈元素&#13;
-```C&#13;
-#define Type int&#13;
-#define MAX_SIZE 10&#13;
-typedef struct Stack {&#13;
-    // 存放栈元素&#13;
-    Type data[MAX_SIZE];&#13;
-    // 栈顶指针&#13;
-    int top;&#13;
-} Stack;&#13;
-&#13;
-void initStack(Stack *s) {&#13;
-    // 栈为空&#13;
-    s-&gt;top = -1;&#13;
-}&#13;
-&#13;
-void destructorStack(Stack *s) {&#13;
-    s-&gt;top = -1;&#13;
-}&#13;
-&#13;
-bool isEmpty(Stack *s) {&#13;
-    return s-&gt;top == -1;&#13;
-}&#13;
-&#13;
-bool push(Stack *s, Type e) {&#13;
-    if (s-&gt;top == MAX_SIZE - 1) {&#13;
-        printf('Stack is full');&#13;
-        return false;&#13;
-    }&#13;
-    s-&gt;data[++s-&gt;top] = e;&#13;
-    return true;&#13;
-}&#13;
-&#13;
-bool pop(Stack *s) {&#13;
-    if (isEmpty(s)) {&#13;
-        printf('Stack is empty');&#13;
-        return false;&#13;
-    }&#13;
-    s-&gt;top--;&#13;
-    return true;&#13;
-}&#13;
-&#13;
-Type front(Stack*s){&#13;
-    if (isEmpty(s)) {&#13;
-        printf('Stack is empty');&#13;
-        return false;&#13;
-    }&#13;
-    return s-&gt;data[s-&gt;top];&#13;
-}&#13;
-```&#13;
-也可以将top初始化为0，这样top指向的就是下一个入栈的位置&#13;
-## 共享栈&#13;
-就是在顺序栈的基础上，再添加一个top标记，将一整片数组空间分为两个栈使用，top0是从数组的索引0向上，top1从数组的最大索引向下；相交的时候就是满了&#13;
-&#13;
-## 链式栈&#13;
-每个元素就是一个链表结点，实现栈的功能就行，也是分为带头结点和不带头结点&#13;
-不带头结点:&#13;
-```C&#13;
-#define Type int&#13;
-typedef struct Node {&#13;
-    Type data;&#13;
-    struct Node *next;&#13;
-} Node;&#13;
-typedef Node *stack;&#13;
-&#13;
-void initStack(stack *s) {&#13;
-    (*s) = NULL;&#13;
-}&#13;
-&#13;
-void destructor(stack *s) {&#13;
-    Node *p = *s;&#13;
-    while (p != NULL) {&#13;
-        Node *temp = p;&#13;
-        p = p-&gt;next;&#13;
-        free(temp);&#13;
-    }&#13;
-    (*s) = NULL;&#13;
-}&#13;
-&#13;
-bool push(stack *s, Type e) {&#13;
-    Node *p = *s;&#13;
-    Node *newNode = (Node *) malloc(sizeof(Node));&#13;
-    if (newNode == NULL) {&#13;
-        printf('Failed to allocate memory');&#13;
-        return false;&#13;
-    }&#13;
-    newNode-&gt;data = e;&#13;
-    newNode-&gt;next = p;&#13;
-    *s = newNode;&#13;
-    return true;&#13;
-}&#13;
-&#13;
-bool pop(stack *s) {&#13;
-    if (*s == NULL) {&#13;
-        printf('Stack is empty\n');&#13;
-        return false;&#13;
-    }&#13;
-    Node *p = *s;&#13;
-    (*s) = (*s)-&gt;next;&#13;
-    free(p);&#13;
-    return true;&#13;
-}&#13;
-&#13;
-Type front(stack *s) {&#13;
-    if (*s == NULL) {&#13;
-        printf('Stack is empty\n');&#13;
-        return -1;&#13;
-    }&#13;
-    return (*s)-&gt;data;&#13;
-}&#13;
-```&#13;
-带头结点：&#13;
-```C&#13;
-#define Type int&#13;
-typedef struct Node {&#13;
-    Type data;&#13;
-    struct Node *next;&#13;
-} Node;&#13;
-typedef Node *stack;&#13;
-&#13;
-void constructor(stack *s) {&#13;
-    // 分配头结点&#13;
-    (*s) = (Node *) malloc(sizeof(Node));&#13;
-    if (*s == NULL) {&#13;
-        printf('Failed to allocate memory');&#13;
-        return;&#13;
-    }&#13;
-    (*s)-&gt;data = -1;&#13;
-    (*s)-&gt;next = NULL;&#13;
-}&#13;
-&#13;
-void destructor(stack *s) {&#13;
-    if (*s == NULL) {&#13;
-        return;&#13;
-    }&#13;
-    Node *p = *s;&#13;
-    while (p != NULL) {&#13;
-        Node *temp = p;&#13;
-        p = p-&gt;next;&#13;
-        free(temp);&#13;
-    }&#13;
-    (*s) = NULL;&#13;
-}&#13;
-&#13;
-bool push(stack *s, Type e) {&#13;
-    if (*s == NULL) {&#13;
-        printf('stack is not initialized');&#13;
-        return false;&#13;
-    }&#13;
-    Node *newNode = (Node *) malloc(sizeof(Node));&#13;
-    if (newNode == NULL) {&#13;
-        printf('Failed to allocate memory');&#13;
-        return false;&#13;
-    }&#13;
-    newNode-&gt;data = e;&#13;
-    newNode-&gt;next = (*s)-&gt;next;&#13;
-    (*s)-&gt;next = newNode;&#13;
-    return true;&#13;
-}&#13;
-&#13;
-bool pop(stack *s) {&#13;
-    if ((*s) == NULL || (*s)-&gt;next == NULL) {&#13;
-        printf('Stack is empty\n');&#13;
-        return false;&#13;
-    }&#13;
-    Node *p = (*s)-&gt;next;&#13;
-    (*s)-&gt;next = p-&gt;next;&#13;
-    free(p);&#13;
-    return true;&#13;
-}&#13;
-&#13;
-Type front(stack *s) {&#13;
-    if ((*s) == NULL || (*s)-&gt;next == NULL) {&#13;
-        printf('Stack is empty\n');&#13;
-        return -1;&#13;
-    }&#13;
-    return (*s)-&gt;next-&gt;data;&#13;
-}&#13;
-```&#13;
-代码地址：https://github.com/proacane/DataStructure。</description><guid isPermaLink="true">https://proacane.github.io/post/DS_2%EF%BC%9A-zhan.html</guid><pubDate>Thu, 26 Sep 2024 06:31:05 +0000</pubDate></item><item><title>DS_1：线性表</title><link>https://proacane.github.io/post/DS_1%EF%BC%9A-xian-xing-biao.html</link><description># 线性表&#13;
-线性表是具有相同数据类型的n（n≥0）个数据元素的**有限序列**，其中n为表长，当n = 0时线性表是一个空表。</description><guid isPermaLink="true">https://proacane.github.io/post/DS_1%EF%BC%9A-xian-xing-biao.html</guid><pubDate>Mon, 23 Sep 2024 08:20:56 +0000</pubDate></item><item><title>Asio协程</title><link>https://proacane.github.io/post/Asio-xie-cheng.html</link><description># 协程&#13;
+将应用程序分为多个独立的进程同时运行；不同的进程可以通过信号、套接字等渠道进行通信，但是这种进程间的通信复杂，且速度慢。</description><guid isPermaLink="true">https://proacane.github.io/post/C%2B%2B-bing-fa-bian-cheng.html</guid><pubDate>Thu, 10 Oct 2024 05:55:51 +0000</pubDate></item><item><title>Asio协程</title><link>https://proacane.github.io/post/Asio-xie-cheng.html</link><description># 协程&#13;
 协程，英文Coroutines，是一种基于线程之上，但又比线程更加轻量级的存在，这种由程序员自己写程序来管理的轻量级线程叫做『用户空间线程』，具有对内核来说不可见的特性。</description><guid isPermaLink="true">https://proacane.github.io/post/Asio-xie-cheng.html</guid><pubDate>Mon, 23 Sep 2024 06:04:56 +0000</pubDate></item><item><title>Grpc</title><link>https://proacane.github.io/post/Grpc.html</link><description># 下载&#13;
 &#13;
 vcpkg install grpc&#13;

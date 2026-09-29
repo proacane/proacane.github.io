@@ -5,7 +5,7 @@ Unity官方API文档：[Unity - Scripting API: MonoBehaviour](https://docs.unity
 
 # 使用VS2022作为代码编辑器
 
-Edit-Preferences中的External Tools 中设置编辑器，先用VS，以后再试着用用Rider
+Edit-Preferences中的External Tools 中设置编辑器Duplicate of #
 
 ![image](https://github.com/user-attachments/assets/74dee040-eac4-48da-a04d-c037d17baac6)
 # 变量

@@ -274,7 +274,7 @@ CSession 中增加 strand 成员变量：</p>
 <p>strand 的初始化：</p>
 <div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-en">_strand</span>(io_context.get_executor())</pre></div>
 <p>绑定：</p>
-<div class="highlight highlight-source-c++"><pre class="notranslate">_socket.async_read_some(boost::asio::buffer(_data, MAX_LENGTH),
+<div class="highlight highlight-source-c++"><pre class="notranslate">_socket.async_read_some(boost::asio::buffer(_data, <span class="pl-c1">MAX_LENGTH</span>),
         <span class="pl-en">boost::asio::bind_executor</span>(_strand, std::bind(&amp;CSession::HandleRead, <span class="pl-c1">this</span>,
             std::placeholders::_1, std::placeholders::_2, SharedSelf())));</pre></div>
 <h2>main 函数修改</h2>
@@ -292,7 +292,7 @@ std::condition_variable cond_quit;
 
         boost::asio::io_context ioc;
         <span class="pl-c"><span class="pl-c">//</span> 这两个信号注册到 ioc 中</span>
-        boost::asio::signal_set <span class="pl-smi">signals</span>(ioc,SIGINT,SIGTERM);
+        boost::asio::signal_set <span class="pl-smi">signals</span>(ioc,<span class="pl-c1">SIGINT</span>,<span class="pl-c1">SIGTERM</span>);
         <span class="pl-c"><span class="pl-c">//</span> 异步等待信号被触发</span>
         signals.<span class="pl-c1">async_wait</span>([&amp;ioc,&amp;pool](<span class="pl-k">auto</span>,<span class="pl-k">auto</span>){
             <span class="pl-c"><span class="pl-c">//</span> 收到了就停止服务器</span>
@@ -311,7 +311,7 @@ std::condition_variable cond_quit;
             }
 
         }
-    } <span class="pl-k">catch</span> (std::<span class="pl-c1">exception</span> &amp;e) {
+    } <span class="pl-k">catch</span> (std::exception &amp;e) {
         std::cerr &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>Unknown error occurred: <span class="pl-pds">"</span></span> &lt;&lt; e.<span class="pl-c1">what</span>() &lt;&lt; std::endl;
     }
     <span class="pl-k">return</span> <span class="pl-c1">0</span>;
@@ -323,7 +323,7 @@ std::condition_variable cond_quit;
 <div class="comments" id="comments"></div>
 
 </div>
-    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://proacane.github.io">Proacane的个人博客</a></div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://proacane.github.io">Proacane个人博客</a></div>
 <div id="footer2">
     <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
 </div>
@@ -336,7 +336,7 @@ if(""!=""){
     var startSite=new Date("");
     var diff=now.getTime()-startSite.getTime();
     var diffDay=Math.floor(diff/(1000*60*60*24));
-    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+    document.getElementById("runday").innerHTML="网站运行 "+diffDay+" 天"+" • ";
 }
 </script></div>
 </body>
@@ -381,6 +381,7 @@ document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
 function openComments(){
     cm=document.getElementById("comments");
     cmButton=document.getElementById("cmButton");
+    cmButton.disabled=true;
     cmButton.innerHTML="loading";
     span=document.createElement("span");
     span.setAttribute("class","AnimatedEllipsis");

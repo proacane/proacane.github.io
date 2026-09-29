@@ -11,12 +11,12 @@
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
 <meta name="description" content="学无止境">
-<meta property="og:title" content="Proacane的个人博客">
+<meta property="og:title" content="Proacane个人博客">
 <meta property="og:description" content="学无止境">
 <meta property="og:type" content="blog">
 <meta property="og:url" content="https://proacane.github.io">
 <meta property="og:image" content="https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true">
-<title>Proacane的个人博客</title>
+<title>Proacane个人博客</title>
 
 </head>
 <style>
@@ -29,7 +29,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <style>
 .avatar {transition: 0.8s;width:64px;height:64px;object-fit: cover;}
 .avatar:hover{transform: scale(1.15) rotate(360deg);}
-#header h1 a{color:inherit;text-decoration:none;vertical-align: bottom;font-size:40px;font-family:Monaco;margin-left:8px;}
+.title-left a{color:inherit;text-decoration:none;vertical-align: bottom;font-size:40px;font-weight: bold;font-family:Monaco;margin-left:8px;}
 .title-right{display:flex;margin:auto 0 0 auto;}
 .title-right button{margin-right:8px;padding:16px;}
 .title-right .circle{padding: 14px 16px;}
@@ -55,8 +55,8 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 
 <body>
     <div id="header">
-<h1>
-    <img src="https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true" class="avatar circle" id="avatarImg" alt="avatar"><a class="blogTitle">Proacane的个人博客</a></h1>
+<div class="title-left">
+    <img src="https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true" class="avatar circle" id="avatarImg" alt="avatar"><a class="blogTitle">Proacane个人博客</a></div>
 <div class="title-right">
     <a href="https://proacane.github.io/tag.html" id="buttonSearch" class="btn btn-invisible circle" title="搜索">
         <svg class="octicon" width="16" height="16" >
@@ -80,9 +80,20 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     <div id="content">
 <div style="margin-bottom: 16px;">学无止境</div>
 <nav class="SideNav border">
-<a class="SideNav-item d-flex flex-items-center flex-justify-between" href="post/Unity-zhong-ying-yong-C%23.html">
+<a class="SideNav-item d-flex flex-items-center flex-justify-between" href="post/bo-ke-ce-shi.html">
     <div class="d-flex flex-items-center">
-        <svg class="SideNav-icon octicon" style="witdh:16px;height:16px"><path class="svgTop0" d=""></path>
+        <svg class="SideNav-icon octicon" style="width:16px;height:16px"><path class="svgTop0" d=""></path>
+        </svg>
+        <span class="listTitle">博客测试</span>
+    </div>
+    <div class="listLabels">
+        
+        <span class="Label LabelName" style="background-color:#6ea9a6"><object><a style="color:#fff" href="tag.html#Python">Python</a></object></span>
+        <span class="Label LabelTime" style="background-color:#1f883d">2026-09-29</span>
+    </div>
+</a><a class="SideNav-item d-flex flex-items-center flex-justify-between" href="post/Unity-zhong-ying-yong-C%23.html">
+    <div class="d-flex flex-items-center">
+        <svg class="SideNav-icon octicon" style="width:16px;height:16px"><path class="svgTop0" d=""></path>
         </svg>
         <span class="listTitle">Unity中应用C#</span>
     </div>
@@ -93,7 +104,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     </div>
 </a><a class="SideNav-item d-flex flex-items-center flex-justify-between" href="post/C%23-yu-fa-xue-xi.html">
     <div class="d-flex flex-items-center">
-        <svg class="SideNav-icon octicon" style="witdh:16px;height:16px"><path class="svgTop0" d=""></path>
+        <svg class="SideNav-icon octicon" style="width:16px;height:16px"><path class="svgTop0" d=""></path>
         </svg>
         <span class="listTitle">C#语法学习</span>
     </div>
@@ -104,7 +115,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     </div>
 </a><a class="SideNav-item d-flex flex-items-center flex-justify-between" href="post/C%2B%2B-bing-fa-bian-cheng.html">
     <div class="d-flex flex-items-center">
-        <svg class="SideNav-icon octicon" style="witdh:16px;height:16px"><path class="svgTop0" d=""></path>
+        <svg class="SideNav-icon octicon" style="width:16px;height:16px"><path class="svgTop0" d=""></path>
         </svg>
         <span class="listTitle">C++并发编程</span>
     </div>
@@ -113,75 +124,9 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
         <span class="Label LabelName" style="background-color:#89D2DF"><object><a style="color:#fff" href="tag.html#C++">C++</a></object></span><span class="Label LabelName" style="background-color:#e99695"><object><a style="color:#fff" href="tag.html#并发">并发</a></object></span>
         <span class="Label LabelTime" style="background-color:#bc4c00">2024-10-10</span>
     </div>
-</a><a class="SideNav-item d-flex flex-items-center flex-justify-between" href="post/DS_3%EF%BC%9A-zi-fu-chuan.html">
-    <div class="d-flex flex-items-center">
-        <svg class="SideNav-icon octicon" style="witdh:16px;height:16px"><path class="svgTop0" d=""></path>
-        </svg>
-        <span class="listTitle">DS_3：字符串</span>
-    </div>
-    <div class="listLabels">
-        
-        <span class="Label LabelName" style="background-color:#fbca04"><object><a style="color:#fff" href="tag.html#数据结构">数据结构</a></object></span><span class="Label LabelName" style="background-color:#006b75"><object><a style="color:#fff" href="tag.html#C语言">C语言</a></object></span>
-        <span class="Label LabelTime" style="background-color:#bc4c00">2024-09-28</span>
-    </div>
-</a><a class="SideNav-item d-flex flex-items-center flex-justify-between" href="post/OS_1%EF%BC%9A-jin-cheng-guan-li.html">
-    <div class="d-flex flex-items-center">
-        <svg class="SideNav-icon octicon" style="witdh:16px;height:16px"><path class="svgTop0" d=""></path>
-        </svg>
-        <span class="listTitle">OS_1：进程管理</span>
-    </div>
-    <div class="listLabels">
-        
-        <span class="Label LabelName" style="background-color:#f9d0c4"><object><a style="color:#fff" href="tag.html#操作系统">操作系统</a></object></span>
-        <span class="Label LabelTime" style="background-color:#bc4c00">2024-09-27</span>
-    </div>
-</a><a class="SideNav-item d-flex flex-items-center flex-justify-between" href="post/DS_2%EF%BC%9A-dui-lie.html">
-    <div class="d-flex flex-items-center">
-        <svg class="SideNav-icon octicon" style="witdh:16px;height:16px"><path class="svgTop0" d=""></path>
-        </svg>
-        <span class="listTitle">DS_2：队列</span>
-    </div>
-    <div class="listLabels">
-        
-        <span class="Label LabelName" style="background-color:#fbca04"><object><a style="color:#fff" href="tag.html#数据结构">数据结构</a></object></span><span class="Label LabelName" style="background-color:#006b75"><object><a style="color:#fff" href="tag.html#C语言">C语言</a></object></span>
-        <span class="Label LabelTime" style="background-color:#bc4c00">2024-09-27</span>
-    </div>
-</a><a class="SideNav-item d-flex flex-items-center flex-justify-between" href="post/cao-zuo-xi-tong-gai-shu.html">
-    <div class="d-flex flex-items-center">
-        <svg class="SideNav-icon octicon" style="witdh:16px;height:16px"><path class="svgTop0" d=""></path>
-        </svg>
-        <span class="listTitle">操作系统概述</span>
-    </div>
-    <div class="listLabels">
-        
-        <span class="Label LabelName" style="background-color:#f9d0c4"><object><a style="color:#fff" href="tag.html#操作系统">操作系统</a></object></span>
-        <span class="Label LabelTime" style="background-color:#bc4c00">2024-09-26</span>
-    </div>
-</a><a class="SideNav-item d-flex flex-items-center flex-justify-between" href="post/DS_2%EF%BC%9A-zhan.html">
-    <div class="d-flex flex-items-center">
-        <svg class="SideNav-icon octicon" style="witdh:16px;height:16px"><path class="svgTop0" d=""></path>
-        </svg>
-        <span class="listTitle">DS_2：栈</span>
-    </div>
-    <div class="listLabels">
-        
-        <span class="Label LabelName" style="background-color:#fbca04"><object><a style="color:#fff" href="tag.html#数据结构">数据结构</a></object></span><span class="Label LabelName" style="background-color:#006b75"><object><a style="color:#fff" href="tag.html#C语言">C语言</a></object></span>
-        <span class="Label LabelTime" style="background-color:#bc4c00">2024-09-26</span>
-    </div>
-</a><a class="SideNav-item d-flex flex-items-center flex-justify-between" href="post/DS_1%EF%BC%9A-xian-xing-biao.html">
-    <div class="d-flex flex-items-center">
-        <svg class="SideNav-icon octicon" style="witdh:16px;height:16px"><path class="svgTop0" d=""></path>
-        </svg>
-        <span class="listTitle">DS_1：线性表</span>
-    </div>
-    <div class="listLabels">
-        
-        <span class="Label LabelName" style="background-color:#fbca04"><object><a style="color:#fff" href="tag.html#数据结构">数据结构</a></object></span><span class="Label LabelName" style="background-color:#006b75"><object><a style="color:#fff" href="tag.html#C语言">C语言</a></object></span>
-        <span class="Label LabelTime" style="background-color:#bc4c00">2024-09-23</span>
-    </div>
 </a><a class="SideNav-item d-flex flex-items-center flex-justify-between" href="post/Asio-xie-cheng.html">
     <div class="d-flex flex-items-center">
-        <svg class="SideNav-icon octicon" style="witdh:16px;height:16px"><path class="svgTop0" d=""></path>
+        <svg class="SideNav-icon octicon" style="width:16px;height:16px"><path class="svgTop0" d=""></path>
         </svg>
         <span class="listTitle">Asio协程</span>
     </div>
@@ -192,7 +137,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     </div>
 </a><a class="SideNav-item d-flex flex-items-center flex-justify-between" href="post/Grpc.html">
     <div class="d-flex flex-items-center">
-        <svg class="SideNav-icon octicon" style="witdh:16px;height:16px"><path class="svgTop0" d=""></path>
+        <svg class="SideNav-icon octicon" style="width:16px;height:16px"><path class="svgTop0" d=""></path>
         </svg>
         <span class="listTitle">Grpc</span>
     </div>
@@ -203,7 +148,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     </div>
 </a><a class="SideNav-item d-flex flex-items-center flex-justify-between" href="post/Beast-shi-xian-websocket-fu-wu-qi.html">
     <div class="d-flex flex-items-center">
-        <svg class="SideNav-icon octicon" style="witdh:16px;height:16px"><path class="svgTop0" d=""></path>
+        <svg class="SideNav-icon octicon" style="width:16px;height:16px"><path class="svgTop0" d=""></path>
         </svg>
         <span class="listTitle">Beast实现websocket服务器</span>
     </div>
@@ -214,7 +159,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     </div>
 </a><a class="SideNav-item d-flex flex-items-center flex-justify-between" href="post/Asio-shi-xian-Http-fu-wu-qi.html">
     <div class="d-flex flex-items-center">
-        <svg class="SideNav-icon octicon" style="witdh:16px;height:16px"><path class="svgTop0" d=""></path>
+        <svg class="SideNav-icon octicon" style="width:16px;height:16px"><path class="svgTop0" d=""></path>
         </svg>
         <span class="listTitle">Asio实现Http服务器</span>
     </div>
@@ -225,7 +170,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     </div>
 </a><a class="SideNav-item d-flex flex-items-center flex-justify-between" href="post/duo-xian-cheng-Asio.html">
     <div class="d-flex flex-items-center">
-        <svg class="SideNav-icon octicon" style="witdh:16px;height:16px"><path class="svgTop0" d=""></path>
+        <svg class="SideNav-icon octicon" style="width:16px;height:16px"><path class="svgTop0" d=""></path>
         </svg>
         <span class="listTitle">多线程Asio</span>
     </div>
@@ -236,7 +181,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     </div>
 </a><a class="SideNav-item d-flex flex-items-center flex-justify-between" href="post/Asio-wang-luo-ku-zhai-yao.html">
     <div class="d-flex flex-items-center">
-        <svg class="SideNav-icon octicon" style="witdh:16px;height:16px"><path class="svgTop0" d=""></path>
+        <svg class="SideNav-icon octicon" style="width:16px;height:16px"><path class="svgTop0" d=""></path>
         </svg>
         <span class="listTitle">Asio网络库摘要</span>
     </div>
@@ -248,7 +193,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </a>
 </nav>
 </div>
-    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://proacane.github.io">Proacane的个人博客</a></div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://proacane.github.io">Proacane个人博客</a></div>
 <div id="footer2">
     <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
 </div>
@@ -261,7 +206,7 @@ if(""!=""){
     var startSite=new Date("");
     var diff=now.getTime()-startSite.getTime();
     var diffDay=Math.floor(diff/(1000*60*60*24));
-    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+    document.getElementById("runday").innerHTML="网站运行 "+diffDay+" 天"+" • ";
 }
 </script></div>
 </body>
