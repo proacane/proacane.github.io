@@ -6,7 +6,11 @@ on:
     types: [opened, edited]
   schedule:
     - cron: "0 16 * * *"
-    
+  push:
+    branches:
+      - main
+    paths:
+      - config.json
 jobs:
   build:
     name: Generate blog
