@@ -103,8 +103,18 @@ PEAS 的价值在于提醒我们：设计智能体时要同时想清楚任务目
 ### Agent Loop：感知—思考—行动—观察
 
 文档把智能体的运行过程描述为持续循环：
-
-<img width="1044" height="187" alt="Image" src="https://github.com/user-attachments/assets/b9296ce1-9e8f-4c2a-a6e0-cfdfdbfdec86" />
+~~~mermaid
+flowchart LR
+    A[感知：接收用户请求或环境反馈] --> B[思考：理解目标、规划下一步]
+    B --> C[工具选择：确定工具和参数]
+    C --> D[行动：调用工具或服务]
+    D --> E[环境产生结果]
+    E --> F[观察：整理并记录结果]
+    F --> A
+    B --> G{任务已完成？}
+    G -->|是| H[生成最终答复]
+    G -->|否| C
+~~~
 
 其中：
 

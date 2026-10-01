@@ -249,7 +249,16 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p>因此，<strong>智能体不能只在任务开始时做一次判断。它需要利用每步行动带回的反馈更新对环境的理解。</strong></p>
 <h3>Agent Loop：感知—思考—行动—观察</h3>
 <p>文档把智能体的运行过程描述为持续循环：</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/b9296ce1-9e8f-4c2a-a6e0-cfdfdbfdec86"><img width="1044" height="187" alt="Image" src="https://github.com/user-attachments/assets/b9296ce1-9e8f-4c2a-a6e0-cfdfdbfdec86" style="max-width: 100%; height: auto; max-height: 187px;; aspect-ratio: 1044 / 187; background-color: var(--bgColor-muted); border-radius: 6px" class="js-gh-image-fallback"></a></p>
+<div class="highlight highlight-source-mermaid"><pre class="notranslate"><span class="pl-k">flowchart</span> <span class="pl-c1">LR</span>
+    <span class="pl-ent">A</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>感知：接收用户请求或环境反馈<span class="pl-pds"><span class="pl-sg">]</span></span></span> <span class="pl-k">--&gt;</span> <span class="pl-ent">B</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>思考：理解目标、规划下一步<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">B</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">C</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>工具选择：确定工具和参数<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">C</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">D</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>行动：调用工具或服务<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">D</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">E</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>环境产生结果<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">E</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">F</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>观察：整理并记录结果<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">F</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">A</span>
+    <span class="pl-ent">B</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">G</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">{</span></span>任务已完成？<span class="pl-pds"><span class="pl-sg">}</span></span></span>
+    <span class="pl-ent">G</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">是</span><span class="pl-k">|</span> <span class="pl-ent">H</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>生成最终答复<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">G</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">否</span><span class="pl-k">|</span> <span class="pl-ent">C</span></pre></div>
 <p>其中：</p>
 <ul>
 <li><strong>Perception（感知）</strong>：接收用户请求，或接收上一步工具调用的返回结果。</li>
@@ -933,6 +942,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 </script>
-<script src='https://blog.meekdai.com/Gmeek/plugins/GmeekTOC.js'></script><script src='https://blog.meekdai.com/Gmeek/plugins/lightbox.js'></script>
+<script src='https://blog.meekdai.com/Gmeek/plugins/GmeekTOC.js'></script><script src='https://blog.meekdai.com/Gmeek/plugins/lightbox.js'></script><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs'; mermaid.initialize({startOnLoad:false}); document.querySelectorAll('pre').forEach(pre=>{const code=pre.querySelector('code');const highlighted=pre.parentElement&&pre.parentElement.className.includes('mermaid');if(pre.getAttribute('lang')==='mermaid'||(code&&code.classList.contains('language-mermaid'))||highlighted){pre.classList.add('mermaid');if(code)pre.textContent=code.textContent;}}); mermaid.run();</script>
 
 </html>
