@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="<html>
+<body>
+<!--StartFragment--><!DOCTYPE html><h1 cid='n0' mdtype='heading' class='md-end-block md-heading md-focus' style='box-sizing: border-box; white-space: pre-wrap; break-after: avoid-page; break-inside: avoid; orphans: 4; font-size: 2.5rem; margin: 2em 0px 1.5rem; font-family: &quot;Lucida Grande&quot;, Corbel, sans-serif; font-weight: normal; clear: both; overflow-wrap: break-word; padding: 0px; color: rgb(222, 222, 222); line-height: 2.75rem; letter-spacing: -1.5px; position: relative; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;'><span md-inline='plain' class='md-plain md-expand' style='box-sizing: border-box;'>第一章：初识智能体（1.1—1.3 学习总结）</span></h1><blockquote cid='n2' mdtype='blockquote' style='box-sizing: border-box; margin: 35px 0px 1.875rem 1.875rem; border-left: 2px solid rgb(71, 77, 84); padding-left: 30px; color: rgb(157, 162, 166); font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, &quot;Segoe UI Emoji&quot;, &quot;SF Pro&quot;, sans-serif; font-size: 16px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;'><p cid='n3' mdtype='paragraph' class='md-end-block md-p' style='box-sizing: border-box; line-height: inherit; orphans: 4; margin-top: 0px; margin-bottom: 1.5rem; overflow-wrap: break-word; white-space: pre-wrap; position: relative;'><span md-inline='plain' class='md-plain' style='box-sizing: border-box;'>本文整理《从零开始构建智能体》第一章 1.1—1.3 的关键内容，并结合 1.3 的智能旅行助手示例解释各个组件如何配合。">
+<meta property="og:title" content="HelloAgents项目笔记">
+<meta property="og:description" content="<html>
+<body>
+<!--StartFragment--><!DOCTYPE html><h1 cid='n0' mdtype='heading' class='md-end-block md-heading md-focus' style='box-sizing: border-box; white-space: pre-wrap; break-after: avoid-page; break-inside: avoid; orphans: 4; font-size: 2.5rem; margin: 2em 0px 1.5rem; font-family: &quot;Lucida Grande&quot;, Corbel, sans-serif; font-weight: normal; clear: both; overflow-wrap: break-word; padding: 0px; color: rgb(222, 222, 222); line-height: 2.75rem; letter-spacing: -1.5px; position: relative; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;'><span md-inline='plain' class='md-plain md-expand' style='box-sizing: border-box;'>第一章：初识智能体（1.1—1.3 学习总结）</span></h1><blockquote cid='n2' mdtype='blockquote' style='box-sizing: border-box; margin: 35px 0px 1.875rem 1.875rem; border-left: 2px solid rgb(71, 77, 84); padding-left: 30px; color: rgb(157, 162, 166); font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, &quot;Segoe UI Emoji&quot;, &quot;SF Pro&quot;, sans-serif; font-size: 16px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;'><p cid='n3' mdtype='paragraph' class='md-end-block md-p' style='box-sizing: border-box; line-height: inherit; orphans: 4; margin-top: 0px; margin-bottom: 1.5rem; overflow-wrap: break-word; white-space: pre-wrap; position: relative;'><span md-inline='plain' class='md-plain' style='box-sizing: border-box;'>本文整理《从零开始构建智能体》第一章 1.1—1.3 的关键内容，并结合 1.3 的智能旅行助手示例解释各个组件如何配合。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://proacane.github.io/post/HelloAgents-xiang-mu-bi-ji.html">
+<meta property="og:image" content="https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true">
+<title>HelloAgents项目笔记</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">HelloAgents项目笔记</h1>
+<div class="title-right">
+    <a href="https://proacane.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/proacane/proacane.github.io/issues/20" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody">
+
+<h1><span>第一章：初识智能体（1.1—1.3 学习总结）</span></h1><blockquote><p><span>本文整理《从零开始构建智能体》第一章 1.1—1.3 的关键内容，并结合 1.3 的智能旅行助手示例解释各个组件如何配合。重点是建立整体心智模型，理解智能体如何感知、决策、调用工具并利用反馈推进任务。</span></p><p><span>参考：</span><span><a href="https://datawhalechina.github.io/hello-agents/#/./chapter1/%E7%AC%AC%E4%B8%80%E7%AB%A0%20%E5%88%9D%E8%AF%86%E6%99%BA%E8%83%BD%E4%BD%93" rel="nofollow"><span>第一章在线文档</span></a></span><span> · </span><span><a href="https://github.com/datawhalechina/hello-agents/blob/main/docs/chapter1/%E7%AC%AC%E4%B8%80%E7%AB%A0%20%E5%88%9D%E8%AF%86%E6%99%BA%E8%83%BD%E4%BD%93.md"><span>仓库中的章节源码</span></a></span></p></blockquote><h2><span>1.1 什么是智能体</span></h2><h3><span>定义：感知环境，并为目标采取行动</span></h3><p><span>智能体（Agent）是能够通过传感器获取环境信息，并通过执行器采取行动，以实现某个目标的实体。可以把它概括成四个要素：</span></p>
+要素 | 含义 | 旅行助手示例
+-- | -- | --
+环境 | 智能体所处的外部世界 | 用户、天气服务、景点信息
+传感器 | 获取环境信息的渠道 | 用户输入、天气 API、搜索 API
+执行器 | 对外部环境采取行动的方式 | 发起 API 请求、调用搜索工具、向用户回复
+目标 | 衡量行动是否有用的任务要求 | 结合天气推荐合适景点
+<p><span><strong><span>适用场景</span></strong></span><span>：规则清晰、合规要求严格、每一步都能预先规定的退款判断适合以 Workflow 为主；材料复杂、表达不统一、需要综合订单与商品状态的部分，可以由 Agent 协助分析。</span></p><p><span><strong><span>方案 C：混合式流程</span></strong></span><span>。先由 Workflow 执行明确的硬规则（例如商品类别、申请期限、金额阈值）；Agent 负责从用户描述和订单材料中提取信息、总结理由、识别异常并给出建议；Workflow 再按政策决定自动处理或转人工。Agent 不应绕过退款硬规则。对高金额或证据不足的申请，可要求人工审批并记录每一步依据。</span></p><p><span>因此，如果我是负责人，会采用 Workflow 管住政策和审批边界，让 Agent 处理语义理解和复杂材料，并保留人工处理例外情况。比起让 Agent 独立批准所有退款，这种组合更容易兼顾灵活性和可控性。</span></p><h3><span>4. 为旅行助手增加记忆、备选推荐与反思</span></h3><h4><span>记住用户偏好</span></h4><p><span>把偏好写进 system prompt 可以在一次运行中作为上下文提供，但 system prompt 主要是固定角色和规则，不适合独自承担跨会话记忆。更合适的做法是把用户明确表达的偏好保存为结构化状态，例如景点类型、预算、步行接受程度；每轮从状态中取出当前任务相关的信息，作为上下文交给 LLM。用户偏好改变时更新记录，并让用户能更正或删除。</span></p><h4><span>景点售罄时推荐备选</span></h4><p><span>增加查询门票/开放状态的工具。若 Observation 返回“售罄”，将该结果和已推荐景点记入历史；下一轮让 Agent 根据天气、偏好和预算选择未售罄的备选项。为搜索设置重试上限；若没有可用选项，就清楚说明情况并询问用户是否调整条件。</span></p><h4><span>连续拒绝三次后调整策略</span></h4><p><span>在状态中记录拒绝次数、已经推荐过的景点，以及用户给出的拒绝原因。每次拒绝都作为新的 Observation 返回；累计三次后触发重新规划：总结已知偏好与被拒绝原因，调整推荐条件，必要时先向用户询问更明确的偏好。记录已拒绝的候选，避免原样重复推荐，并继续保留最大循环次数作为停止条件。</span></p><p><span>这三个功能都沿用同一个改法：把新信息放进状态或 Observation，让下一轮决策能够利用它；需要持久保留的偏好单独存储，不依赖模型“自动记住”。</span></p><h3><span>5. 用医疗分诊助手说明系统 1 与系统 2</span></h3><p><span>可以设计一个面向健身用户的健康分诊助手，帮助识别运动风险并给出安全建议。系统 1/系统 2 是理解快慢决策的类比，不代表程序里真的有两个人类式思维系统。</span></p><ul><li><p><span><strong><span>系统 1：快速筛查。</span></strong></span><span> 迅速读取心率、症状和用户描述，识别明显异常模式；例如出现胸痛、晕厥等危险信号，或生理指标超过医生设定的安全阈值时，立即建议停止运动并寻求专业帮助。模式识别可由模型辅助，明确的安全阈值和禁行动作应由规则约束。</span></p></li><li><p><span><strong><span>系统 2：谨慎分析。</span></strong></span><span> 对非紧急情形综合用户病史、药物、近期训练、恢复情况和目标，检索可靠资料，比较多种解释，评估不确定性，再调整训练建议或转交专业人员。</span></p></li><li><p><span><strong><span>协作方式：</span></strong></span><span> 系统 1 负责快速发现风险并触发安全措施；系统 2 对复杂情况补充上下文、核对证据并决定下一步；遇到高风险或证据不足时由人工专业人员接手。快速筛查结果和后续反馈可用于改进识别与流程。</span></p></li></ul><p><span>这个例子体现神经符号结合的思路：神经模型擅长从复杂信号中识别模式，符号规则擅长表达阈值、禁忌和必须遵守的约束，两者配合能够兼顾灵活识别与明确控制。</span></p><h3><span>6. LLM 智能体的局限与评估</span></h3><h4><span>为什么会产生幻觉</span></h4><p><span>LLM 根据上下文生成可能合适的后续文本，语言流畅不等于事实正确。当知识缺失、问题含糊、上下文过长或信息过时时，模型可能用看似合理的内容填补空白。Agent 还会受到工具返回错误、检索遗漏、参数错误和多步推理误差的影响；前一步的错误观察可能被后续步骤继续放大。</span></p><p><span>降低风险的方法包括：让需要实时性的结论依赖可核验的工具结果；检查来源和参数；明确表达不确定性；对重要决定设置规则校验或人工复核。工具调用本身也需要验证，不能把“用了工具”当作“结果必然正确”。</span></p><h4><span>没有最大循环次数会怎样</span></h4><p><span>如果 Agent 无法判断任务已经结束，它可能反复调用同一工具、重复搜索、在两个行动之间来回循环，造成时间、Token 和 API 费用持续增加。若工具会产生副作用（例如下单、退款、发邮件），重复调用还可能造成重复操作。</span></p><p><span>最大轮数提供一个简单停止边界。实际系统还可结合总运行时间、费用预算、重复 Action 检测、工具调用权限和人工接管条件。</span></p><h4><span>如何评价智能体</span></h4><p><span>只看准确率不够。Agent 不只是给出答案，也要决定行动、正确使用工具并安全完成任务。可以组合评估：</span></p><ul><li><p><span><strong><span>任务成功率</span></strong></span><span>：是否达到用户目标，关键步骤是否完成。</span></p></li><li><p><span><strong><span>事实质量</span></strong></span><span>：回答是否准确，是否有来源支持，是否能表达不确定性。</span></p></li><li><p><span><strong><span>工具能力</span></strong></span><span>：是否选对工具、参数是否正确、是否正确使用返回结果。</span></p></li><li><p><span><strong><span>鲁棒性</span></strong></span><span>：输入换一种说法、数据缺失或工具失败时，能否妥善恢复。</span></p></li><li><p><span><strong><span>安全与约束</span></strong></span><span>：是否遵守政策、权限和停止条件，有无不当副作用。</span></p></li><li><p><span><strong><span>效率与体验</span></strong></span><span>：延迟、Token/API 成本、交互轮数，以及用户是否能理解并接受结果。</span></p></li></ul><p><span>适合为不同任务准备代表性测试案例，既看最终结果，也检查中间行动轨迹。单一指标可能掩盖“答案正确但工具调用危险”或“平均准确但遇到边界情形就失败”等问题。</span></p><br>
+
+# 第一章：初识智能体（1.1—1.3 学习总结）
+<blockquote>
+<p>本文整理《从零开始构建智能体》第一章 1.1—1.3 的关键内容，并结合 1.3 的智能旅行助手示例解释各个组件如何配合。重点是建立整体心智模型，理解智能体如何感知、决策、调用工具并利用反馈推进任务。</p>
+<p>参考：[<a href="https://datawhalechina.github.io/hello-agents/#/./chapter1/%E7%AC%AC%E4%B8%80%E7%AB%A0%20%E5%88%9D%E8%AF%86%E6%99%BA%E8%83%BD%E4%BD%93" rel="nofollow">第一章在线文档</a>](<a href="https://datawhalechina.github.io/hello-agents/#/./chapter1/%E7%AC%AC%E4%B8%80%E7%AB%A0%20%E5%88%9D%E8%AF%86%E6%99%BA%E8%83%BD%E4%BD%93" rel="nofollow">https://datawhalechina.github.io/hello-agents/#/./chapter1/%E7%AC%AC%E4%B8%80%E7%AB%A0%20%E5%88%9D%E8%AF%86%E6%99%BA%E8%83%BD%E4%BD%93</a>) · [<a href="https://github.com/datawhalechina/hello-agents/blob/main/docs/chapter1/%E7%AC%AC%E4%B8%80%E7%AB%A0%20%E5%88%9D%E8%AF%86%E6%99%BA%E8%83%BD%E4%BD%93.md">仓库中的章节源码</a>](<a href="https://github.com/datawhalechina/hello-agents/blob/main/docs/chapter1/%E7%AC%AC%E4%B8%80%E7%AB%A0%20%E5%88%9D%E8%AF%86%E6%99%BA%E8%83%BD%E4%BD%93.md">https://github.com/datawhalechina/hello-agents/blob/main/docs/chapter1/%E7%AC%AC%E4%B8%80%E7%AB%A0%20%E5%88%9D%E8%AF%86%E6%99%BA%E8%83%BD%E4%BD%93.md</a>)</p>
+</blockquote>
+<h2>1.1 什么是智能体</h2>
+<h3>定义：感知环境，并为目标采取行动</h3>
+<p>智能体（Agent）是能够通过传感器获取环境信息，并通过执行器采取行动，以实现某个目标的实体。可以把它概括成四个要素：</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>要素</th>
+<th>含义</th>
+<th>旅行助手示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>环境</td>
+<td>智能体所处的外部世界</td>
+<td>用户、天气服务、景点信息</td>
+</tr>
+<tr>
+<td>传感器</td>
+<td>获取环境信息的渠道</td>
+<td>用户输入、天气 API、搜索 API</td>
+</tr>
+<tr>
+<td>执行器</td>
+<td>对外部环境采取行动的方式</td>
+<td>发起 API 请求、调用搜索工具、向用户回复</td>
+</tr>
+<tr>
+<td>目标</td>
+<td>衡量行动是否有用的任务要求</td>
+<td>结合天气推荐合适景点</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p>智能体的关键不在于“会说话”，而在于能围绕目标，根据当前信息选择下一步行动，并利用行动结果继续决策。</p>
+<h3>传统智能体的演进</h3>
+<p>传统智能体的几类典型架构，可以看作决策能力逐步扩展的过程：</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>类型</th>
+<th>决策方式</th>
+<th>例子与局限</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>简单反射型</td>
+<td>根据当前输入匹配“条件—动作”规则</td>
+<td>恒温器检测到温度高于设定值就制冷；不保留历史状态</td>
+</tr>
+<tr>
+<td>基于模型的反射型</td>
+<td>结合内部状态或世界模型判断情况</td>
+<td>汽车可以根据先前信息估计暂时看不见的车辆位置</td>
+</tr>
+<tr>
+<td>基于目标型</td>
+<td>选择能把当前状态带向目标的行动</td>
+<td>导航系统搜索一条抵达目的地的路线</td>
+</tr>
+<tr>
+<td>基于效用型</td>
+<td>比较多个方案，并优化综合满意度</td>
+<td>同时权衡耗时、距离、油耗和拥堵</td>
+</tr>
+<tr>
+<td>学习型</td>
+<td>根据行动结果和反馈调整策略</td>
+<td>下棋系统通过大量对弈改进策略</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p>这条演进路线说明，智能体从即时规则响应，逐渐发展出状态建模、目标规划、多目标权衡和从经验中学习等能力。</p>
+<h3>LLM 驱动的智能体</h3>
+<p>大语言模型（LLM）为智能体提供了通用的语言理解和决策能力。用户可以用自然语言提出较高层级的目标，LLM 再把目标分解成步骤、选择工具，并根据工具返回的信息调整后续行动。</p>
+<p>例如，面对“根据今天北京的天气推荐一个景点”，LLM 可以先判断需要查询天气；得到天气结果后，再决定查询适合当日天气的景点，最后组织答案。<strong>模型承担推理和决策，外部工具则提供实时信息或执行操作</strong>。</p>
+<h3>智能体的其他分类视角</h3>
+<p>除了按内部决策架构分类，还可以从两个角度理解智能体：</p>
+<ol>
+<li>
+<p><strong>按决策时间与反应性</strong></p>
+<ul>
+<li>反应式：响应快、延迟低，适合必须快速处理的情况，但规划较少。</li>
+<li>规划式：行动前考虑多个步骤，能处理复杂目标，但需要更多时间和计算。</li>
+<li>混合式：结合快速反应与较长程规划。LLM 智能体常通过多轮“<strong>思考—行动—观察</strong>”把大任务拆成一连串小决策。</li>
+</ul>
+</li>
+<li>
+<p><strong>按知识表示方式</strong></p>
+<ul>
+<li>亚符号主义：知识以神经网络中学到的模式为主，擅长从数据中识别规律。</li>
+<li>符号主义：通过明确的符号、规则和逻辑表示知识，推理过程较容易追踪。</li>
+<li>神经符号主义：尝试结合神经网络的模式识别能力与符号系统的结构化推理能力。</li>
+</ul>
+</li>
+</ol>
+<p>这些角度不是互相排斥的标签，而是帮助设计者分析一个系统如何决策、擅长什么，以及需要承担什么代价。</p>
+<h2>1.2 智能体的任务环境与运行原理</h2>
+<h3>用 PEAS 描述任务环境</h3>
+<p>PEAS 用四个维度描述智能体要完成的任务：</p>
+<ul>
+<li><strong>P — Performance（性能度量）</strong>：怎样算任务完成得好。</li>
+<li><strong>E — Environment（环境）</strong>：智能体面对的世界。</li>
+<li><strong>A — Actuators（执行器）</strong>：智能体能采取哪些行动。</li>
+<li><strong>S — Sensors（传感器）</strong>：智能体能获取的信息。</li>
+</ul>
+<p>对于旅行助手，可以这样理解：</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>PEAS 维度</th>
+<th>旅行助手中的内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>性能度量</td>
+<td>推荐有依据、符合天气和用户需求，信息准确且表达清楚</td>
+</tr>
+<tr>
+<td>环境</td>
+<td>用户、天气数据、景点信息和搜索服务</td>
+</tr>
+<tr>
+<td>执行器</td>
+<td>查询天气、搜索景点、向用户提供建议</td>
+</tr>
+<tr>
+<td>传感器</td>
+<td>用户提出的问题、天气 API 结果、搜索结果</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p>PEAS 的价值在于提醒我们：设计智能体时要同时想清楚任务目标、可用信息来源、可执行动作和评价标准。</p>
+<h3>环境会影响智能体设计</h3>
+<p>实际环境通常具有以下特点：</p>
+<ul>
+<li><strong>部分可观察</strong>：智能体每次只能获得环境的一部分信息，例如一个天气接口只返回特定地点和时刻的数据。</li>
+<li><strong>不确定性</strong>：搜索结果或实时数据会变化，重复调用可能得到不同结果。</li>
+<li><strong>动态性与序贯性</strong>：环境会持续变化；当前行动和结果会影响后续步骤。</li>
+<li><strong>多行动者</strong>：用户、其他服务或其他系统的行为也可能改变环境状态。</li>
+</ul>
+<p>因此，<strong>智能体不能只在任务开始时做一次判断。它需要利用每步行动带回的反馈更新对环境的理解。</strong></p>
+<h3>Agent Loop：感知—思考—行动—观察</h3>
+<p>文档把智能体的运行过程描述为持续循环：</p>
+<div class="highlight highlight-source-mermaid"><pre class="notranslate"><span class="pl-k">flowchart</span> <span class="pl-c1">LR</span>
+    <span class="pl-ent">A</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>感知：接收用户请求或环境反馈<span class="pl-pds"><span class="pl-sg">]</span></span></span> <span class="pl-k">--&gt;</span> <span class="pl-ent">B</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>思考：理解目标、规划下一步<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">B</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">C</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>工具选择：确定工具和参数<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">C</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">D</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>行动：调用工具或服务<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">D</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">E</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>环境产生结果<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">E</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">F</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>观察：整理并记录结果<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">F</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">A</span>
+    <span class="pl-ent">B</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">G</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">{</span></span>任务已完成？<span class="pl-pds"><span class="pl-sg">}</span></span></span>
+    <span class="pl-ent">G</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">是</span><span class="pl-k">|</span> <span class="pl-ent">H</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>生成最终答复<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">G</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">否</span><span class="pl-k">|</span> <span class="pl-ent">C</span></pre></div>
+<p>其中：</p>
+<ul>
+<li><strong>Perception（感知）</strong>：接收用户请求，或接收上一步工具调用的返回结果。</li>
+<li><strong>Thought（思考）</strong>：理解目前进展，拆解任务，并选择下一步工具。</li>
+<li><strong>Action（行动）</strong>：实际执行工具调用，对环境产生影响。</li>
+<li><strong>Observation（观察）</strong>：把工具返回值整理成下一轮可使用的信息。</li>
+</ul>
+<p>在代码中，模型通常生成结构化的行动文本；外部解析器读取其中的 Action 并调用对应 Python 函数。工具执行后的结果被整理成 Observation，再反馈给模型。这样，LLM 的语言决策能力和 Python 的执行能力就连成了闭环。</p>
+<h2>1.3 动手体验：智能旅行助手</h2>
+<h3>任务目标</h3>
+<p>示例要求助手先查询北京当天的天气，再根据天气推荐景点。这个任务包含两个有先后依赖的子任务：</p>
+<ol>
+<li>查询天气。</li>
+<li>根据天气搜索景点并总结建议。</li>
+</ol>
+<p>第二步要用到第一步的结果，因此不能把两步当成彼此无关的操作。这正适合展示智能体如何根据反馈连续决策。</p>
+<h3>程序的组件</h3>
+<h4>1. 指令模板：规定角色、工具和输出格式</h4>
+<p>系统提示词（system prompt）相当于智能体的操作说明。示例告诉模型：</p>
+<ul>
+<li>它是一个旅行助手。</li>
+<li>可用工具包括天气查询和景点搜索，并说明每个工具的参数。</li>
+<li>每轮回答都要包含 Thought 和 Action。</li>
+<li>Action 可以是某个工具调用，也可以是表示完成任务的 Finish。</li>
+</ul>
+<p>这个约定把模型的自由文本限制成程序比较容易处理的形式。提示词只负责告诉模型工具的名字和用法；Python 函数仍由程序本身保存和执行。</p>
+<h4>2. 天气工具：调用天气服务并整理结果</h4>
+<p>天气函数通过 HTTP 库请求天气服务，解析返回的 JSON，提取天气描述和温度，并整理成简短文字。它还处理了网络异常、返回数据缺字段等情况。</p>
+<p>这一步体现了工具函数的基本职责：<strong>对接外部服务、整理机器数据、返回可供模型使用的结果。</strong></p>
+<h4>3. 景点工具：调用搜索服务</h4>
+<p>景点函数把城市和天气组合成搜索问题，调用 Tavily 搜索 API，并将搜索摘要或结果整理成文字返回。它需要 Tavily API 密钥。</p>
+<p>天气服务、景点搜索服务和 LLM 是不同的服务，承担不同职责：天气服务返回天气；搜索服务查找景点信息；LLM 负责决定何时调用工具，以及怎样使用工具结果。</p>
+<h4>4. 工具注册表：把名称映射到 Python 函数</h4>
+<p>程序把工具名称和函数对象放进一个字典。例如，模型请求调用 <code class="notranslate">get_weather</code>，程序就从字典中找到对应函数。这个注册表也是工具白名单：只有登记过的工具能由主循环调用。</p>
+<h4>5. LLM 客户端：向模型发送上下文</h4>
+<p>示例封装了一个兼容 OpenAI 风格接口的客户端。调用时需要提供模型名称、API 密钥和服务地址。客户端把 system prompt 与当前 prompt 组成消息，发送请求，再从响应中取出模型生成的文字。</p>
+<p>其中，prompt 不只包含最初的用户请求，也会在后续轮次包含已经发生的 Thought、Action 和 Observation。模型由此能够根据前面收集到的信息继续处理任务。</p>
+<h3>主循环如何连接所有部分</h3>
+<p>主循环的逻辑可以概括为：</p>
+<pre lang="text" class="notranslate"><code class="notranslate">保存用户请求
+最多重复 5 轮：
+    把系统指令和历史交给 LLM
+    取得模型生成的 Thought 和 Action
+    如果 Action 表示 Finish：
+        输出最终答案并结束
+    否则：
+        解析工具名称和参数
+        从工具注册表中找到函数并执行
+        把工具结果记为 Observation
+        将模型输出和 Observation 加入历史
+</code></pre>
+<p><code class="notranslate">range(5)</code> 设置了循环上限，模型可以通过 Finish 提前结束。这个上限是保护措施：当模型没能按预期结束时，程序不会无限调用模型。</p>
+<h3>跟着运行示例走一遍</h3>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>轮次</th>
+<th>模型的决定</th>
+<th>Python 的动作</th>
+<th>反馈</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>第 1 轮</td>
+<td>先查天气</td>
+<td>调用天气函数</td>
+<td>返回天气描述和温度</td>
+</tr>
+<tr>
+<td>第 2 轮</td>
+<td>根据天气查景点</td>
+<td>调用景点搜索函数</td>
+<td>返回搜索摘要或景点信息</td>
+</tr>
+<tr>
+<td>第 3 轮</td>
+<td>已获得足够信息</td>
+<td>不再调用工具，返回 Finish</td>
+<td>输出最终推荐</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p>从这个流程可以看到模型和 Python 各自承担的职责：模型生成“下一步做什么”的决策；Python 解析决策并执行注册好的函数；工具把环境信息带回来；模型再结合这些新信息做下一步判断。</p>
+<h3>这个小例子展示了什么</h3>
+<ol>
+<li><strong>任务分解</strong>：把一个整体目标拆成天气查询和景点推荐。</li>
+<li><strong>工具选择与调用</strong>：根据任务进度选择不同工具。</li>
+<li><strong>上下文利用</strong>：把工具结果写入历史，让后续决策有依据。</li>
+<li><strong>结果整合</strong>：收集信息后，由模型形成面向用户的最终答复。</li>
+</ol>
+<h3>阅读代码时需要留意的细节</h3>
+<ul>
+<li>文档中的 API 密钥、服务地址和模型名称都是占位值，运行前要按实际服务配置。密钥应保存在环境变量等配置中，避免提交到公开代码仓库。</li>
+<li>景点搜索依赖 Tavily 凭证。示例中密钥占位写法出现了重复赋值；实际使用时要确保环境变量里放入真实密钥，而不是占位字符串。</li>
+<li>示例通过正则表达式解析模型生成的工具调用文本，适合展示原理，但对格式变化比较敏感。若模型少写字段、改变引号或多输出内容，解析可能失败。</li>
+<li>示例只允许注册表中的工具被调用，并设置最多五轮循环；这些约束能让这个入门程序比较容易理解和控制。</li>
+<li>文档运行日志中的天气和搜索结果是示例输出。实际结果会随时间、服务返回内容和模型输出而变化。</li>
+</ul>
+<h2>小结</h2>
+<p>1.1 建立了智能体的定义和分类视角；1.2 介绍了如何描述任务环境，以及智能体如何通过循环与环境交互；1.3 把这些概念落实成一个能调用天气与搜索工具的旅行助手。</p>
+<p>理解本章最有用的一句话是：**LLM 根据目标和当前上下文决定下一步，程序负责执行工具并把结果反馈给 LLM。**智能体正是通过这种循环，把自然语言目标逐步转化为可执行的行动和最终结果。</p>
+<h2>1.4 FirstAgentTest.py</h2>
+<p>下面按照程序实际执行的顺序，梳理这份脚本如何运行。</p>
+<h3>代码内容</h3>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">import</span> <span class="pl-s1">requests</span>
+<span class="pl-c"># 系统提示词</span>
+<span class="pl-c1">AGENT_SYSTEM_PROMPT</span> <span class="pl-c1">=</span> <span class="pl-s">"""</span>
+<span class="pl-s">你是一个智能旅行助手。你的任务是分析用户的请求，并使用可用工具一步步地解决问题。</span>
+<span class="pl-s"></span>
+<span class="pl-s"># 可用工具:</span>
+<span class="pl-s">- `get_weather(city: str)`: 查询指定城市的实时天气。</span>
+<span class="pl-s">- `get_attraction(city: str, weather: str)`: 根据城市和天气搜索推荐的旅游景点。</span>
+<span class="pl-s"></span>
+<span class="pl-s"># 输出格式要求:</span>
+<span class="pl-s">你的每次回复必须严格遵循以下格式，包含一对Thought和Action：</span>
+<span class="pl-s"></span>
+<span class="pl-s">Thought: [你的思考过程和下一步计划]</span>
+<span class="pl-s">Action: [你要执行的具体行动]</span>
+<span class="pl-s"></span>
+<span class="pl-s">Action的格式必须是以下之一：</span>
+<span class="pl-s">1. 调用工具：function_name(arg_name="arg_value")</span>
+<span class="pl-s">2. 结束任务：Finish[最终答案]</span>
+<span class="pl-s"></span>
+<span class="pl-s"># 重要提示:</span>
+<span class="pl-s">- 每次只输出一对Thought-Action</span>
+<span class="pl-s">- Action必须在同一行，不要换行</span>
+<span class="pl-s">- 当收集到足够信息可以回答用户问题时，必须使用 Action: Finish[最终答案] 格式结束</span>
+<span class="pl-s"></span>
+<span class="pl-s">请开始吧！</span>
+<span class="pl-s">"""</span>
+
+
+<span class="pl-c"># 请求天气状况</span>
+<span class="pl-k">def</span> <span class="pl-en">get_weather</span>(<span class="pl-s1">city</span>: <span class="pl-smi">str</span>) <span class="pl-c1">-&gt;</span><span class="pl-smi">str</span>:
+    <span class="pl-s1">url</span> <span class="pl-c1">=</span> <span class="pl-s">f"http://wttr.in/<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">city</span><span class="pl-kos">}</span></span>?format=j1"</span>
+    
+    <span class="pl-k">try</span>:
+        <span class="pl-c"># 发起request</span>
+        <span class="pl-s1">response</span> <span class="pl-c1">=</span> <span class="pl-s1">requests</span>.<span class="pl-c1">get</span>(<span class="pl-s1">url</span>)
+        <span class="pl-c"># 检查请求是否成功</span>
+        <span class="pl-s1">response</span>.<span class="pl-c1">raise_for_status</span>()
+        <span class="pl-c"># 解析JSON数据</span>
+        <span class="pl-s1">data</span> <span class="pl-c1">=</span> <span class="pl-s1">response</span>.<span class="pl-c1">json</span>()
+                
+        <span class="pl-c"># 提取天气信息</span>
+        <span class="pl-s1">current_condition</span> <span class="pl-c1">=</span> <span class="pl-s1">data</span>[<span class="pl-s">'current_condition'</span>][<span class="pl-c1">0</span>]
+        <span class="pl-s1">weather_desc</span> <span class="pl-c1">=</span> <span class="pl-s1">current_condition</span>[<span class="pl-s">'weatherDesc'</span>][<span class="pl-c1">0</span>][<span class="pl-s">'value'</span>]
+        <span class="pl-s1">temp_c</span> <span class="pl-c1">=</span> <span class="pl-s1">current_condition</span>[<span class="pl-s">'temp_C'</span>]
+        
+        <span class="pl-c"># 返回天气信息</span>
+        <span class="pl-k">return</span> <span class="pl-s">f"<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">city</span><span class="pl-kos">}</span></span>的当前天气: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">weather_desc</span><span class="pl-kos">}</span></span>, 温度: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">temp_c</span><span class="pl-kos">}</span></span>°C"</span>
+    <span class="pl-k">except</span> <span class="pl-s1">requests</span>.<span class="pl-c1">exceptions</span>.<span class="pl-c1">RequestException</span> <span class="pl-k">as</span> <span class="pl-s1">e</span>:
+        <span class="pl-k">return</span> <span class="pl-s">f"错误：网络请求超时: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">e</span><span class="pl-kos">}</span></span>"</span>
+    <span class="pl-k">except</span> (<span class="pl-v">KeyError</span>, <span class="pl-v">IndexError</span>) <span class="pl-k">as</span> <span class="pl-s1">e</span>:
+        <span class="pl-k">return</span> <span class="pl-s">f"错误：无法解析天气数据，可能是城市名称无效: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">e</span><span class="pl-kos">}</span></span>"</span>
+
+
+<span class="pl-k">import</span> <span class="pl-s1">os</span>
+<span class="pl-k">from</span> <span class="pl-s1">tavily</span> <span class="pl-k">import</span> <span class="pl-v">TavilyClient</span>
+
+<span class="pl-c"># 景点搜索服务</span>
+<span class="pl-k">def</span> <span class="pl-en">get_attraction</span>(<span class="pl-s1">city</span>: <span class="pl-smi">str</span>, <span class="pl-s1">weather</span>: <span class="pl-smi">str</span>)<span class="pl-c1">-&gt;</span><span class="pl-smi">str</span>:
+    <span class="pl-c"># 使用Tavily Search API获取景点信息</span>
+        
+    <span class="pl-c"># 读取API Key</span>
+    <span class="pl-s1">api_key</span> <span class="pl-c1">=</span> <span class="pl-s1">os</span>.<span class="pl-c1">getenv</span>(<span class="pl-s">"TAVILY_API_KEY"</span>)
+    <span class="pl-k">if</span> <span class="pl-c1">not</span> <span class="pl-s1">api_key</span>:
+        <span class="pl-k">return</span> <span class="pl-s">"错误：未设置TAVILY_API_KEY环境变量"</span>
+    
+    <span class="pl-c"># 创建Tavily客户端</span>
+    <span class="pl-s1">tavily_client</span> <span class="pl-c1">=</span> <span class="pl-en">TavilyClient</span>(<span class="pl-s1">api_key</span><span class="pl-c1">=</span><span class="pl-s1">api_key</span>)
+    <span class="pl-c"># 构建查询</span>
+    <span class="pl-s1">query</span> <span class="pl-c1">=</span> <span class="pl-s">f"在'<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">city</span><span class="pl-kos">}</span></span>'在'<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">weather</span><span class="pl-kos">}</span></span>'天气下最值得去的旅游景点推荐及理由"</span>
+    
+    <span class="pl-k">try</span>:
+        <span class="pl-c"># 调用API, include_answers=True会返回一个综合性的回答</span>
+        <span class="pl-s1">response</span> <span class="pl-c1">=</span> <span class="pl-s1">tavily_client</span>.<span class="pl-c1">search</span>(<span class="pl-s1">query</span><span class="pl-c1">=</span><span class="pl-s1">query</span>, <span class="pl-s1">search_depth</span><span class="pl-c1">=</span><span class="pl-s">"basic"</span>,<span class="pl-s1">include_answers</span><span class="pl-c1">=</span><span class="pl-c1">True</span>)
+        
+        <span class="pl-k">if</span> <span class="pl-s1">response</span>.<span class="pl-c1">get</span>(<span class="pl-s">"answer"</span>):
+            <span class="pl-k">return</span> <span class="pl-s1">response</span>[<span class="pl-s">"answer"</span>]
+        
+        <span class="pl-s1">formatted_results</span> <span class="pl-c1">=</span> []
+        <span class="pl-k">for</span> <span class="pl-s1">result</span> <span class="pl-c1">in</span> <span class="pl-s1">response</span>.<span class="pl-c1">get</span>(<span class="pl-s">"results"</span>, []):
+            <span class="pl-s1">formatted_results</span>.<span class="pl-c1">append</span>(<span class="pl-s">f"- <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">result</span>[<span class="pl-s">'title'</span>]<span class="pl-kos">}</span></span>: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">result</span>[<span class="pl-s">'content'</span>]<span class="pl-kos">}</span></span>"</span>)
+        
+        <span class="pl-k">if</span> <span class="pl-c1">not</span> <span class="pl-s1">formatted_results</span>:
+             <span class="pl-k">return</span> <span class="pl-s">"抱歉，没有找到相关的旅游景点推荐。"</span>
+
+        <span class="pl-k">return</span> <span class="pl-s">"根据搜索，为您找到以下信息:<span class="pl-cce">\n</span>"</span> <span class="pl-c1">+</span> <span class="pl-s">"<span class="pl-cce">\n</span>"</span>.<span class="pl-c1">join</span>(<span class="pl-s1">formatted_results</span>)
+
+    <span class="pl-k">except</span> <span class="pl-v">Exception</span> <span class="pl-k">as</span> <span class="pl-s1">e</span>:
+        <span class="pl-k">return</span> <span class="pl-s">f"错误:执行Tavily搜索时出现问题 - <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">e</span><span class="pl-kos">}</span></span>"</span>
+    
+
+<span class="pl-c"># 将所有工具函数放入一个字典，方便后续调用</span>
+<span class="pl-s1">available_tools</span> <span class="pl-c1">=</span> {
+    <span class="pl-s">"get_weather"</span>: <span class="pl-s1">get_weather</span>,
+    <span class="pl-s">"get_attraction"</span>: <span class="pl-s1">get_attraction</span>,
+}
+
+<span class="pl-c"># 接入LLM服务的客户端</span>
+<span class="pl-k">from</span> <span class="pl-s1">openai</span> <span class="pl-k">import</span> <span class="pl-v">OpenAI</span>
+
+<span class="pl-k">class</span> <span class="pl-v">OpenAICompatibleClient</span>:
+    <span class="pl-s">"""</span>
+<span class="pl-s">    一个用于调用任何兼容OpenAI接口的LLM服务的客户端。</span>
+<span class="pl-s">    """</span>
+    <span class="pl-k">def</span> <span class="pl-en">__init__</span>(<span class="pl-s1">self</span>, <span class="pl-s1">model</span>: <span class="pl-smi">str</span>, <span class="pl-s1">api_key</span>: <span class="pl-smi">str</span>, <span class="pl-s1">base_url</span>: <span class="pl-smi">str</span>):
+        <span class="pl-s1">self</span>.<span class="pl-c1">model</span> <span class="pl-c1">=</span> <span class="pl-s1">model</span>
+        <span class="pl-s1">self</span>.<span class="pl-c1">client</span> <span class="pl-c1">=</span> <span class="pl-en">OpenAI</span>(<span class="pl-s1">api_key</span><span class="pl-c1">=</span><span class="pl-s1">api_key</span>, <span class="pl-s1">base_url</span><span class="pl-c1">=</span><span class="pl-s1">base_url</span>)
+
+    <span class="pl-k">def</span> <span class="pl-en">generate</span>(<span class="pl-s1">self</span>, <span class="pl-s1">prompt</span>: <span class="pl-smi">str</span>, <span class="pl-s1">system_prompt</span>: <span class="pl-smi">str</span>) <span class="pl-c1">-&gt;</span> <span class="pl-smi">str</span>:
+        <span class="pl-s">"""调用LLM API来生成回应。"""</span>
+        <span class="pl-en">print</span>(<span class="pl-s">"正在调用大语言模型..."</span>)
+        <span class="pl-k">try</span>:
+            <span class="pl-s1">messages</span> <span class="pl-c1">=</span> [
+                {<span class="pl-s">'role'</span>: <span class="pl-s">'system'</span>, <span class="pl-s">'content'</span>: <span class="pl-s1">system_prompt</span>},
+                {<span class="pl-s">'role'</span>: <span class="pl-s">'user'</span>, <span class="pl-s">'content'</span>: <span class="pl-s1">prompt</span>}
+            ]
+            <span class="pl-s1">response</span> <span class="pl-c1">=</span> <span class="pl-s1">self</span>.<span class="pl-c1">client</span>.<span class="pl-c1">chat</span>.<span class="pl-c1">completions</span>.<span class="pl-c1">create</span>(
+                <span class="pl-s1">model</span><span class="pl-c1">=</span><span class="pl-s1">self</span>.<span class="pl-c1">model</span>,
+                <span class="pl-s1">messages</span><span class="pl-c1">=</span><span class="pl-s1">messages</span>,
+                <span class="pl-s1">stream</span><span class="pl-c1">=</span><span class="pl-c1">False</span>
+            )
+            <span class="pl-s1">answer</span> <span class="pl-c1">=</span> <span class="pl-s1">response</span>.<span class="pl-c1">choices</span>[<span class="pl-c1">0</span>].<span class="pl-c1">message</span>.<span class="pl-c1">content</span>
+            <span class="pl-en">print</span>(<span class="pl-s">"大语言模型响应成功。"</span>)
+            <span class="pl-k">return</span> <span class="pl-s1">answer</span>
+        <span class="pl-k">except</span> <span class="pl-v">Exception</span> <span class="pl-k">as</span> <span class="pl-s1">e</span>:
+            <span class="pl-en">print</span>(<span class="pl-s">f"调用LLM API时发生错误: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">e</span><span class="pl-kos">}</span></span>"</span>)
+            <span class="pl-k">return</span> <span class="pl-s">"错误:调用语言模型服务时出错。"</span>
+        
+<span class="pl-k">import</span> <span class="pl-s1">re</span>
+
+<span class="pl-c"># --- 1. 配置LLM客户端 ---</span>
+<span class="pl-c"># 请根据您使用的服务，将这里替换成对应的凭证和地址</span>
+<span class="pl-c1">API_KEY</span> <span class="pl-c1">=</span> <span class="pl-s">"sk-09a86d1ecdce43b0b2efdef740f6effb"</span>
+<span class="pl-c1">BASE_URL</span> <span class="pl-c1">=</span> <span class="pl-s">"https://api.deepseek.com"</span>
+<span class="pl-c1">MODEL_ID</span> <span class="pl-c1">=</span> <span class="pl-s">"deepseek-flash"</span>
+<span class="pl-c1">TAVILY_API_KEY</span><span class="pl-c1">=</span><span class="pl-s">"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"</span>
+<span class="pl-s1">os</span>.<span class="pl-c1">environ</span>[<span class="pl-s">'TAVILY_API_KEY'</span>] <span class="pl-c1">=</span> <span class="pl-s">"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"</span>
+
+<span class="pl-s1">llm</span> <span class="pl-c1">=</span> <span class="pl-en">OpenAICompatibleClient</span>(
+    <span class="pl-s1">model</span><span class="pl-c1">=</span><span class="pl-c1">MODEL_ID</span>,
+    <span class="pl-s1">api_key</span><span class="pl-c1">=</span><span class="pl-c1">API_KEY</span>,
+    <span class="pl-s1">base_url</span><span class="pl-c1">=</span><span class="pl-c1">BASE_URL</span>
+)
+
+<span class="pl-c"># --- 2. 初始化 ---</span>
+<span class="pl-s1">user_prompt</span> <span class="pl-c1">=</span> <span class="pl-s">"我计划去北京旅游，想知道现在的天气情况，并推荐一些适合当前天气的景点。"</span>
+<span class="pl-s1">prompt_history</span> <span class="pl-c1">=</span> [<span class="pl-s">f"用户请求: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">user_prompt</span><span class="pl-kos">}</span></span>"</span>]
+
+<span class="pl-en">print</span>(<span class="pl-s">f"用户输入: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">user_prompt</span><span class="pl-kos">}</span></span><span class="pl-cce">\n</span>"</span> <span class="pl-c1">+</span> <span class="pl-s">"="</span><span class="pl-c1">*</span><span class="pl-c1">40</span>)
+
+<span class="pl-c"># --- 3. 运行主循环 ---</span>
+<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-en">range</span>(<span class="pl-c1">5</span>): <span class="pl-c"># 设置最大循环次数</span>
+    <span class="pl-en">print</span>(<span class="pl-s">f"--- 循环 <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">i</span><span class="pl-c1">+</span><span class="pl-c1">1</span><span class="pl-kos">}</span></span> ---<span class="pl-cce">\n</span>"</span>)
+    
+    <span class="pl-c"># 3.1. 构建Prompt</span>
+    <span class="pl-s1">full_prompt</span> <span class="pl-c1">=</span> <span class="pl-s">"<span class="pl-cce">\n</span>"</span>.<span class="pl-c1">join</span>(<span class="pl-s1">prompt_history</span>)
+    
+    <span class="pl-c"># 3.2. 调用LLM进行思考</span>
+    <span class="pl-s1">llm_output</span> <span class="pl-c1">=</span> <span class="pl-s1">llm</span>.<span class="pl-c1">generate</span>(<span class="pl-s1">full_prompt</span>, <span class="pl-s1">system_prompt</span><span class="pl-c1">=</span><span class="pl-c1">AGENT_SYSTEM_PROMPT</span>)
+    <span class="pl-c"># 模型可能会输出多余的Thought-Action，需要截断</span>
+    <span class="pl-s1">match</span> <span class="pl-c1">=</span> <span class="pl-s1">re</span>.<span class="pl-c1">search</span>(<span class="pl-s">r'(Thought:.*?Action:.*?)(?=\n\s*(?:Thought:|Action:|Observation:)|\Z)'</span>, <span class="pl-s1">llm_output</span>, <span class="pl-s1">re</span>.<span class="pl-c1">DOTALL</span>)
+    <span class="pl-k">if</span> <span class="pl-s1">match</span>:
+        <span class="pl-s1">truncated</span> <span class="pl-c1">=</span> <span class="pl-s1">match</span>.<span class="pl-c1">group</span>(<span class="pl-c1">1</span>).<span class="pl-c1">strip</span>()
+        <span class="pl-k">if</span> <span class="pl-s1">truncated</span> <span class="pl-c1">!=</span> <span class="pl-s1">llm_output</span>.<span class="pl-c1">strip</span>():
+            <span class="pl-s1">llm_output</span> <span class="pl-c1">=</span> <span class="pl-s1">truncated</span>
+            <span class="pl-en">print</span>(<span class="pl-s">"已截断多余的 Thought-Action 对"</span>)
+    <span class="pl-en">print</span>(<span class="pl-s">f"模型输出:<span class="pl-cce">\n</span><span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">llm_output</span><span class="pl-kos">}</span></span><span class="pl-cce">\n</span>"</span>)
+    <span class="pl-s1">prompt_history</span>.<span class="pl-c1">append</span>(<span class="pl-s1">llm_output</span>)
+    
+    <span class="pl-c"># 3.3. 解析并执行行动</span>
+    <span class="pl-s1">action_match</span> <span class="pl-c1">=</span> <span class="pl-s1">re</span>.<span class="pl-c1">search</span>(<span class="pl-s">r"Action: (.*)"</span>, <span class="pl-s1">llm_output</span>, <span class="pl-s1">re</span>.<span class="pl-c1">DOTALL</span>)
+    <span class="pl-k">if</span> <span class="pl-c1">not</span> <span class="pl-s1">action_match</span>:
+        <span class="pl-s1">observation</span> <span class="pl-c1">=</span> <span class="pl-s">"错误: 未能解析到 Action 字段。请确保你的回复严格遵循 'Thought: ... Action: ...' 的格式。"</span>
+        <span class="pl-s1">observation_str</span> <span class="pl-c1">=</span> <span class="pl-s">f"Observation: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">observation</span><span class="pl-kos">}</span></span>"</span>
+        <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">observation_str</span><span class="pl-kos">}</span></span><span class="pl-cce">\n</span>"</span> <span class="pl-c1">+</span> <span class="pl-s">"="</span><span class="pl-c1">*</span><span class="pl-c1">40</span>)
+        <span class="pl-s1">prompt_history</span>.<span class="pl-c1">append</span>(<span class="pl-s1">observation_str</span>)
+        <span class="pl-k">continue</span>
+    <span class="pl-s1">action_str</span> <span class="pl-c1">=</span> <span class="pl-s1">action_match</span>.<span class="pl-c1">group</span>(<span class="pl-c1">1</span>).<span class="pl-c1">strip</span>()
+
+    <span class="pl-k">if</span> <span class="pl-s1">action_str</span>.<span class="pl-c1">startswith</span>(<span class="pl-s">"Finish"</span>):
+        <span class="pl-s1">final_answer</span> <span class="pl-c1">=</span> <span class="pl-s1">re</span>.<span class="pl-c1">match</span>(<span class="pl-s">r"Finish\[(.*)\]"</span>, <span class="pl-s1">action_str</span>).<span class="pl-c1">group</span>(<span class="pl-c1">1</span>)
+        <span class="pl-en">print</span>(<span class="pl-s">f"任务完成，最终答案: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">final_answer</span><span class="pl-kos">}</span></span>"</span>)
+        <span class="pl-k">break</span>
+    
+    <span class="pl-s1">tool_name</span> <span class="pl-c1">=</span> <span class="pl-s1">re</span>.<span class="pl-c1">search</span>(<span class="pl-s">r"(\w+)\("</span>, <span class="pl-s1">action_str</span>).<span class="pl-c1">group</span>(<span class="pl-c1">1</span>)
+    <span class="pl-s1">args_str</span> <span class="pl-c1">=</span> <span class="pl-s1">re</span>.<span class="pl-c1">search</span>(<span class="pl-s">r"\((.*)\)"</span>, <span class="pl-s1">action_str</span>).<span class="pl-c1">group</span>(<span class="pl-c1">1</span>)
+    <span class="pl-s1">kwargs</span> <span class="pl-c1">=</span> <span class="pl-en">dict</span>(<span class="pl-s1">re</span>.<span class="pl-c1">findall</span>(<span class="pl-s">r'(\w+)="([^"]*)"'</span>, <span class="pl-s1">args_str</span>))
+
+    <span class="pl-k">if</span> <span class="pl-s1">tool_name</span> <span class="pl-c1">in</span> <span class="pl-s1">available_tools</span>:
+        <span class="pl-s1">observation</span> <span class="pl-c1">=</span> <span class="pl-s1">available_tools</span>[<span class="pl-s1">tool_name</span>](<span class="pl-c1">**</span><span class="pl-s1">kwargs</span>)
+    <span class="pl-k">else</span>:
+        <span class="pl-s1">observation</span> <span class="pl-c1">=</span> <span class="pl-s">f"错误:未定义的工具 '<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">tool_name</span><span class="pl-kos">}</span></span>'"</span>
+
+    <span class="pl-c"># 3.4. 记录观察结果</span>
+    <span class="pl-s1">observation_str</span> <span class="pl-c1">=</span> <span class="pl-s">f"Observation: <span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">observation</span><span class="pl-kos">}</span></span>"</span>
+    <span class="pl-en">print</span>(<span class="pl-s">f"<span class="pl-s1"><span class="pl-kos">{</span><span class="pl-s1">observation_str</span><span class="pl-kos">}</span></span><span class="pl-cce">\n</span>"</span> <span class="pl-c1">+</span> <span class="pl-s">"="</span><span class="pl-c1">*</span><span class="pl-c1">40</span>)
+    <span class="pl-s1">prompt_history</span>.<span class="pl-c1">append</span>(<span class="pl-s1">observation_str</span>)</pre></div>
+<h3>代码流程</h3>
+<ol>
+<li><strong>定义 system prompt</strong>：告诉模型它是旅行助手，列出天气和景点两个工具，并要求每轮生成 Thought、Action；任务完成时返回 Finish。</li>
+<li><strong>定义两个外部工具</strong>：
+<ul>
+<li><code class="notranslate">get_weather(city)</code> 请求 wttr.in，解析 JSON，提取天气描述和温度。</li>
+<li><code class="notranslate">get_attraction(city, weather)</code> 把城市和天气组成搜索问题，调用 Tavily，再把搜索摘要整理成文字。</li>
+</ul>
+</li>
+<li><strong>注册工具</strong>：<code class="notranslate">available_tools</code> 把工具名映射到对应 Python 函数，后续只允许调用这个字典中登记的函数。</li>
+<li><strong>创建 LLM 客户端</strong>：<code class="notranslate">OpenAICompatibleClient</code> 使用 DeepSeek 的 OpenAI 兼容接口。每轮把 system prompt 和当前历史作为消息发给模型，并取回模型返回文本。</li>
+<li><strong>初始化任务历史</strong>：用户提出“了解北京当前天气并推荐适合景点”，这句话先放进 <code class="notranslate">prompt_history</code>。</li>
+<li><strong>进入最多五轮的 Agent Loop</strong>：每轮将历史拼成 prompt，调用 LLM，再解析模型输出的 Action。</li>
+<li><strong>执行 Action</strong>：
+<ul>
+<li>Action 是 <code class="notranslate">get_weather(...)</code> 或 <code class="notranslate">get_attraction(...)</code> 时，程序解析函数名和参数，从注册表找到函数并执行。</li>
+<li>Action 以 <code class="notranslate">Finish[...]</code> 开头时，程序取出最终答案并结束循环。</li>
+</ul>
+</li>
+<li><strong>回填 Observation</strong>：工具结果被包装成 Observation 并追加到历史。下一轮模型便能看到前一步的结果，决定继续搜索还是结束。</li>
+</ol>
+<div class="highlight highlight-source-mermaid"><pre class="notranslate"><span class="pl-k">sequenceDiagram</span>
+    <span class="pl-k">participant</span> <span class="pl-ent">U</span> <span class="pl-k">as</span> <span class="pl-ent">用户</span>
+    <span class="pl-k">participant</span> <span class="pl-ent">L</span> <span class="pl-k">as</span> <span class="pl-ent">LLM</span>
+    <span class="pl-k">participant</span> <span class="pl-ent">P</span> <span class="pl-k">as</span> <span class="pl-ent">Python 主循环</span>
+    <span class="pl-k">participant</span> <span class="pl-ent">W</span> <span class="pl-k">as</span> <span class="pl-ent">天气工具</span>
+    <span class="pl-k">participant</span> <span class="pl-ent">T</span> <span class="pl-k">as</span> <span class="pl-ent">Tavily 搜索</span>
+    <span class="pl-ent">U</span><span class="pl-k">-&gt;&gt;</span><span class="pl-ent">P</span><span class="pl-k">:</span> <span class="pl-s">北京天气 + 景点推荐</span>
+    <span class="pl-ent">P</span><span class="pl-k">-&gt;&gt;</span><span class="pl-ent">L</span><span class="pl-k">:</span> <span class="pl-s">system prompt + 用户请求</span>
+    <span class="pl-ent">L</span><span class="pl-k">--&gt;&gt;</span><span class="pl-ent">P</span><span class="pl-k">:</span> <span class="pl-s">Action: get_weather(...)</span>
+    <span class="pl-ent">P</span><span class="pl-k">-&gt;&gt;</span><span class="pl-ent">W</span><span class="pl-k">:</span> <span class="pl-s">查询天气</span>
+    <span class="pl-ent">W</span><span class="pl-k">--&gt;&gt;</span><span class="pl-ent">P</span><span class="pl-k">:</span> <span class="pl-s">Observation: 天气描述和温度</span>
+    <span class="pl-ent">P</span><span class="pl-k">-&gt;&gt;</span><span class="pl-ent">L</span><span class="pl-k">:</span> <span class="pl-s">历史 + 天气观察</span>
+    <span class="pl-ent">L</span><span class="pl-k">--&gt;&gt;</span><span class="pl-ent">P</span><span class="pl-k">:</span> <span class="pl-s">Action: get_attraction(...)</span>
+    <span class="pl-ent">P</span><span class="pl-k">-&gt;&gt;</span><span class="pl-ent">T</span><span class="pl-k">:</span> <span class="pl-s">按城市和天气搜索</span>
+    <span class="pl-ent">T</span><span class="pl-k">--&gt;&gt;</span><span class="pl-ent">P</span><span class="pl-k">:</span> <span class="pl-s">Observation: 景点搜索结果</span>
+    <span class="pl-ent">P</span><span class="pl-k">-&gt;&gt;</span><span class="pl-ent">L</span><span class="pl-k">:</span> <span class="pl-s">历史 + 搜索观察</span>
+    <span class="pl-ent">L</span><span class="pl-k">--&gt;&gt;</span><span class="pl-ent">P</span><span class="pl-k">:</span> <span class="pl-s">Action: Finish[最终建议]</span>
+    <span class="pl-ent">P</span><span class="pl-k">--&gt;&gt;</span><span class="pl-ent">U</span><span class="pl-k">:</span> <span class="pl-s">输出最终建议</span></pre></div>
+<p>最重要的分工是：<strong>LLM 选择下一步，Python 执行工具，工具结果再交给 LLM。</strong> 模型输出的函数调用格式只是文本；真正执行函数的是主循环中的 Python 代码。</p>
+<h3>小结</h3>
+<p>这份代码已经包含一个最小 Agent 的核心闭环：<strong>用户目标 → LLM 选择工具 → Python 执行工具 → Observation 加入历史 → LLM 继续决策 → Finish 返回答案</strong>。眼下优先修正密钥管理和 Tavily 参数，再给网络请求加超时，并为解析失败补上检查。</p>
+<h2>1.5：智能体应用的协作模式</h2>
+<p>本节从智能体在任务中的角色和自主程度出发，介绍两种常见协作模式：<strong>作为人的开发工具</strong>和<strong>作为自主协作者</strong>。</p>
+<h3>1.5.1 作为开发者工具：人主导，智能体辅助</h3>
+<p>在这种模式中，智能体被放进人的工作流程里，帮助完成代码补全、问答、重构或调试等任务。人仍负责确定目标、判断建议是否正确并决定最终结果；智能体减少重复劳动，让人把精力放在更重要的工作上。文档以 GitHub Copilot、Claude Code、Trae、Cursor 等工具为例。</p>
+<p>可以把这种关系理解为：**人拆分并管理任务，智能体在工作流程中提供能力。**自动补全属于较小范围的辅助；能读取代码库、编辑文件、运行测试的编程助手则拥有更多行动能力，但仍处于人的开发流程中。</p>
+<h3>1.5.2 作为自主协作者：给目标，智能体规划与执行</h3>
+<p>在这种模式中，用户把较高层级的目标委托给智能体。智能体需要自行规划、推理、调用工具、观察结果并调整行动，直到产出成果。人与 AI 的协作重心从逐步下达操作指令，转向描述目标并委托完成。</p>
+<p>几类实现思路：</p>
+<ol>
+<li><strong>单智能体自主循环</strong>：一个通用智能体通过思考、规划、执行和反思反复迭代，完成开放式任务。</li>
+<li><strong>多智能体协作</strong>：多个智能体按角色或职责配合。可以是角色扮演式对话，也可以像团队一样按分工和流程组织工作；还可以让开发者自定义智能体之间的交互方式。</li>
+<li><strong>图结构控制流</strong>：把执行过程表示成状态图，通过节点和分支组织循环、分支、回溯及人工介入等流程。</li>
+</ol>
+<div class="highlight highlight-source-mermaid"><pre class="notranslate"><span class="pl-k">flowchart</span> <span class="pl-c1">TD</span>
+    <span class="pl-ent">A</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>智能体应用<span class="pl-pds"><span class="pl-sg">]</span></span></span> <span class="pl-k">--&gt;</span> <span class="pl-ent">B</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>作为开发工具<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">A</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">C</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>作为自主协作者<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">B</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">B1</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>嵌入人的工作流<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">B</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">B2</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>人负责目标和最终判断<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">C</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">C1</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>单智能体：规划、执行、反思<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">C</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">C2</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>多智能体：按角色或职责协作<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">C</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">C3</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>状态图：循环、分支、回溯和人工介入<span class="pl-pds"><span class="pl-sg">]</span></span></span></pre></div>
+<h3>1.5.3 Workflow 与 Agent 的差异</h3>
+<p>两者都能自动化任务，核心差异在于<strong>谁决定接下来做什么</strong>：</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>对比维度</th>
+<th>Workflow（工作流）</th>
+<th>Agent（智能体）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>流程由谁决定</td>
+<td>开发者预先编排步骤和分支</td>
+<td>智能体根据目标、当前信息和工具结果选择下一步</td>
+</tr>
+<tr>
+<td>运行方式</td>
+<td>按确定流程推进</td>
+<td>通过规划和反馈动态调整行动</td>
+</tr>
+<tr>
+<td>优势</td>
+<td>过程明确、结果较容易预测和审核</td>
+<td>灵活，能处理表达模糊、步骤不完全确定的目标</td>
+</tr>
+<tr>
+<td>适合的任务</td>
+<td>规则稳定、步骤明确的流程</td>
+<td>需要判断、搜集信息和逐步适应的开放任务</td>
+</tr>
+<tr>
+<td>主要挑战</td>
+<td>遇到流程外情况时需要修改编排</td>
+<td>行动和结果更难预测，需要边界、校验和停止条件</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p>例如，固定的报销审批规则适合由工作流明确规定条件和审批顺序；“根据天气和偏好规划一日游”则需要智能体先收集信息，再决定下一步。实际系统也可以结合两者：由 Workflow 负责稳定、必须遵守的主流程，在其中需要理解语义或动态选择工具的环节交给 Agent。这里的混合设计是根据两种范式特点得出的实践思路。</p>
+<h2>1.6：本章小结</h2>
+<p>第一章依次回答了四个问题：</p>
+<ol>
+<li><strong>什么是智能体？</strong> 能感知环境、围绕目标做决策并采取行动；传统智能体从规则响应发展到建模、规划、效用权衡和学习，LLM 则提供了更通用的语言理解与决策能力。</li>
+<li><strong>智能体如何工作？</strong> 它通过感知、思考、行动和观察反馈形成循环。对 LLM 智能体来说，Thought、Action、Observation 描述了模型决策与外部执行之间的交互。</li>
+<li><strong>如何构建一个最小智能体？</strong> 旅行助手把任务拆成查天气、按天气找景点、组织最终建议；LLM 选择工具，Python 执行工具，并把结果反馈给下一轮。</li>
+<li><strong>智能体怎样与人协作？</strong> 它可以作为人的工作工具，也可以作为接收目标后自主推进任务的协作者；Workflow 与 Agent 的取舍取决于流程是否固定、任务是否需要动态判断。</li>
+</ol>
+<p>从 1.1 到 1.5，可以串成一条主线：<strong>先定义目标与环境，再让智能体感知信息、选择行动、调用工具、接收反馈，最后根据任务需要决定由固定 Workflow 控制流程，还是让 Agent 自主规划。</strong></p>
+<h2>本章习题：参考答案与解析</h2>
+<h3>1. 四个 case 是否属于智能体</h3>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>Case</th>
+<th>判断与分类</th>
+<th>理由与补充</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A：超级计算机</td>
+<td>单看这台计算机硬件，不属于智能体</td>
+<td>峰值算力只表示计算能力。题目没有给出它要达成的目标、感知环境的输入、根据状态选择行动的策略和影响环境的执行器。它可以运行智能体程序，但“能运行程序”本身不等于它就是智能体。你的结论方向正确，可以把理由说得更具体。</td>
+</tr>
+<tr>
+<td>B：自动驾驶系统</td>
+<td>属于智能体；可归为快速反应的反应式智能体，也可能是基于模型的反射型智能体</td>
+<td>系统感知道路和障碍物，选择刹车或变道来降低风险。若它维护车辆、车道和障碍物的位置/速度等内部状态，再据此判断，就是基于模型的反射型。若题目只描述“看到障碍就触发固定动作”，则更接近简单反射型。毫秒级响应说明它需要反应快，不代表系统完全没有规划能力。</td>
+</tr>
+<tr>
+<td>C：AlphaGo</td>
+<td>属于学习型智能体；同时具有目标导向和规划特征</td>
+<td>它通过训练（包括自我对弈）获得策略；对局时以赢棋为目标，评估局面并搜索后续落子。按决策时间分类，它属于规划/审议式智能体。若描述其评估局面的价值函数，也可说它具有效用导向的决策特征。你的答案抓住了“学习型”，还可补上目标和规划两个维度。</td>
+</tr>
+<tr>
+<td>D：LLM 智能客服</td>
+<td>若能查询订单等工具并据此采取行动，属于 LLM 驱动的工具型智能体</td>
+<td>它接收投诉，查询订单信息，把工具返回结果作为观察，再分析原因、选择解决方式并答复用户。它具有目标导向和多步决策特征。若 ChatGPT 只是扮演客服角色、没有工具或环境交互，则更像对话模型，而不是具备完整行动闭环的智能体。</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p>分类时最好说明依据，而不要只贴一个标签。同一个智能体可以从架构、反应性、学习能力和目标等多个维度描述。</p>
+<h3>2. 智能健身教练的 PEAS 与环境特性</h3>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>PEAS</th>
+<th>设计描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>P — 性能度量</strong></td>
+<td>训练建议是否符合用户目标和当前状态；训练计划执行情况与阶段性进展；是否及时识别风险并提醒休息/停止；指导是否易懂、用户是否能持续使用。避免只用“分析精确”作指标，因为传感器有误差，身体状态也不能被完整观测。</td>
+</tr>
+<tr>
+<td><strong>E — 环境</strong></td>
+<td>用户的身体状态、健身目标、训练历史、作息与饮食；运动场地、器材和可用时间；可穿戴设备及其数据服务；必要时还包括天气、温度等影响运动的条件。</td>
+</tr>
+<tr>
+<td><strong>A — 执行器</strong></td>
+<td>调整训练计划、动作顺序和强度；语音指导与动作纠正；建议休息、补水或停止训练；记录训练结果；发现明显风险时提醒用户并建议联系专业人员。</td>
+</tr>
+<tr>
+<td><strong>S — 传感器</strong></td>
+<td>心率、运动强度、步数和加速度等穿戴设备数据；用户输入的疼痛、疲劳、目标和健康限制；训练日志、饮食记录；如果具备摄像头，还可以使用姿态/动作信息。</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p>你给出的四类 PEAS 已经抓到基本方向：特别是把调整计划和动作纠正列为行动，把身体状态和动作列为观察信息。可以继续完善的是：P 应尽量描述可评价的结果；E 不只是“健身计划、饮食状况”，还包括用户、设备、器材和运动场景；S 需要覆盖获取这些信息的具体渠道。</p>
+<p>这个任务环境具有以下性质：</p>
+<ul>
+<li><strong>部分可观察</strong>：心率和动作数据只能反映身体状态的一部分；穿戴设备会有测量误差，用户也可能漏报疲劳或饮食情况。</li>
+<li><strong>随机/不确定</strong>：相同训练对不同人的影响不同；睡眠、情绪、疾病和测量噪声都会改变结果。</li>
+<li><strong>动态</strong>：心率、疲劳和动作质量在训练过程中不断变化，环境信息需要实时更新。</li>
+<li><strong>序贯</strong>：今天的训练会影响之后的疲劳、恢复和训练安排，不能只看单次动作。</li>
+<li><strong>连续</strong>：心率、时间、运动强度等是连续变化的数值，指导也可能需要实时调整。</li>
+</ul>
+<p>基本设定可以看作用户与一个智能体交互；如果医生、教练或其他服务也参与决策，再按具体系统扩展为多行动者环境。</p>
+<h3>3. 售后退款：Workflow、Agent 与混合方案</h3>
+<p>你的核心区别是对的：Workflow 的步骤预先确定，Agent 能根据情况调整。但“Workflow 无法处理特殊情况”和“Agent 能处理各种意外”都说得太绝对。Workflow 可以设置异常分支或转人工；Agent 也可能误判、漏信息或给出不一致的决定。</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>方案</th>
+<th>优点</th>
+<th>局限</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Workflow</td>
+<td>规则和路径明确，运行稳定、结果一致，通常更容易审计和预测</td>
+<td>规则覆盖不全时需要添加分支；业务变化会带来流程维护成本；难以理解复杂的自由文本或未预见情形</td>
+</tr>
+<tr>
+<td>Agent</td>
+<td>能理解自然语言材料，综合多种信息，在开放情形下动态规划和选择工具</td>
+<td>输出有不确定性，可能误解政策或产生幻觉；调用时间和费用可能更高；需要校验、安全边界和审计机制</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p><strong>适用场景</strong>：规则清晰、合规要求严格、每一步都能预先规定的退款判断适合以 Workflow 为主；材料复杂、表达不统一、需要综合订单与商品状态的部分，可以由 Agent 协助分析。</p>
+<p><strong>方案 C：混合式流程</strong>。先由 Workflow 执行明确的硬规则（例如商品类别、申请期限、金额阈值）；Agent 负责从用户描述和订单材料中提取信息、总结理由、识别异常并给出建议；Workflow 再按政策决定自动处理或转人工。Agent 不应绕过退款硬规则。对高金额或证据不足的申请，可要求人工审批并记录每一步依据。</p>
+<p>因此，如果我是负责人，会采用 Workflow 管住政策和审批边界，让 Agent 处理语义理解和复杂材料，并保留人工处理例外情况。比起让 Agent 独立批准所有退款，这种组合更容易兼顾灵活性和可控性。</p>
+<h3>4. 为旅行助手增加记忆、备选推荐与反思</h3>
+<h4>记住用户偏好</h4>
+<p>把偏好写进 system prompt 可以在一次运行中作为上下文提供，但 system prompt 主要是固定角色和规则，不适合独自承担跨会话记忆。更合适的做法是把用户明确表达的偏好保存为结构化状态，例如景点类型、预算、步行接受程度；每轮从状态中取出当前任务相关的信息，作为上下文交给 LLM。用户偏好改变时更新记录，并让用户能更正或删除。</p>
+<h4>景点售罄时推荐备选</h4>
+<p>增加查询门票/开放状态的工具。若 Observation 返回“售罄”，将该结果和已推荐景点记入历史；下一轮让 Agent 根据天气、偏好和预算选择未售罄的备选项。为搜索设置重试上限；若没有可用选项，就清楚说明情况并询问用户是否调整条件。</p>
+<h4>连续拒绝三次后调整策略</h4>
+<p>在状态中记录拒绝次数、已经推荐过的景点，以及用户给出的拒绝原因。每次拒绝都作为新的 Observation 返回；累计三次后触发重新规划：总结已知偏好与被拒绝原因，调整推荐条件，必要时先向用户询问更明确的偏好。记录已拒绝的候选，避免原样重复推荐，并继续保留最大循环次数作为停止条件。</p>
+<p>这三个功能都沿用同一个改法：把新信息放进状态或 Observation，让下一轮决策能够利用它；需要持久保留的偏好单独存储，不依赖模型“自动记住”。</p>
+<h3>5. 用医疗分诊助手说明系统 1 与系统 2</h3>
+<p>可以设计一个面向健身用户的健康分诊助手，帮助识别运动风险并给出安全建议。系统 1/系统 2 是理解快慢决策的类比，不代表程序里真的有两个人类式思维系统。</p>
+<ul>
+<li><strong>系统 1：快速筛查。</strong> 迅速读取心率、症状和用户描述，识别明显异常模式；例如出现胸痛、晕厥等危险信号，或生理指标超过医生设定的安全阈值时，立即建议停止运动并寻求专业帮助。模式识别可由模型辅助，明确的安全阈值和禁行动作应由规则约束。</li>
+<li><strong>系统 2：谨慎分析。</strong> 对非紧急情形综合用户病史、药物、近期训练、恢复情况和目标，检索可靠资料，比较多种解释，评估不确定性，再调整训练建议或转交专业人员。</li>
+<li><strong>协作方式：</strong> 系统 1 负责快速发现风险并触发安全措施；系统 2 对复杂情况补充上下文、核对证据并决定下一步；遇到高风险或证据不足时由人工专业人员接手。快速筛查结果和后续反馈可用于改进识别与流程。</li>
+</ul>
+<p>这个例子体现神经符号结合的思路：神经模型擅长从复杂信号中识别模式，符号规则擅长表达阈值、禁忌和必须遵守的约束，两者配合能够兼顾灵活识别与明确控制。</p>
+<h3>6. LLM 智能体的局限与评估</h3>
+<h4>为什么会产生幻觉</h4>
+<p>LLM 根据上下文生成可能合适的后续文本，语言流畅不等于事实正确。当知识缺失、问题含糊、上下文过长或信息过时时，模型可能用看似合理的内容填补空白。Agent 还会受到工具返回错误、检索遗漏、参数错误和多步推理误差的影响；前一步的错误观察可能被后续步骤继续放大。</p>
+<p>降低风险的方法包括：让需要实时性的结论依赖可核验的工具结果；检查来源和参数；明确表达不确定性；对重要决定设置规则校验或人工复核。工具调用本身也需要验证，不能把“用了工具”当作“结果必然正确”。</p>
+<h4>没有最大循环次数会怎样</h4>
+<p>如果 Agent 无法判断任务已经结束，它可能反复调用同一工具、重复搜索、在两个行动之间来回循环，造成时间、Token 和 API 费用持续增加。若工具会产生副作用（例如下单、退款、发邮件），重复调用还可能造成重复操作。</p>
+<p>最大轮数提供一个简单停止边界。实际系统还可结合总运行时间、费用预算、重复 Action 检测、工具调用权限和人工接管条件。</p>
+<h4>如何评价智能体</h4>
+<p>只看准确率不够。Agent 不只是给出答案，也要决定行动、正确使用工具并安全完成任务。可以组合评估：</p>
+<ul>
+<li><strong>任务成功率</strong>：是否达到用户目标，关键步骤是否完成。</li>
+<li><strong>事实质量</strong>：回答是否准确，是否有来源支持，是否能表达不确定性。</li>
+<li><strong>工具能力</strong>：是否选对工具、参数是否正确、是否正确使用返回结果。</li>
+<li><strong>鲁棒性</strong>：输入换一种说法、数据缺失或工具失败时，能否妥善恢复。</li>
+<li><strong>安全与约束</strong>：是否遵守政策、权限和停止条件，有无不当副作用。</li>
+<li><strong>效率与体验</strong>：延迟、Token/API 成本、交互轮数，以及用户是否能理解并接受结果。</li>
+</ul>
+<p>适合为不同任务准备代表性测试案例，既看最终结果，也检查中间行动轨迹。单一指标可能掩盖“答案正确但工具调用危险”或“平均准确但遇到边界情形就失败”等问题。</p></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://proacane.github.io">Proacane个人博客</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行 "+diffDay+" 天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.disabled=true;
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","proacane/proacane.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+<script src='https://blog.meekdai.com/Gmeek/plugins/GmeekTOC.js'></script><script src='https://blog.meekdai.com/Gmeek/plugins/lightbox.js'></script>
+
+</html>
