@@ -489,6 +489,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 </script>
-<script src='https://blog.meekdai.com/Gmeek/plugins/GmeekTOC.js'></script><script src='https://blog.meekdai.com/Gmeek/plugins/lightbox.js'></script><script type="module">import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs'; mermaid.initialize({startOnLoad:false}); document.querySelectorAll('pre').forEach(pre=>{const code=pre.querySelector('code');const highlighted=pre.parentElement&&pre.parentElement.className.includes('mermaid');if(pre.getAttribute('lang')==='mermaid'||(code&&code.classList.contains('language-mermaid'))||highlighted){pre.classList.add('mermaid');if(code)pre.textContent=code.textContent;}}); mermaid.run();</script>
+<script src='https://blog.meekdai.com/Gmeek/plugins/GmeekTOC.js'></script><script src='https://blog.meekdai.com/Gmeek/plugins/lightbox.js'></script><script type='module'>import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({startOnLoad:false});for(const pre of document.querySelectorAll('pre')){const code=pre.querySelector('code');const mark=[pre.className,code?.className,pre.getAttribute('lang'),code?.getAttribute('lang'),pre.parentElement?.className].join(' ');if(!/mermaid/i.test(mark))continue;const node=document.createElement('div');node.className='mermaid';node.textContent=code?.textContent??pre.textContent;pre.replaceWith(node)}await mermaid.run({querySelector:'.mermaid'});</script>
 
 </html>
