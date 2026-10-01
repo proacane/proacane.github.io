@@ -104,18 +104,7 @@ PEAS 的价值在于提醒我们：设计智能体时要同时想清楚任务目
 
 文档把智能体的运行过程描述为持续循环：
 
-~~~mermaid
-flowchart LR
-    A[感知：接收用户请求或环境反馈] --> B[思考：理解目标、规划下一步]
-    B --> C[工具选择：确定工具和参数]
-    C --> D[行动：调用工具或服务]
-    D --> E[环境产生结果]
-    E --> F[观察：整理并记录结果]
-    F --> A
-    B --> G{任务已完成？}
-    G -->|是| H[生成最终答复]
-    G -->|否| C
-~~~
+<img width="1044" height="187" alt="Image" src="https://github.com/user-attachments/assets/b9296ce1-9e8f-4c2a-a6e0-cfdfdbfdec86" />
 
 其中：
 
@@ -443,26 +432,7 @@ for i in range(5): # 设置最大循环次数
    - Action 以 <code>Finish[...]</code> 开头时，程序取出最终答案并结束循环。
 8. **回填 Observation**：工具结果被包装成 Observation 并追加到历史。下一轮模型便能看到前一步的结果，决定继续搜索还是结束。
 
-~~~mermaid
-sequenceDiagram
-    participant U as 用户
-    participant L as LLM
-    participant P as Python 主循环
-    participant W as 天气工具
-    participant T as Tavily 搜索
-    U->>P: 北京天气 + 景点推荐
-    P->>L: system prompt + 用户请求
-    L-->>P: Action: get_weather(...)
-    P->>W: 查询天气
-    W-->>P: Observation: 天气描述和温度
-    P->>L: 历史 + 天气观察
-    L-->>P: Action: get_attraction(...)
-    P->>T: 按城市和天气搜索
-    T-->>P: Observation: 景点搜索结果
-    P->>L: 历史 + 搜索观察
-    L-->>P: Action: Finish[最终建议]
-    P-->>U: 输出最终建议
-~~~
+<img width="937" height="662" alt="Image" src="https://github.com/user-attachments/assets/92d16031-afb2-4f3d-838e-b16237130b46" />
 
 最重要的分工是：**LLM 选择下一步，Python 执行工具，工具结果再交给 LLM。** 模型输出的函数调用格式只是文本；真正执行函数的是主循环中的 Python 代码。
 
@@ -491,16 +461,7 @@ sequenceDiagram
 2. **多智能体协作**：多个智能体按角色或职责配合。可以是角色扮演式对话，也可以像团队一样按分工和流程组织工作；还可以让开发者自定义智能体之间的交互方式。
 3. **图结构控制流**：把执行过程表示成状态图，通过节点和分支组织循环、分支、回溯及人工介入等流程。
 
-~~~mermaid
-flowchart TD
-    A[智能体应用] --> B[作为开发工具]
-    A --> C[作为自主协作者]
-    B --> B1[嵌入人的工作流]
-    B --> B2[人负责目标和最终判断]
-    C --> C1[单智能体：规划、执行、反思]
-    C --> C2[多智能体：按角色或职责协作]
-    C --> C3[状态图：循环、分支、回溯和人工介入]
-~~~
+<img width="1028" height="333" alt="Image" src="https://github.com/user-attachments/assets/8a67aabe-9033-49e0-a810-b7e45c789b04" />
 
 ### 1.5.3 Workflow 与 Agent 的差异
 

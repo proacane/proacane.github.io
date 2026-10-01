@@ -249,16 +249,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p>因此，<strong>智能体不能只在任务开始时做一次判断。它需要利用每步行动带回的反馈更新对环境的理解。</strong></p>
 <h3>Agent Loop：感知—思考—行动—观察</h3>
 <p>文档把智能体的运行过程描述为持续循环：</p>
-<div class="highlight highlight-source-mermaid"><pre class="notranslate"><span class="pl-k">flowchart</span> <span class="pl-c1">LR</span>
-    <span class="pl-ent">A</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>感知：接收用户请求或环境反馈<span class="pl-pds"><span class="pl-sg">]</span></span></span> <span class="pl-k">--&gt;</span> <span class="pl-ent">B</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>思考：理解目标、规划下一步<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">B</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">C</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>工具选择：确定工具和参数<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">C</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">D</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>行动：调用工具或服务<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">D</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">E</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>环境产生结果<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">E</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">F</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>观察：整理并记录结果<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">F</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">A</span>
-    <span class="pl-ent">B</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">G</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">{</span></span>任务已完成？<span class="pl-pds"><span class="pl-sg">}</span></span></span>
-    <span class="pl-ent">G</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">是</span><span class="pl-k">|</span> <span class="pl-ent">H</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>生成最终答复<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">G</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">否</span><span class="pl-k">|</span> <span class="pl-ent">C</span></pre></div>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/b9296ce1-9e8f-4c2a-a6e0-cfdfdbfdec86"><img width="1044" height="187" alt="Image" src="https://github.com/user-attachments/assets/b9296ce1-9e8f-4c2a-a6e0-cfdfdbfdec86" style="max-width: 100%; height: auto; max-height: 187px;; aspect-ratio: 1044 / 187; background-color: var(--bgColor-muted); border-radius: 6px" class="js-gh-image-fallback"></a></p>
 <p>其中：</p>
 <ul>
 <li><strong>Perception（感知）</strong>：接收用户请求，或接收上一步工具调用的返回结果。</li>
@@ -581,24 +572,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </li>
 <li><strong>回填 Observation</strong>：工具结果被包装成 Observation 并追加到历史。下一轮模型便能看到前一步的结果，决定继续搜索还是结束。</li>
 </ol>
-<div class="highlight highlight-source-mermaid"><pre class="notranslate"><span class="pl-k">sequenceDiagram</span>
-    <span class="pl-k">participant</span> <span class="pl-ent">U</span> <span class="pl-k">as</span> <span class="pl-ent">用户</span>
-    <span class="pl-k">participant</span> <span class="pl-ent">L</span> <span class="pl-k">as</span> <span class="pl-ent">LLM</span>
-    <span class="pl-k">participant</span> <span class="pl-ent">P</span> <span class="pl-k">as</span> <span class="pl-ent">Python 主循环</span>
-    <span class="pl-k">participant</span> <span class="pl-ent">W</span> <span class="pl-k">as</span> <span class="pl-ent">天气工具</span>
-    <span class="pl-k">participant</span> <span class="pl-ent">T</span> <span class="pl-k">as</span> <span class="pl-ent">Tavily 搜索</span>
-    <span class="pl-ent">U</span><span class="pl-k">-&gt;&gt;</span><span class="pl-ent">P</span><span class="pl-k">:</span> <span class="pl-s">北京天气 + 景点推荐</span>
-    <span class="pl-ent">P</span><span class="pl-k">-&gt;&gt;</span><span class="pl-ent">L</span><span class="pl-k">:</span> <span class="pl-s">system prompt + 用户请求</span>
-    <span class="pl-ent">L</span><span class="pl-k">--&gt;&gt;</span><span class="pl-ent">P</span><span class="pl-k">:</span> <span class="pl-s">Action: get_weather(...)</span>
-    <span class="pl-ent">P</span><span class="pl-k">-&gt;&gt;</span><span class="pl-ent">W</span><span class="pl-k">:</span> <span class="pl-s">查询天气</span>
-    <span class="pl-ent">W</span><span class="pl-k">--&gt;&gt;</span><span class="pl-ent">P</span><span class="pl-k">:</span> <span class="pl-s">Observation: 天气描述和温度</span>
-    <span class="pl-ent">P</span><span class="pl-k">-&gt;&gt;</span><span class="pl-ent">L</span><span class="pl-k">:</span> <span class="pl-s">历史 + 天气观察</span>
-    <span class="pl-ent">L</span><span class="pl-k">--&gt;&gt;</span><span class="pl-ent">P</span><span class="pl-k">:</span> <span class="pl-s">Action: get_attraction(...)</span>
-    <span class="pl-ent">P</span><span class="pl-k">-&gt;&gt;</span><span class="pl-ent">T</span><span class="pl-k">:</span> <span class="pl-s">按城市和天气搜索</span>
-    <span class="pl-ent">T</span><span class="pl-k">--&gt;&gt;</span><span class="pl-ent">P</span><span class="pl-k">:</span> <span class="pl-s">Observation: 景点搜索结果</span>
-    <span class="pl-ent">P</span><span class="pl-k">-&gt;&gt;</span><span class="pl-ent">L</span><span class="pl-k">:</span> <span class="pl-s">历史 + 搜索观察</span>
-    <span class="pl-ent">L</span><span class="pl-k">--&gt;&gt;</span><span class="pl-ent">P</span><span class="pl-k">:</span> <span class="pl-s">Action: Finish[最终建议]</span>
-    <span class="pl-ent">P</span><span class="pl-k">--&gt;&gt;</span><span class="pl-ent">U</span><span class="pl-k">:</span> <span class="pl-s">输出最终建议</span></pre></div>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/92d16031-afb2-4f3d-838e-b16237130b46"><img width="937" height="662" alt="Image" src="https://github.com/user-attachments/assets/92d16031-afb2-4f3d-838e-b16237130b46" style="max-width: 100%; height: auto; max-height: 662px;; aspect-ratio: 937 / 662; background-color: var(--bgColor-muted); border-radius: 6px" class="js-gh-image-fallback"></a></p>
 <p>最重要的分工是：<strong>LLM 选择下一步，Python 执行工具，工具结果再交给 LLM。</strong> 模型输出的函数调用格式只是文本；真正执行函数的是主循环中的 Python 代码。</p>
 <h3>小结</h3>
 <p>这份代码已经包含一个最小 Agent 的核心闭环：<strong>用户目标 → LLM 选择工具 → Python 执行工具 → Observation 加入历史 → LLM 继续决策 → Finish 返回答案</strong>。眼下优先修正密钥管理和 Tavily 参数，再给网络请求加超时，并为解析失败补上检查。</p>
@@ -615,14 +589,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <li><strong>多智能体协作</strong>：多个智能体按角色或职责配合。可以是角色扮演式对话，也可以像团队一样按分工和流程组织工作；还可以让开发者自定义智能体之间的交互方式。</li>
 <li><strong>图结构控制流</strong>：把执行过程表示成状态图，通过节点和分支组织循环、分支、回溯及人工介入等流程。</li>
 </ol>
-<div class="highlight highlight-source-mermaid"><pre class="notranslate"><span class="pl-k">flowchart</span> <span class="pl-c1">TD</span>
-    <span class="pl-ent">A</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>智能体应用<span class="pl-pds"><span class="pl-sg">]</span></span></span> <span class="pl-k">--&gt;</span> <span class="pl-ent">B</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>作为开发工具<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">A</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">C</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>作为自主协作者<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">B</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">B1</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>嵌入人的工作流<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">B</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">B2</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>人负责目标和最终判断<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">C</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">C1</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>单智能体：规划、执行、反思<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">C</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">C2</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>多智能体：按角色或职责协作<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">C</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">C3</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>状态图：循环、分支、回溯和人工介入<span class="pl-pds"><span class="pl-sg">]</span></span></span></pre></div>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/8a67aabe-9033-49e0-a810-b7e45c789b04"><img width="1028" height="333" alt="Image" src="https://github.com/user-attachments/assets/8a67aabe-9033-49e0-a810-b7e45c789b04" style="max-width: 100%; height: auto; max-height: 333px;; aspect-ratio: 1028 / 333; background-color: var(--bgColor-muted); border-radius: 6px" class="js-gh-image-fallback"></a></p>
 <h3>1.5.3 Workflow 与 Agent 的差异</h3>
 <p>两者都能自动化任务，核心差异在于<strong>谁决定接下来做什么</strong>：</p>
 <markdown-accessiblity-table><table role="table">
