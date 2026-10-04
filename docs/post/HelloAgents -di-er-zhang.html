@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="# 第二章：智能体发展史
+
+> 学习重点不在背诵年代、人物和系统名称，而在理解：每一种智能范式试图解决什么问题，又留下了什么局限；现代智能体为何会组合规则、学习、规划、记忆和工具。">
+<meta property="og:title" content="HelloAgents 第二章">
+<meta property="og:description" content="# 第二章：智能体发展史
+
+> 学习重点不在背诵年代、人物和系统名称，而在理解：每一种智能范式试图解决什么问题，又留下了什么局限；现代智能体为何会组合规则、学习、规划、记忆和工具。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://proacane.github.io/post/HelloAgents%20-di-er-zhang.html">
+<meta property="og:image" content="https://github.com/proacane/proacane.github.io/blob/main/avatar.jpg?raw=true">
+<title>HelloAgents 第二章</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+<style>@media(min-width:1200px){body{max-width:none!important;margin:0!important;padding:32px!important}#header,#content{margin-left:288px!important;width:calc(100% - 288px)!important}#content{display:block!important}.toc{position:fixed!important;top:0!important;left:0!important;width:260px!important;height:100vh!important;max-height:100vh!important;overflow-y:auto!important;transform:none!important;z-index:1000!important;box-sizing:border-box!important;padding:10px 16px 16px!important;border:0!important;border-right:1px solid var(--color-border-default)!important;border-radius:0!important;background:var(--color-canvas-default)!important;box-shadow:none!important}}.toc-title{margin:0 0 10px!important;padding:4px 8px 10px 0!important;border-bottom:1px solid var(--color-border-default)!important;text-align:left!important;font-size:12px!important;font-weight:700!important;letter-spacing:.06em!important;color:var(--color-fg-muted)!important}.toc-title:before{content:none!important}.toc a.toc-link{display:block!important;margin:2px 0!important;padding-top:7px!important;padding-bottom:7px!important;padding-right:10px!important;border:0!important;border-left:2px solid transparent!important;border-radius:0 6px 6px 0!important;color:var(--color-fg-muted)!important;text-decoration:none!important;line-height:1.45!important;transition:background-color .15s ease,color .15s ease,border-color .15s ease!important}.toc a.toc-link:hover{background:var(--color-accent-subtle)!important;border-left-color:var(--color-accent-fg)!important;color:var(--color-accent-fg)!important}.toc a.toc-link:focus-visible{outline:2px solid var(--color-accent-fg);outline-offset:1px}.toc-end{position:fixed!important;top:auto!important;right:24px!important;bottom:24px!important;left:auto!important;width:46px!important;height:46px!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important;border:1px solid var(--color-border-default)!important;border-radius:50%!important;background:var(--color-canvas-default)!important;color:var(--color-fg-default)!important;box-shadow:0 4px 14px rgba(31,35,40,.18)!important;font-size:0!important;line-height:1!important;z-index:1100!important;cursor:pointer!important;transition:transform .15s ease,box-shadow .15s ease!important}.toc-end:before{content:'↑';font-size:24px;line-height:1}.toc-end:hover{color:var(--color-accent-fg)!important;transform:translateY(-2px)!important}</style>
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">HelloAgents 第二章</h1>
+<div class="title-right">
+    <a href="https://proacane.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/proacane/proacane.github.io/issues/21" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><h1>第二章：智能体发展史</h1>
+<blockquote>
+<p>学习重点不在背诵年代、人物和系统名称，而在理解：每一种智能范式试图解决什么问题，又留下了什么局限；现代智能体为何会组合规则、学习、规划、记忆和工具。</p>
+</blockquote>
+<h2>一、发展史</h2>
+<p>智能体的发展不是新技术把旧技术彻底取代，而是不断补足旧方法的短板：</p>
+<div class="highlight highlight-source-mermaid"><pre class="notranslate"><span class="pl-k">flowchart</span> <span class="pl-c1">LR</span>
+    <span class="pl-ent">A</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>符号与规则&lt;<span class="pl-ent">br</span>/&gt;人把知识写进系统<span class="pl-pds"><span class="pl-sg">]</span></span></span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">规则难以穷举、遇到新情况脆弱</span><span class="pl-k">|</span> <span class="pl-ent">B</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>学习与神经网络&lt;<span class="pl-ent">br</span>/&gt;从数据中学习模式<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">B</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">会识别模式，但需要学会连续决策</span><span class="pl-k">|</span> <span class="pl-ent">C</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>强化学习&lt;<span class="pl-ent">br</span>/&gt;与环境交互、根据奖励改进<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">C</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">专用训练成本高、先验知识有限</span><span class="pl-k">|</span> <span class="pl-ent">D</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>大规模预训练的LLM&lt;<span class="pl-ent">br</span>/&gt;获得广泛语言能力和知识<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">D</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">E</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>现代Agent&lt;<span class="pl-ent">br</span>/&gt;LLM + 规划 + 记忆 + 工具 + 环境反馈<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+    <span class="pl-ent">F</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>心智社会&lt;<span class="pl-ent">br</span>/&gt;简单单元协作产生复杂能力<span class="pl-pds"><span class="pl-sg">]</span></span></span> <span class="pl-k">-.</span><span class="pl-s">启发协作与多智能体</span><span class="pl-k">.-&gt;</span> <span class="pl-ent">E</span></pre></div>
+<p>把它记成一句话：<strong>知识可以手工编码，也可以从数据中学习；智能体还要在环境中行动、接收反馈，并能把多个能力组织起来。</strong></p>
+<h2>二、符号主义：把知识和规则明确写出来</h2>
+<p>早期符号主义认为，智能可以通过表示符号、操作符号和执行逻辑推理来实现。物理符号系统假说进一步提出：符号处理与通用智能之间存在紧密关系。</p>
+<h3>专家系统</h3>
+<p>专家系统把领域知识写成“如果……那么……”规则，通常由两部分组成：</p>
+<ul>
+<li><strong>知识库</strong>：存放事实与规则。</li>
+<li><strong>推理机</strong>：根据已有事实匹配并执行规则。</li>
+</ul>
+<p>两种常见推理方向：</p>
+<ul>
+<li><strong>正向链</strong>：从已有事实出发，逐步推出结论，属于数据驱动。</li>
+<li><strong>反向链</strong>：先设定想证明的目标，再倒推需要哪些条件，属于目标驱动。</li>
+</ul>
+<p>例如，MYCIN 是用于辅助细菌感染诊断的专家系统。它展示了规则系统在边界清晰的专业领域可以很有用，但建立和维护知识库需要专家参与，系统也容易受限于已有规则。</p>
+<h3>SHRDLU 与封闭世界</h3>
+<p>SHRDLU 能在“积木世界”里理解自然语言指令、记住上下文、规划移动积木的步骤并执行动作。它的重要启发是：语言理解、记忆、规划和行动可以集成在一个闭环中。</p>
+<p>但它主要在规则明确、范围有限的积木世界里工作。离开这个微型环境，原有知识和规则就难以应付真实世界的复杂变化。<strong>受控环境里的成功，不等于已经理解开放世界。</strong></p>
+<h3>符号系统的主要局限</h3>
+<ol>
+<li><strong>知识获取瓶颈</strong>：把专家经验整理成完整规则既昂贵又困难，很多常识和经验难以明确表达。</li>
+<li><strong>常识不足</strong>：没有写入系统的知识，系统通常不能自然地补上。</li>
+<li><strong>框架问题</strong>：动作改变环境后，系统还要判断哪些状态变了、哪些没有变；真实环境里的变化很难全部列举。</li>
+<li><strong>脆弱性</strong>：遇到规则覆盖不到的新情形时，表现容易失效；规则增加后也会出现冲突和维护负担。</li>
+</ol>
+<h2>三、ELIZA：看起来会聊天，不代表真的理解</h2>
+<p>ELIZA 是早期规则聊天程序。它会根据关键词和句式匹配用户输入，再用预设模板改写成回应。简化流程如下：</p>
+<pre lang="text" class="notranslate"><code class="notranslate">用户输入
+  → 找关键词或匹配句式
+  → 提取输入中的片段
+  → 转换代词
+  → 填入回应模板
+</code></pre>
+<p>例如，把“我需要帮助”匹配到相应规则后，可能生成“你为什么需要帮助？”ELIZA 不必理解用户处境，也能通过开放式提问营造出会倾听的感觉。这种“人把理解能力投射给程序”的现象常被称为 <strong>ELIZA 效应</strong>。</p>
+<p>ELIZA 的练习价值在于亲手看见规则机器的工作方式。它能让我们区分<strong>语言表面上的连贯</strong>与<strong>对含义、上下文和真实状态的理解</strong>。增加规则能覆盖更多句子，但难以覆盖开放域语言的无穷组合。</p>
+<h2>四、心智社会：复杂智能可以由简单部分协作产生</h2>
+<p>马文·明斯基提出“心智社会”观点：智能不一定来自一个全知全能的中心，而可能来自许多简单、专门的过程彼此协作。每个小单元只负责有限任务；组合起来后，系统可以表现出复杂能力。</p>
+<p>例如，搭积木可以拆为寻找积木、抓取、移动、放置等子任务。负责抓取的部分不必理解“搭塔”的整体目标，协调这些步骤后仍可以完成目标。</p>
+<p>这类思想启发了<strong>分布式智能和多智能体系统</strong>：多个独立单元可以分工、通信和协作。不过协作也带来协调、通信、冲突处理和局部故障等问题。本章这里主要是思想背景，不需要把它等同于当下每一种多 Agent 框架。</p>
+<h2>五、从规则转向学习</h2>
+<h3>联结主义与神经网络</h3>
+<p>符号主义把知识显式写成规则；联结主义则用神经网络中的连接权重分布式地表示知识，通过数据训练调整权重。它让机器能从图像、声音和文本等大量样本中学出模式，尤其提升了感知与识别能力。</p>
+<p>简单对比：</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>思路</th>
+<th>能力从哪里来</th>
+<th>典型优势</th>
+<th>典型难点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>符号主义</td>
+<td>人编写的事实和规则</td>
+<td>规则清晰，特定领域可解释</td>
+<td>知识难收集，规则外情况脆弱</td>
+</tr>
+<tr>
+<td>联结主义</td>
+<td>数据训练出的参数和模式</td>
+<td>能从大量样本中学习复杂模式</td>
+<td>不容易直接解释，训练数据和泛化很关键</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<h3>强化学习</h3>
+<p>神经网络擅长从数据中识别模式，但智能体还要连续地做决策。强化学习让智能体与环境交互，根据行动后的奖励调整策略：</p>
+<pre lang="text" class="notranslate"><code class="notranslate">观察状态 → 选择行动 → 环境变化并给出奖励 → 更新策略 → 再次行动
+</code></pre>
+<p>核心概念：<strong>智能体、环境、状态、行动、奖励、策略</strong>。它优化的通常是长期累积回报，而非只追求眼前一步的奖励。AlphaGo 自我对弈的例子说明了系统可以从反复试错和胜负反馈中改进策略。</p>
+<p>与监督学习的简单区别：监督学习通常需要带有正确答案的示例；强化学习可以通过与环境交互获得奖励信号，但奖励设计、探索和训练成本都可能很难处理。</p>
+<h3>预训练与大语言模型</h3>
+<p>预训练先让模型从海量文本中学习通用语言模式和知识，再用提示示例或进一步训练适配具体任务。它降低了每个任务都从头准备标注数据的需求，也让模型具备较广泛的语言能力。</p>
+<p>但要注意：模型生成流畅答案，不代表它掌握的事实一定可靠；预训练所得知识也不等于实时信息或可核验的数据库。因此，在需要最新信息或精确事实时，现代 Agent 往往还要调用搜索、数据库或业务 API。</p>
+<h2>六、现代 LLM Agent：把模型放进“感知—思考—行动—反馈”循环</h2>
+<p>大语言模型本身负责理解和生成；作为 Agent 的系统还需要让它接收环境信息、选择行动、调用工具，并根据返回结果决定下一步：</p>
+<pre lang="text" class="notranslate"><code class="notranslate">环境 / 用户
+    ↓ 观察
+感知 → LLM推理与规划 ←→ 记忆
+              ↓ 决策
+          工具 / 执行
+              ↓ 结果与环境变化
+          新一轮观察
+</code></pre>
+<p>这一循环和第一章的 <strong>Thought–Action–Observation</strong> 对应：</p>
+<ul>
+<li><strong>Thought</strong>：结合目标、已有信息与记忆，判断下一步。</li>
+<li><strong>Action</strong>：调用工具或采取其他行动。</li>
+<li><strong>Observation</strong>：读取工具结果或环境变化，再决定是否继续。</li>
+</ul>
+<p>现代 Agent 并不是只靠某一种历史范式：神经网络提供语言能力，符号化的计划和工具接口提供可执行结构，记忆保留任务信息，环境反馈帮助系统修正下一步。这种组合仍有局限，模型可能判断错误、工具可能失败，循环也需要限制和检查。</p>
+<h2>七、本章需要记住的结论</h2>
+<ol>
+<li><strong>规则系统擅长明确、稳定、边界清楚的问题</strong>，但知识难以穷举，遇到新情况容易脆弱。</li>
+<li><strong>ELIZA 能制造会理解的印象，却主要依靠模式匹配</strong>；对话像人，不足以证明系统理解了内容。</li>
+<li><strong>复杂智能可以由多个简单能力协作产生</strong>，这是理解多智能体思想的一条线索。</li>
+<li><strong>神经网络从数据中学习模式，强化学习从行动反馈中学习决策</strong>，两者解决的问题不完全相同。</li>
+<li><strong>LLM 提供语言理解和生成能力，但现代 Agent 还要有规划、记忆、工具和反馈闭环</strong>。</li>
+<li>发展史的核心线索是“能力如何获得”：<strong>手工编码 → 从数据学习 → 与环境交互学习 → 把模型接入可行动的系统</strong>。</li>
+</ol>
+<h2>八、和后续章节的关系</h2>
+<p>本章主要建立历史背景。后面更值得投入精力的是理解 LLM 的基本工作方式、Agent 如何规划与调用工具，以及怎样处理记忆、反馈和可靠性。学到具体架构时，可以回想本章对应的历史问题：系统为什么需要记忆？为什么要用工具验证？为什么要控制行动循环？这些设计往往是在弥补某种能力缺口。</p>
+<p><strong>参考</strong>：Datawhale《Hello-Agents》<a href="https://datawhalechina.github.io/hello-agents/#/./chapter2/%E7%AC%AC%E4%BA%8C%E7%AB%A0%20%E6%99%BA%E8%83%BD%E4%BD%93%E5%8F%91%E5%B1%95%E5%8F%B2" rel="nofollow">第二章：智能体发展史</a>。</p></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://proacane.github.io">Proacane个人博客</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行 "+diffDay+" 天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.disabled=true;
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","proacane/proacane.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+<script src='https://blog.meekdai.com/Gmeek/plugins/GmeekTOC.js'></script><script src='https://blog.meekdai.com/Gmeek/plugins/lightbox.js'></script><script type='module'>import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';mermaid.initialize({startOnLoad:false});for(const pre of document.querySelectorAll('pre')){const code=pre.querySelector('code');const mark=[pre.className,code?.className,pre.getAttribute('lang'),code?.getAttribute('lang'),pre.parentElement?.className].join(' ');if(!/mermaid/i.test(mark))continue;const node=document.createElement('div');node.className='mermaid';node.textContent=code?.textContent??pre.textContent;pre.replaceWith(node)}await mermaid.run({querySelector:'.mermaid'});</script>
+
+</html>
