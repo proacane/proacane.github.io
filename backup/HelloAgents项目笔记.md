@@ -345,11 +345,11 @@ import re
 
 # --- 1. 配置LLM客户端 ---
 # 请根据您使用的服务，将这里替换成对应的凭证和地址
-API_KEY = "sk-09a86d1ecdce43b0b2efdef740f6effb"
+API_KEY = ""
 BASE_URL = "https://api.deepseek.com"
 MODEL_ID = "deepseek-flash"
-TAVILY_API_KEY="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"
-os.environ['TAVILY_API_KEY'] = "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"
+TAVILY_API_KEY=""
+os.environ['TAVILY_API_KEY'] = ""
 
 llm = OpenAICompatibleClient(
     model=MODEL_ID,
