@@ -876,19 +876,19 @@ C#的访问修饰符如下：</p>
 <span class="pl-kos">}</span>;</pre></div>
 <h1>类</h1>
 <p>定义：</p>
-<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-c1">&lt;</span><span class="pl-smi">access</span> <span class="pl-s1">specifier</span><span class="pl-c1">&gt;</span> <span class="pl-k">class</span>  <span class="pl-s1">class_name</span>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-c1">&lt;</span><span class="pl-s1">access</span> specifier<span class="pl-c1">&gt;</span> <span class="pl-k">class</span>  <span class="pl-s1">class_name</span>
 <span class="pl-kos">{</span>
     <span class="pl-c">// member variables</span>
-    <span class="pl-c1">&lt;</span><span class="pl-smi">access</span> <span class="pl-smi">specifier</span><span class="pl-c1">&gt;</span> <span class="pl-c1">&lt;</span><span class="pl-smi">data</span> type<span class="pl-c1">&gt;</span> <span class="pl-s1">variable1</span><span class="pl-kos">;</span>
-    ..<span class="pl-kos">.</span><span class="pl-s1"></span>
+    <span class="pl-c1">&lt;</span><span class="pl-s1">access</span> <span class="pl-smi">specifier</span><span class="pl-c1">&gt;</span> <span class="pl-c1">&lt;</span><span class="pl-smi">data</span> type<span class="pl-c1">&gt;</span> variable1<span class="pl-kos">;</span>
+    <span class="pl-c1">..</span><span class="pl-kos">.</span>
     <span class="pl-c1">&lt;</span><span class="pl-s1">access</span> specifier<span class="pl-c1">&gt;</span> <span class="pl-c1">&lt;</span>data type<span class="pl-c1">&gt;</span> variableN<span class="pl-kos">;</span>
     <span class="pl-c">// member methods</span>
-    <span class="pl-c1">&lt;</span><span class="pl-smi">access</span> <span class="pl-en">specifier</span><span class="pl-c1">&gt;</span> <span class="pl-c1">&lt;</span><span class="pl-c1">return</span> type<span class="pl-c1">&gt;</span> method1<span class="pl-kos">(</span><span class="pl-s1">parameter_list</span><span class="pl-kos">)</span>
+    <span class="pl-c1">&lt;</span>access specifier<span class="pl-c1">&gt;</span> <span class="pl-c1">&lt;</span><span class="pl-k">return</span> <span class="pl-s1">type</span><span class="pl-c1">&gt;</span> <span class="pl-s1">method1</span><span class="pl-kos">(</span><span class="pl-s1">parameter_list</span><span class="pl-kos">)</span>
     <span class="pl-kos">{</span>
         <span class="pl-c">// method body</span>
     <span class="pl-kos">}</span>
-    ..<span class="pl-kos">.</span><span class="pl-s1"></span>
-    <span class="pl-c1">&lt;</span><span class="pl-s1">access</span> <span class="pl-s1">specifier</span><span class="pl-c1">&gt;</span> <span class="pl-c1">&lt;</span><span class="pl-k">return</span> type<span class="pl-c1">&gt;</span> methodN<span class="pl-kos">(</span><span class="pl-s1">parameter_list</span><span class="pl-kos">)</span>
+    <span class="pl-c1">..</span><span class="pl-kos">.</span>
+    <span class="pl-c1">&lt;</span><span class="pl-s1">access</span> specifier<span class="pl-c1">&gt;</span> <span class="pl-c1">&lt;</span><span class="pl-s1">return</span> type<span class="pl-c1">&gt;</span> <span class="pl-s1">methodN</span><span class="pl-kos">(</span><span class="pl-s1">parameter_list</span><span class="pl-kos">)</span>
     <span class="pl-kos">{</span>
         <span class="pl-c">// method body</span>
     <span class="pl-kos">}</span>
@@ -907,11 +907,11 @@ C#的访问修饰符如下：</p>
 <p>C#不支持多重继承，但是可以实现多个接口（Interface），继承语法和C++一样</p>
 <div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-c1">&lt;</span><span class="pl-s1">访问修饰符</span><span class="pl-c1">&gt;</span> <span class="pl-s1">class</span> <span class="pl-c1">&lt;</span><span class="pl-s1">基类</span><span class="pl-c1">&gt;</span>
 <span class="pl-kos">{</span>
- ..<span class="pl-kos">.</span>
+ <span class="pl-c1">..</span><span class="pl-kos">.</span>
 <span class="pl-kos">}</span>
 <span class="pl-k">class</span><span class="pl-s1"></span> <span class="pl-c1">&lt;</span><span class="pl-c1">派生类</span><span class="pl-c1">&gt;</span> <span class="pl-c1">:</span><span class="pl-smi"></span> <span class="pl-c1">&lt;</span><span class="pl-smi">基类</span><span class="pl-c1">&gt;</span>
 <span class="pl-kos">{</span>
- ..<span class="pl-kos">.</span>
+ <span class="pl-c1">..</span><span class="pl-kos">.</span>
 <span class="pl-kos">}</span></pre></div>
 <h2>基类的初始化</h2>
 <p>派生类继承了基类的成员变量和方法， 所以父类对象在子类对象之前被创建，可以通过初始化列表的方式创建</p>
@@ -1661,7 +1661,7 @@ C#的访问修饰符如下：</p>
 <p>特性（Attribute）用于添加元数据，如编译器指令和注释、描述、方法、类等其他信息。.Net 框架提供了两种类型的特性：<strong>预定义</strong>特性和<strong>自定义</strong>特性。</p>
 <h2>规定特性</h2>
 <p>规定特性的语法：</p>
-<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-kos">[</span><span class="pl-c1">attribute</span><span class="pl-kos">(</span><span class="pl-s1">positional_parameters</span><span class="pl-kos">,</span> <span class="pl-s1">name_parameter</span> <span class="pl-c1">=</span> <span class="pl-s1">value</span><span class="pl-kos">,</span> ..<span class="pl-kos">.</span><span class="pl-s1"></span><span class="pl-kos">)</span><span class="pl-kos">]</span>
+<div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-kos">[</span><span class="pl-c1">attribute</span><span class="pl-kos">(</span><span class="pl-s1">positional_parameters</span><span class="pl-kos">,</span> <span class="pl-s1">name_parameter</span> <span class="pl-c1">=</span> <span class="pl-s1">value</span><span class="pl-kos">,</span> <span class="pl-c1">..</span><span class="pl-kos">.</span><span class="pl-s1"></span><span class="pl-kos">)</span><span class="pl-kos">]</span>
 element</pre></div>
 <p>特性（Attribute）的名称和值是在方括号内规定的，放置在它所应用的元素之前。positional_parameters 规定必需的信息，name_parameter 规定可选的信息。</p>
 <h2>预定义特性</h2>
@@ -2012,7 +2012,7 @@ element</pre></div>
 <h2>实例化委托</h2>
 <p>委托对象必须用new关键字创建，参数传递方法名：</p>
 <div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">public</span> <span class="pl-k">delegate</span> <span class="pl-smi">void</span> <span class="pl-s1">printString</span><span class="pl-kos">(</span><span class="pl-smi">string</span> <span class="pl-s1">s</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
-..<span class="pl-kos">.</span>
+<span class="pl-c1">..</span><span class="pl-kos">.</span>
 <span class="pl-s1">printString</span> ps1 <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-smi">printString</span><span class="pl-kos">(</span><span class="pl-s1">WriteToScreen</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
 <span class="pl-smi">printString</span> <span class="pl-s1">ps2</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-smi">printString</span><span class="pl-kos">(</span><span class="pl-s1">WriteToFile</span><span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div>
 <p>例子：</p>
@@ -2705,7 +2705,7 @@ Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span cl
 <div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">delegate</span><span class="pl-kos">(</span><span class="pl-s1">parameters</span><span class="pl-kos">)</span> <span class="pl-kos">{</span> <span class="pl-s1">statement</span><span class="pl-kos">;</span> <span class="pl-kos">}</span></pre></div>
 <p>例如：</p>
 <div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k">delegate</span> <span class="pl-smi">void</span> <span class="pl-s1">NumberChanger</span><span class="pl-kos">(</span><span class="pl-smi">int</span> <span class="pl-s1">n</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
-..<span class="pl-kos">.</span>
+<span class="pl-c1">..</span><span class="pl-kos">.</span>
 <span class="pl-s1">NumberChanger</span> nc <span class="pl-c1">=</span> <span class="pl-k">delegate</span><span class="pl-kos">(</span><span class="pl-smi">int</span> <span class="pl-s1">x</span><span class="pl-kos">)</span>
 <span class="pl-kos">{</span>
     <span class="pl-s1">Console</span><span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span class="pl-kos">(</span><span class="pl-s">"Anonymous Method: {0}"</span><span class="pl-kos">,</span> <span class="pl-s1">x</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
@@ -2714,7 +2714,7 @@ Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span cl
 <p>当一个代码块使用<code class="notranslate">unsafe</code>修饰符标记时，就允许使用指针变量</p>
 <div class="highlight highlight-source-cs"><pre class="notranslate"><span class="pl-k"><span class="pl-k">static</span></span>  <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-smi">string</span><span class="pl-kos">[</span><span class="pl-kos">]</span> <span class="pl-s1">args</span><span class="pl-kos">)</span>
 <span class="pl-kos">{</span>
-  unsafe
+  <span class="pl-k">unsafe</span>
   <span class="pl-kos">{</span>
   	<span class="pl-smi">int</span> <span class="pl-s1">var</span> <span class="pl-c1">=</span> <span class="pl-c1">20</span><span class="pl-kos">;</span>
 	<span class="pl-smi">int</span><span class="pl-c1">*</span> <span class="pl-s1">p</span> <span class="pl-c1">=</span> <span class="pl-c1">&amp;</span><span class="pl-s1">var</span><span class="pl-kos">;</span>
@@ -2733,7 +2733,7 @@ Console<span class="pl-kos">.</span><span class="pl-en">WriteLine</span><span cl
 <span class="pl-kos">{</span>
    <span class="pl-k">class</span> <span class="pl-smi">TestPointer</span>
    <span class="pl-kos">{</span>
-      <span class="pl-k">public</span> <span class="pl-k">unsafe</span> <span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+      <span class="pl-k">public</span> <span class="pl-k"><span class="pl-k">unsafe</span></span> <span class="pl-k"><span class="pl-k">static</span></span> <span class="pl-smi">void</span> <span class="pl-en">Main</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
       <span class="pl-kos">{</span>
          <span class="pl-smi">int</span><span class="pl-kos">[</span><span class="pl-kos">]</span>  <span class="pl-s1">list</span> <span class="pl-c1">=</span> <span class="pl-kos">{</span><span class="pl-c1">10</span><span class="pl-kos">,</span> <span class="pl-c1">100</span><span class="pl-kos">,</span> <span class="pl-c1">200</span><span class="pl-kos">}</span><span class="pl-kos">;</span>
          fixed<span class="pl-kos">(</span><span class="pl-smi">int</span> <span class="pl-c1">*</span><span class="pl-s1">ptr</span> <span class="pl-c1">=</span> <span class="pl-s1">list</span><span class="pl-kos">)</span>
